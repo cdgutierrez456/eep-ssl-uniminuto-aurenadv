@@ -1,0 +1,10 @@
+{
+  "id": "d2b7c0e4-8a16-4f3d-a5c9-0e6f3b8d1a47",
+  "version_esquema": 1,
+  "estacion": "ergonomia",
+  "tipo": "estado_modulo",
+  "timestamp": "2026-11-20T10:30:00-05:00",
+  "severidad": "info",
+  "datos": { "modulo": "ergonomia", "estado": "activo", "mensaje": "Cámara conectada, 28 fps" },
+  "origen": { "dispositivo": "pc-stand", "modulo_version": "0.1.0" }
+}

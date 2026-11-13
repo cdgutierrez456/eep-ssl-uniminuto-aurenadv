@@ -1,0 +1,17 @@
+{
+  "id": "8f3c2a1e-5b7d-4e8a-9c21-7d4e5f6a8b90",
+  "version_esquema": 1,
+  "estacion": "ergonomia",
+  "tipo": "evaluacion_reba",
+  "timestamp": "2026-11-20T10:32:05-05:00",
+  "sesion_id": "V-0142",
+  "severidad": "alta",
+  "datos": {
+    "puntaje": 9,
+    "nivel": "alto",
+    "angulos": { "tronco": 62.5, "cuello": 24.0, "brazo": 71.3, "antebrazo": 48.9, "muneca": 17.2, "piernas": 35.0 },
+    "duracion_s": 6.4
+  },
+  "adjuntos": [ { "tipo": "imagen", "ruta": "media/2026-11-20/8f3c2a1e.jpg" } ],
+  "origen": { "dispositivo": "pc-stand", "modulo_version": "0.1.0" }
+}

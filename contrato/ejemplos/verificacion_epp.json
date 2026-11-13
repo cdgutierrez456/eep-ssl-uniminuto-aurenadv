@@ -1,0 +1,18 @@
+{
+  "id": "c4e1a9f2-6d3b-4f7a-b1c8-9a0e2d5f7c31",
+  "version_esquema": 1,
+  "estacion": "epp",
+  "tipo": "verificacion_epp",
+  "timestamp": "2026-11-20T10:35:12-05:00",
+  "sesion_id": "V-0142",
+  "severidad": "media",
+  "datos": {
+    "perfil": "alturas",
+    "requeridos": ["casco", "arnes", "guantes", "botas"],
+    "detectados": ["casco", "guantes", "botas"],
+    "faltantes": ["arnes"],
+    "cumple": false
+  },
+  "adjuntos": [ { "tipo": "imagen", "ruta": "media/2026-11-20/c4e1a9f2.jpg" } ],
+  "origen": { "dispositivo": "pc-stand", "modulo_version": "0.1.0" }
+}

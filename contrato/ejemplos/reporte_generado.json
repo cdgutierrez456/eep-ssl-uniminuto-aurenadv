@@ -1,0 +1,12 @@
+{
+  "id": "2b9d4c77-1f0a-4c3e-8a56-3e9f1d2c4b6a",
+  "version_esquema": 1,
+  "estacion": "ergonomia",
+  "tipo": "reporte_generado",
+  "timestamp": "2026-11-20T10:32:41-05:00",
+  "sesion_id": "V-0142",
+  "severidad": "info",
+  "datos": { "reporte_id": "REBA-0142-01", "url_reporte": "media/2026-11-20/reba-0142-01.pdf" },
+  "adjuntos": [ { "tipo": "pdf", "ruta": "media/2026-11-20/reba-0142-01.pdf" } ],
+  "origen": { "dispositivo": "pc-stand", "modulo_version": "0.1.0" }
+}

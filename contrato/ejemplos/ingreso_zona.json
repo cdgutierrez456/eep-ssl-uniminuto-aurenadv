@@ -1,0 +1,10 @@
+{
+  "id": "5a7f0e3d-9c2b-4d1e-a6f4-0b8c3e1d9f52",
+  "version_esquema": 1,
+  "estacion": "zona",
+  "tipo": "ingreso_zona",
+  "timestamp": "2026-11-20T10:41:03-05:00",
+  "severidad": "media",
+  "datos": { "zona_id": "prensa-1", "duracion_s": 2.8, "alarma_activada": true },
+  "origen": { "dispositivo": "pc-stand", "modulo_version": "0.1.0" }
+}

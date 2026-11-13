@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Receptor de prueba · SST en vivo</title>
+<style>
+  :root {
+    --deep: #12343B;
+    --negro: #111414;
+    --marfil: #F2F1EA;
+    --lima: #C8F169;
+    --tenue: rgba(242, 241, 234, .6);
+    --borde: rgba(242, 241, 234, .12);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--negro); color: var(--marfil);
+    font: 15px/1.45 "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
+  }
+  header {
+    background: var(--deep); padding: 20px 24px; border-bottom: 1px solid var(--borde);
+    display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 20px;
+  }
+  h1 { margin: 0; font-size: 20px; font-weight: 600; letter-spacing: .01em; }
+  .aviso { color: var(--tenue); font-size: 13px; }
+  .estado { margin-left: auto; font-size: 13px; color: var(--tenue); display: flex; align-items: center; gap: 8px; }
+  .punto { width: 9px; height: 9px; border-radius: 50%; background: var(--lima); }
+  .punto.caido { background: #E5604D; }
+  main { max-width: 1100px; margin: 0 auto; padding: 20px 16px 48px; }
+  .vacio { color: var(--tenue); padding: 48px 0; text-align: center; }
+  article {
+    background: var(--deep); border: 1px solid var(--borde); border-left: 4px solid var(--tenue);
+    border-radius: 6px; padding: 12px 16px; margin-bottom: 10px;
+  }
+  article.sev-baja { border-left-color: #7FB7BE; }
+  article.sev-media { border-left-color: #E8B84A; }
+  article.sev-alta { border-left-color: #EE8B45; }
+  article.sev-critica { border-left-color: #E5604D; }
+  .linea { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 14px; }
+  .hora { font-variant-numeric: tabular-nums; color: var(--tenue); }
+  .estacion { font-weight: 600; text-transform: uppercase; letter-spacing: .06em; font-size: 13px; }
+  .tipo { font-weight: 600; }
+  .etiqueta {
+    font-size: 12px; text-transform: uppercase; letter-spacing: .05em;
+    border: 1px solid var(--borde); border-radius: 999px; padding: 1px 10px; color: var(--tenue);
+  }
+  .sesion { margin-left: auto; color: var(--tenue); font-size: 13px; }
+  pre {
+    margin: 8px 0 0; white-space: pre-wrap; word-break: break-word; color: var(--tenue);
+    font: 13px/1.45 Consolas, "Cascadia Mono", Menlo, monospace;
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>Receptor de prueba · SST en vivo</h1>
+  <span class="aviso">Herramienta de desarrollo. No es la plataforma final.</span>
+  <span class="estado"><span class="punto" id="punto"></span><span id="conteo">Conectando…</span></span>
+</header>
+<main id="lista"><p class="vacio">Esperando eventos…</p></main>
+<script>
+  const lista = document.getElementById("lista");
+  const conteo = document.getElementById("conteo");
+  const punto = document.getElementById("punto");
+
+  function elemento(etiqueta, clase, texto) {
+    const nodo = document.createElement(etiqueta);
+    if (clase) nodo.className = clase;
+    if (texto !== undefined) nodo.textContent = texto;   // textContent: nunca HTML de los eventos
+    return nodo;
+  }
+
+  function tarjeta(evento) {
+    const articulo = elemento("article", "sev-" + evento.severidad);
+    const linea = elemento("div", "linea");
+    linea.append(
+      elemento("span", "hora", evento.timestamp.slice(11, 19)),
+      elemento("span", "estacion", evento.estacion),
+      elemento("span", "tipo", evento.tipo),
+      elemento("span", "etiqueta", evento.severidad)
+    );
+    if (evento.sesion_id) linea.append(elemento("span", "sesion", "Sesión " + evento.sesion_id));
+    articulo.append(linea, elemento("pre", "", JSON.stringify(evento.datos, null, 1)));
+    if (evento.adjuntos && evento.adjuntos.length) {
+      articulo.append(elemento("pre", "", "Adjuntos: " + evento.adjuntos.map(a => a.ruta).join(", ")));
+    }
+    return articulo;
+  }
+
+  let ultimaFirma = "";
+  async function actualizar() {
+    try {
+      const respuesta = await fetch("/api/eventos?limite=50", { cache: "no-store" });
+      const eventos = (await respuesta.json()).reverse();   // el más reciente arriba
+      punto.classList.remove("caido");
+      conteo.textContent = eventos.length ? "Últimos " + eventos.length + " eventos" : "Sin eventos todavía";
+      const firma = eventos.map(e => e.id).join();
+      if (firma === ultimaFirma) return;
+      ultimaFirma = firma;
+      lista.replaceChildren(...(eventos.length ? eventos.map(tarjeta) : [elemento("p", "vacio", "Esperando eventos…")]));
+    } catch (error) {
+      punto.classList.add("caido");
+      conteo.textContent = "Receptor sin respuesta";
+    }
+  }
+  actualizar();
+  setInterval(actualizar, 2000);
+</script>
+</body>
+</html>

@@ -1,0 +1,250 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aurenadv.com/sst/contrato/evento.schema.json",
+  "title": "Evento de la plataforma SST en vivo",
+  "description": "Sobre común que todo módulo publica en POST /api/eventos. Fuente de verdad compartida entre la plataforma (Next.js) y los módulos (Python). Si el sobre cambia, version_esquema sube a 2.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "version_esquema", "estacion", "tipo", "timestamp", "severidad", "datos", "origen"],
+  "properties": {
+    "id": {
+      "description": "UUID generado por el módulo que crea el evento. Hace la sincronización idempotente.",
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+    },
+    "version_esquema": {
+      "description": "Versión del sobre.",
+      "const": 1
+    },
+    "estacion": {
+      "description": "Estación del stand que origina el evento.",
+      "enum": ["ergonomia", "epp", "zona", "inspector", "incidente", "plataforma"]
+    },
+    "tipo": {
+      "description": "Tipo de evento. Determina la forma de 'datos'.",
+      "enum": [
+        "evaluacion_reba",
+        "reporte_generado",
+        "verificacion_epp",
+        "ingreso_zona",
+        "casi_accidente",
+        "inspeccion_foto",
+        "informe_incidente",
+        "lead_registrado",
+        "estado_modulo"
+      ]
+    },
+    "timestamp": {
+      "description": "Fecha y hora ISO 8601 con zona horaria explícita (America/Bogota: -05:00).",
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?(Z|[+-]\\d{2}:\\d{2})$"
+    },
+    "sesion_id": {
+      "description": "Opcional. Identifica al visitante a lo largo del recorrido (por ejemplo V-0142).",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64
+    },
+    "severidad": {
+      "description": "El tablero la usa para colores y alertas sin conocer cada tipo.",
+      "enum": ["info", "baja", "media", "alta", "critica"]
+    },
+    "datos": {
+      "description": "Contenido propio de cada tipo de evento (ver $defs).",
+      "type": "object"
+    },
+    "adjuntos": {
+      "description": "Archivos asociados. Las imágenes se guardan con rostros difuminados.",
+      "type": "array",
+      "items": { "$ref": "#/$defs/adjunto" }
+    },
+    "origen": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["dispositivo", "modulo_version"],
+      "properties": {
+        "dispositivo": { "type": "string", "minLength": 1 },
+        "modulo_version": { "type": "string", "minLength": 1 }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": { "required": ["tipo"], "properties": { "tipo": { "const": "evaluacion_reba" } } },
+      "then": { "properties": { "estacion": { "const": "ergonomia" }, "datos": { "$ref": "#/$defs/datos_evaluacion_reba" } } }
+    },
+    {
+      "if": { "required": ["tipo"], "properties": { "tipo": { "const": "reporte_generado" } } },
+      "then": { "properties": { "estacion": { "const": "ergonomia" }, "datos": { "$ref": "#/$defs/datos_reporte_generado" } } }
+    },
+    {
+      "if": { "required": ["tipo"], "properties": { "tipo": { "const": "verificacion_epp" } } },
+      "then": { "properties": { "estacion": { "const": "epp" }, "datos": { "$ref": "#/$defs/datos_verificacion_epp" } } }
+    },
+    {
+      "if": { "required": ["tipo"], "properties": { "tipo": { "const": "ingreso_zona" } } },
+      "then": { "properties": { "estacion": { "const": "zona" }, "datos": { "$ref": "#/$defs/datos_ingreso_zona" } } }
+    },
+    {
+      "if": { "required": ["tipo"], "properties": { "tipo": { "const": "casi_accidente" } } },
+      "then": { "properties": { "estacion": { "const": "zona" }, "datos": { "$ref": "#/$defs/datos_casi_accidente" } } }
+    },
+    {
+      "if": { "required": ["tipo"], "properties": { "tipo": { "const": "inspeccion_foto" } } },
+      "then": { "properties": { "estacion": { "const": "inspector" }, "datos": { "$ref": "#/$defs/datos_inspeccion_foto" } } }
+    },
+    {
+      "if": { "required": ["tipo"], "properties": { "tipo": { "const": "informe_incidente" } } },
+      "then": { "properties": { "estacion": { "const": "incidente" }, "datos": { "$ref": "#/$defs/datos_informe_incidente" } } }
+    },
+    {
+      "if": { "required": ["tipo"], "properties": { "tipo": { "const": "lead_registrado" } } },
+      "then": { "properties": { "estacion": { "const": "plataforma" }, "datos": { "$ref": "#/$defs/datos_lead_registrado" } } }
+    },
+    {
+      "$comment": "estado_modulo es el latido: lo emite cualquier estación (la del módulo que late), por eso no fija 'estacion'.",
+      "if": { "required": ["tipo"], "properties": { "tipo": { "const": "estado_modulo" } } },
+      "then": { "properties": { "datos": { "$ref": "#/$defs/datos_estado_modulo" } } }
+    }
+  ],
+  "$defs": {
+    "adjunto": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["tipo", "ruta"],
+      "properties": {
+        "tipo": { "enum": ["imagen", "pdf", "excel", "audio"] },
+        "ruta": {
+          "description": "Ruta relativa a la carpeta de medios, tal como la devuelve POST /api/medios.",
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "datos_evaluacion_reba": {
+      "type": "object",
+      "required": ["puntaje", "nivel"],
+      "properties": {
+        "puntaje": { "description": "Puntaje REBA final.", "type": "integer", "minimum": 1, "maximum": 15 },
+        "nivel": {
+          "description": "Nivel de riesgo REBA: 1 insignificante, 2-3 bajo, 4-7 medio, 8-10 alto, 11-15 muy_alto.",
+          "enum": ["insignificante", "bajo", "medio", "alto", "muy_alto"]
+        },
+        "angulos": {
+          "description": "Ángulos articulares en grados.",
+          "type": "object",
+          "properties": {
+            "tronco": { "type": "number" },
+            "cuello": { "type": "number" },
+            "brazo": { "type": "number" },
+            "antebrazo": { "type": "number" },
+            "muneca": { "type": "number" },
+            "piernas": { "type": "number" }
+          }
+        },
+        "duracion_s": { "description": "Duración de la evaluación en segundos.", "type": "number", "minimum": 0 }
+      }
+    },
+    "datos_reporte_generado": {
+      "type": "object",
+      "required": ["reporte_id", "url_reporte"],
+      "properties": {
+        "reporte_id": { "type": "string", "minLength": 1 },
+        "url_reporte": { "type": "string", "minLength": 1 }
+      }
+    },
+    "datos_verificacion_epp": {
+      "type": "object",
+      "required": ["perfil", "requeridos", "detectados", "faltantes", "cumple"],
+      "properties": {
+        "perfil": { "description": "Perfil elegido: alimentos, alturas, ruido…", "type": "string", "minLength": 1 },
+        "requeridos": { "type": "array", "items": { "type": "string" } },
+        "detectados": { "type": "array", "items": { "type": "string" } },
+        "faltantes": { "type": "array", "items": { "type": "string" } },
+        "cumple": { "type": "boolean" }
+      }
+    },
+    "datos_ingreso_zona": {
+      "type": "object",
+      "required": ["zona_id", "duracion_s", "alarma_activada"],
+      "properties": {
+        "zona_id": { "type": "string", "minLength": 1 },
+        "duracion_s": { "type": "number", "minimum": 0 },
+        "alarma_activada": { "type": "boolean" }
+      }
+    },
+    "datos_casi_accidente": {
+      "type": "object",
+      "required": ["zona_id", "descripcion"],
+      "properties": {
+        "zona_id": { "type": "string", "minLength": 1 },
+        "descripcion": { "type": "string", "minLength": 1 },
+        "distancia_min_px": { "type": "number", "minimum": 0 }
+      }
+    },
+    "datos_inspeccion_foto": {
+      "type": "object",
+      "required": ["escena", "peligros"],
+      "properties": {
+        "escena": { "description": "Descripción breve de la escena analizada.", "type": "string", "minLength": 1 },
+        "peligros": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["peligro", "clasificacion", "efectos", "controles_propuestos", "nivel_preliminar"],
+            "properties": {
+              "peligro": { "type": "string", "minLength": 1 },
+              "clasificacion": {
+                "description": "Clasificación de peligros de la GTC 45.",
+                "enum": [
+                  "biologico",
+                  "fisico",
+                  "quimico",
+                  "psicosocial",
+                  "biomecanico",
+                  "condiciones_de_seguridad",
+                  "fenomenos_naturales"
+                ]
+              },
+              "efectos": { "type": "string" },
+              "controles_propuestos": { "type": "array", "items": { "type": "string" } },
+              "nivel_preliminar": { "enum": ["bajo", "medio", "alto", "muy_alto"] }
+            }
+          }
+        },
+        "url_excel": { "type": "string", "minLength": 1 }
+      }
+    },
+    "datos_informe_incidente": {
+      "type": "object",
+      "required": ["resumen", "causas", "acciones"],
+      "properties": {
+        "resumen": { "type": "string", "minLength": 1 },
+        "causas": { "type": "array", "items": { "type": "string" } },
+        "acciones": { "type": "array", "items": { "type": "string" } },
+        "url_informe": { "type": "string", "minLength": 1 }
+      }
+    },
+    "datos_lead_registrado": {
+      "description": "Solo sector y rango de empleados. Nunca datos personales: por eso no admite campos adicionales.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sector", "rango_empleados"],
+      "properties": {
+        "sector": { "type": "string", "minLength": 1 },
+        "rango_empleados": { "type": "string", "minLength": 1 }
+      }
+    },
+    "datos_estado_modulo": {
+      "type": "object",
+      "required": ["modulo", "estado"],
+      "properties": {
+        "modulo": { "type": "string", "minLength": 1 },
+        "estado": { "enum": ["activo", "error", "sin_conexion"] },
+        "mensaje": { "type": "string" }
+      }
+    }
+  }
+}

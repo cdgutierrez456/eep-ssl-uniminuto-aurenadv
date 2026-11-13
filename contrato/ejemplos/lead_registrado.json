@@ -1,0 +1,10 @@
+{
+  "id": "3f8a1d6c-2e9b-4c5a-9f03-8b7e4d1a2c96",
+  "version_esquema": 1,
+  "estacion": "plataforma",
+  "tipo": "lead_registrado",
+  "timestamp": "2026-11-20T11:31:02-05:00",
+  "severidad": "info",
+  "datos": { "sector": "alimentos", "rango_empleados": "51-200" },
+  "origen": { "dispositivo": "pc-stand", "modulo_version": "0.1.0" }
+}

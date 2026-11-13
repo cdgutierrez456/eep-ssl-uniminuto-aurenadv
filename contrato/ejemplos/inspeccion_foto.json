@@ -1,0 +1,34 @@
+{
+  "id": "71d3f8a6-0e5c-4a9b-8d27-4f6b9c2e1a05",
+  "version_esquema": 1,
+  "estacion": "inspector",
+  "tipo": "inspeccion_foto",
+  "timestamp": "2026-11-20T11:02:47-05:00",
+  "sesion_id": "V-0157",
+  "severidad": "alta",
+  "datos": {
+    "escena": "Bodega de almacenamiento con estanterías metálicas y tránsito de montacargas",
+    "peligros": [
+      {
+        "peligro": "Cajas apiladas sin asegurar en el nivel superior de la estantería",
+        "clasificacion": "condiciones_de_seguridad",
+        "efectos": "Golpes y contusiones por caída de objetos",
+        "controles_propuestos": ["Instalar topes y mallas de retención", "Definir altura máxima de apilamiento", "Inspección semanal de estanterías"],
+        "nivel_preliminar": "alto"
+      },
+      {
+        "peligro": "Levantamiento manual de cargas desde el piso",
+        "clasificacion": "biomecanico",
+        "efectos": "Lumbalgia y lesiones osteomusculares",
+        "controles_propuestos": ["Ayudas mecánicas para cargas de más de 25 kg", "Capacitación en higiene postural"],
+        "nivel_preliminar": "medio"
+      }
+    ],
+    "url_excel": "media/2026-11-20/ipevr-71d3f8a6.xlsx"
+  },
+  "adjuntos": [
+    { "tipo": "imagen", "ruta": "media/2026-11-20/71d3f8a6.jpg" },
+    { "tipo": "excel", "ruta": "media/2026-11-20/ipevr-71d3f8a6.xlsx" }
+  ],
+  "origen": { "dispositivo": "pc-stand", "modulo_version": "0.1.0" }
+}
