@@ -578,3 +578,248 @@ Un editor simple sobre la imagen de referencia de la cámara (`capacidades.image
 
 Recordatorio de la sección 3: cada escritura lee la configuración vigente, cambia sus campos
 y la manda completa.
+
+---
+
+# Cambios de contrato — módulo inspector por foto
+
+Para Cristian. Lo que agrega el módulo inspector. Todo es aditivo: `version_esquema` sigue en 1
+y un tablero que solo lea los campos anteriores de `inspeccion_foto` sigue funcionando.
+
+A diferencia de los módulos de visión, **este módulo sí expone un servicio HTTP** en la PC del
+stand (puerto `INSPECTOR_PUERTO`, 8010 por defecto). La tablet le manda la foto y las respuestas;
+la ruta `/api/modulos/inspector` del brief es un proxy hacia él. El servicio trae una interfaz
+provisional en `GET /`, que sirve de referencia hasta que exista la definitiva.
+
+La clave de la IA vive solo en el `.env` de la PC. Ninguna respuesta del servicio la incluye y el
+navegador nunca llama a la IA.
+
+## 1. API del servicio
+
+| Método y ruta | Para qué |
+|---|---|
+| `POST /analizar` | Foto (o escena preparada) → peligros propuestos |
+| `POST /valorar/{inspeccion_id}` | Respuestas de la persona → valoración, Excel y evento |
+| `GET /excel/{inspeccion_id}` | La matriz IPEVR en Excel |
+| `GET /imagen/{inspeccion_id}` | La foto anotada (JPEG). Con `?limpia=1`, sin cajas |
+| `GET /escenas` | Escenas preparadas, para cuando no hay internet |
+| `GET /escenas/{id}/imagen` | Miniatura de una escena preparada |
+| `GET /opciones` | Valores y textos de los formularios (frecuencias, controles, niveles y sus colores) |
+| `GET /salud` | Estado del servicio |
+
+### `POST /analizar`
+
+Cuerpo `multipart/form-data`:
+
+| Campo | Qué es |
+|---|---|
+| `foto` | Archivo de imagen (JPEG, PNG o WebP, hasta 25 MB). Obligatorio si no va `escena_preparada` |
+| `escena_preparada` | `id` de una escena de `GET /escenas`. No llama a la IA |
+| `escena` | Opcional. Nombre o descripción del lugar; llega al evento como `datos.escena` |
+| `sesion_id` | Opcional. Número del visitante; llega al evento |
+
+Respuesta 200:
+
+```json
+{
+  "inspeccion_id": "ce5a41636a64",
+  "origen": "ia",
+  "modelo": "claude-sonnet-5-5",
+  "borrador": true,
+  "aviso": "Borrador generado con IA. La IA propone, el profesional de SST decide.",
+  "duracion_s": 17.4,
+  "descripcion_general": "Bodega de almacenamiento con estantería metálica…",
+  "advertencias": ["No se ve la parte alta de la estantería"],
+  "url_imagen": "/imagen/ce5a41636a64",
+  "ancho": 1568, "alto": 1176,
+  "peligros": [
+    {
+      "n": 1,
+      "descripcion": "Trabajador sobre escalera de tijera manipulando cajas sobre el nivel de los hombros",
+      "clasificacion": { "categoria": "condiciones_de_seguridad", "subcategoria": "trabajo en alturas", "nombre": "Condiciones de seguridad" },
+      "evidencia_visible": "La persona está en los peldaños superiores de la escalera…",
+      "ubicacion": [0.4082, 0.085, 0.5867, 0.8078],
+      "confianza": "alta",
+      "posible": false,
+      "efectos_posibles": "Fracturas, traumas y contusiones por caída a distinto nivel",
+      "peor_consecuencia": "Trauma craneoencefálico por caída",
+      "nivel_deficiencia_propuesto": "alto",
+      "explicacion_deficiencia": "No se ve punto de anclaje, plataforma ni ayudante…",
+      "consecuencia_propuesta": "muy_grave",
+      "explicacion_consecuencia": "Una caída desde esa altura puede causar lesiones con incapacidad permanente.",
+      "controles_propuestos": { "eliminacion": ["…"], "sustitucion": ["…"], "ingenieria": [], "administrativos": ["…"], "epp": ["…"] }
+    }
+  ]
+}
+```
+
+- `origen`: `ia` (análisis nuevo), `cache` (esa misma foto ya se había analizado) o
+  `escena_preparada`.
+- `ubicacion`: caja aproximada `[x1, y1, x2, y2]` de 0 a 1 sobre la foto, con `(0, 0)` arriba a la
+  izquierda. `url_imagen` ya trae las cajas numeradas dibujadas; quien prefiera dibujarlas pide
+  la foto con `?limpia=1`.
+- `posible: true` (confianza baja) se muestra como "Posible — verificar".
+- El análisis tarda entre 10 y 25 s. Conviene mostrar una espera con el tiempo transcurrido.
+- La foto se guarda y se envía a la IA siempre con los rostros difuminados.
+
+Errores, todos con `{ "error": código, "mensaje": texto para la persona }` y, cuando sirve,
+`escenas_preparadas` (la misma lista de `GET /escenas`) para ofrecer la salida sin internet:
+
+| Estado | `error` | Cuándo |
+|---|---|---|
+| 422 | `imagen_invalida` | El archivo no es una imagen, es muy pequeña o pesa más de 25 MB |
+| 422 | `sin_foto` | No llegó ni `foto` ni `escena_preparada` |
+| 422 | `rechazo` | La IA declinó analizar esa foto. Mensaje: "No pudimos analizar esta foto. Intenta con otra toma o usa una escena preparada." |
+| 404 | `escena_no_existe` | La escena preparada no existe o no se ha precalculado |
+| 503 | `sin_conexion`, `tiempo_agotado`, `limite`, `servicio` | Sin internet, se agotó el tiempo o falla el servicio de IA |
+| 503 | `respuesta_invalida` | La IA respondió algo que no cumple el esquema, dos veces |
+| 503 | `sin_clave`, `solicitud` | Falta la clave en la PC o hay un problema de configuración |
+| 503 | `solo_escenas` | El operador apagó la IA (`solo_escenas_preparadas`) |
+
+El `mensaje` se puede mostrar tal cual. Ante cualquier error conviene ofrecer dos botones:
+intentar con otra foto y usar una escena preparada.
+
+### `POST /valorar/{inspeccion_id}`
+
+Cuerpo JSON:
+
+```json
+{
+  "contexto": { "proceso": "Almacenamiento", "zona": "Bodega", "actividad": "", "tarea": "", "rutinaria": true },
+  "peligros": [
+    { "n": 1, "frecuencia": "frecuente", "expuestos": 2, "controles_existentes": ["epp"], "otros_controles": "" },
+    { "n": 2, "frecuencia": "ocasional", "nivel_deficiencia": "bajo", "consecuencia": "grave" },
+    { "n": 3, "descartado": true }
+  ]
+}
+```
+
+- `peligros` lleva **una respuesta por cada peligro** de `/analizar`, identificada por `n`.
+- `frecuencia`: `continua`, `frecuente`, `ocasional` o `esporadica`. Obligatoria si no se descarta.
+- `expuestos`: entero mayor que cero. Opcional.
+- `controles_existentes`: lista con `ninguno`, `senalizacion`, `procedimiento`, `epp`,
+  `proteccion_maquina`. `otros_controles`: texto libre. Opcionales.
+- `nivel_deficiencia` (`muy_alto`, `alto`, `medio`, `bajo`) y `consecuencia` (`mortal`,
+  `muy_grave`, `grave`, `leve`): solo si la persona ajusta lo que propuso la IA.
+- `contexto`: todo opcional; lo que falte queda en blanco en el Excel.
+
+Respuesta 200:
+
+```json
+{
+  "inspeccion_id": "ce5a41636a64",
+  "borrador": true,
+  "aviso": "Borrador generado con IA. La IA propone, el profesional de SST decide.",
+  "descartados": 1,
+  "resumen": { "peor_nivel": "I", "severidad": "critica", "por_nivel": { "I": 1, "II": 0, "III": 0, "IV": 1 } },
+  "url_excel": "/excel/ce5a41636a64",
+  "url_imagen": "/imagen/ce5a41636a64",
+  "evento_id": "d013645b-46b9-4f68-8626-cde3266fdfb1",
+  "publicado": true,
+  "peligros": [
+    {
+      "n": 1, "n_original": 1, "descripcion": "…", "exposicion": "frecuente", "expuestos": 2,
+      "controles_existentes": { "fuente": "Ninguno", "medio": "Ninguno", "individuo": "EPP" },
+      "valoracion": {
+        "nd": 6, "ne": 3, "np": 18, "interpretacion_np": "Alto", "nc": 60, "nr": 1080,
+        "nivel_riesgo": "I", "aceptabilidad": "No aceptable",
+        "significado": "Situación crítica: detener la tarea hasta controlar el riesgo e intervenir de inmediato.",
+        "nivel_preliminar": "muy_alto", "severidad": "critica", "nota": null
+      }
+    }
+  ]
+}
+```
+
+- Los peligros que quedan se **renumeran desde 1** (`n_original` es el número que tenían en
+  `/analizar`) y la foto de `url_imagen` pasa a mostrar solo esos, con la numeración nueva.
+- La valoración la calcula el módulo, sin IA: `NP = ND × NE`, `NR = NP × NC`. Los colores de
+  cada nivel (I a IV) vienen en `GET /opciones`.
+- Con deficiencia `bajo`, `nd`, `np` y `nr` son `null` y el nivel es IV (aceptable).
+- Se puede llamar más de una vez para corregir: devuelve el Excel nuevo, pero **el evento se
+  publica una sola vez por inspección** (`publicado: false` en las siguientes).
+- Errores: 404 `inspeccion_no_existe`; 422 `respuestas_invalidas`, con el motivo en `mensaje`
+  (por ejemplo "Falta la frecuencia de la tarea del peligro 2").
+
+### `GET /salud`
+
+```json
+{
+  "estado": "ok", "modulo": "inspector", "version": "0.1.0", "modelo": "claude-sonnet-5-5",
+  "ia_disponible": true, "hay_clave": true, "solo_escenas_preparadas": false,
+  "escenas_preparadas": 5, "fotos_analizadas": 16, "costo_promedio_por_foto_usd": 0.0387
+}
+```
+
+Si `ia_disponible` es `false`, la interfaz debe ofrecer solo las escenas preparadas.
+
+## 2. `inspeccion_foto`: campos opcionales nuevos
+
+Añadidos a [`contrato/evento.schema.json`](../contrato/evento.schema.json); ejemplo actualizado en
+[`contrato/ejemplos/inspeccion_foto.json`](../contrato/ejemplos/inspeccion_foto.json). Los
+obligatorios no cambian.
+
+En `datos`:
+
+| Campo | Qué trae |
+|---|---|
+| `inspeccion_id` | Id de la inspección en el servicio |
+| `borrador` | Siempre `true` |
+| `origen_analisis` | `ia`, `cache` o `escena_preparada` |
+| `modelo` | Modelo de IA que analizó la foto |
+| `advertencias` | Limitaciones de la imagen ("imagen oscura", "no se ve el piso") |
+| `peligros_descartados` | Cuántos peligros propuestos descartó la persona |
+| `contexto` | Lo que la persona llenó: `proceso`, `zona`, `actividad`, `tarea`, `rutinaria` |
+
+En cada elemento de `datos.peligros`:
+
+| Campo | Qué trae |
+|---|---|
+| `subclasificacion` | Subcategoría libre ("trabajo en alturas") |
+| `evidencia`, `confianza` | Lo que se ve en la foto y qué tan claro (`alta`, `media`, `baja`) |
+| `ubicacion` | Caja `[x1, y1, x2, y2]` de 0 a 1 sobre la imagen adjunta |
+| `peor_consecuencia` | La peor consecuencia creíble |
+| `controles_por_jerarquia` | Los controles separados en `eliminacion`, `sustitucion`, `ingenieria`, `administrativos`, `epp` |
+| `exposicion`, `expuestos`, `controles_existentes` | Lo que respondió la persona |
+| `valoracion` | `nd`, `ne`, `np`, `interpretacion_np`, `nc`, `nr`, `nivel_riesgo` (I a IV), `aceptabilidad` |
+
+Cómo llega el evento:
+
+- **Uno por inspección**, cuando la persona genera la matriz. Solo trae los peligros que no descartó.
+- `controles_propuestos` sigue siendo una lista plana, en orden de jerarquía.
+- `nivel_preliminar` repite el nivel de riesgo: I → `muy_alto`, II → `alto`, III → `medio`, IV → `bajo`.
+- `severidad`: la del peor peligro. I → `critica`, II → `alta`, III → `media`, IV → `baja`; sin
+  peligros → `info`.
+- **Dos adjuntos**: la foto anotada (`imagen`, rostros difuminados) y la matriz (`excel`), subidos
+  antes por `POST /api/medios`. `datos.url_excel` es la misma ruta del adjunto `excel`.
+- Trae `sesion_id` si la tablet lo envió en `/analizar`.
+- El latido sale con `estacion: "inspector"` y `modulo: "inspector"`. Sin clave de IA sigue
+  `activo`, con el mensaje "Sin clave de IA: solo escenas preparadas".
+
+## 3. Configuración del módulo inspector
+
+Usa los endpoints genéricos (`/api/modulos/inspector/capacidades` y `/api/modulos/inspector/config`).
+Esquema: [`contrato/config_inspector.schema.json`](../contrato/config_inspector.schema.json).
+
+```json
+{ "modelo": "claude-sonnet-5-5", "max_peligros": 6, "tiempo_maximo_s": 60, "solo_escenas_preparadas": false }
+```
+
+- Todas las claves son opcionales: la que falte conserva el valor del `.env` de la estación.
+- `modelo`: uno de `capacidades.modelos`. `max_peligros`: de 1 a 12. `tiempo_maximo_s`: de 10 a 180.
+- `solo_escenas_preparadas: true` apaga las llamadas a la IA (sin internet o para no gastar).
+- El módulo aplica el cambio en el siguiente análisis. Una configuración inválida se rechaza
+  entera y se conserva la anterior.
+
+Capacidades que registra:
+
+```json
+{
+  "modelos": [ { "id": "claude-sonnet-5-5", "nombre": "Sonnet 5.5 (rápido, por defecto)" },
+               { "id": "claude-opus-5-5", "nombre": "Opus 5.5 (mayor calidad)" } ],
+  "max_peligros": { "minimo": 1, "maximo": 12 },
+  "tiempo_maximo_s": { "minimo": 10, "maximo": 180 },
+  "ia_disponible": true,
+  "escenas_preparadas": [ { "id": "bodega_estanterias", "nombre": "Bodega con estanterías" } ]
+}
+```

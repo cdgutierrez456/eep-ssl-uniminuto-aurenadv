@@ -5,26 +5,76 @@
   "tipo": "inspeccion_foto",
   "timestamp": "2026-11-20T11:02:47-05:00",
   "sesion_id": "V-0157",
-  "severidad": "alta",
+  "severidad": "critica",
   "datos": {
-    "escena": "Bodega de almacenamiento con estanterías metálicas y tránsito de montacargas",
+    "escena": "Bodega de almacenamiento con estantería metálica, donde una persona ubica cajas en el nivel superior desde una escalera de tijera.",
     "peligros": [
       {
-        "peligro": "Cajas apiladas sin asegurar en el nivel superior de la estantería",
+        "peligro": "Trabajador sobre escalera de tijera manipulando cajas sobre el nivel de los hombros",
         "clasificacion": "condiciones_de_seguridad",
-        "efectos": "Golpes y contusiones por caída de objetos",
-        "controles_propuestos": ["Instalar topes y mallas de retención", "Definir altura máxima de apilamiento", "Inspección semanal de estanterías"],
-        "nivel_preliminar": "alto"
+        "efectos": "Fracturas, traumas y contusiones por caída a distinto nivel",
+        "controles_propuestos": [
+          "Ubicar la mercancía de alta rotación en niveles alcanzables desde el piso",
+          "Cambiar la escalera de tijera por una escalera tipo avión con plataforma y baranda",
+          "Definir un procedimiento de trabajo seguro para tareas en altura",
+          "Casco con barbuquejo"
+        ],
+        "nivel_preliminar": "muy_alto",
+        "subclasificacion": "trabajo en alturas",
+        "evidencia": "La persona está en los peldaños superiores de la escalera, sin apoyo de manos y con una caja levantada sobre la cabeza.",
+        "confianza": "alta",
+        "ubicacion": [0.4082, 0.085, 0.5867, 0.8078],
+        "peor_consecuencia": "Trauma craneoencefálico por caída",
+        "controles_por_jerarquia": {
+          "eliminacion": ["Ubicar la mercancía de alta rotación en niveles alcanzables desde el piso"],
+          "sustitucion": ["Cambiar la escalera de tijera por una escalera tipo avión con plataforma y baranda"],
+          "ingenieria": [],
+          "administrativos": ["Definir un procedimiento de trabajo seguro para tareas en altura"],
+          "epp": ["Casco con barbuquejo"]
+        },
+        "exposicion": "frecuente",
+        "expuestos": 2,
+        "controles_existentes": { "fuente": "Ninguno", "medio": "Ninguno", "individuo": "EPP" },
+        "valoracion": {
+          "nd": 6, "ne": 3, "np": 18, "interpretacion_np": "Alto", "nc": 60, "nr": 1080,
+          "nivel_riesgo": "I", "aceptabilidad": "No aceptable"
+        }
       },
       {
-        "peligro": "Levantamiento manual de cargas desde el piso",
+        "peligro": "Manipulación manual de cajas por encima de los hombros",
         "clasificacion": "biomecanico",
-        "efectos": "Lumbalgia y lesiones osteomusculares",
-        "controles_propuestos": ["Ayudas mecánicas para cargas de más de 25 kg", "Capacitación en higiene postural"],
-        "nivel_preliminar": "medio"
+        "efectos": "Lesiones osteomusculares de hombro y espalda",
+        "controles_propuestos": ["Usar ayudas mecánicas para subir y bajar cajas", "Capacitar en manipulación manual de cargas"],
+        "nivel_preliminar": "bajo",
+        "subclasificacion": "manipulación manual de cargas",
+        "evidencia": "La persona sostiene una caja con los brazos extendidos sobre la cabeza.",
+        "confianza": "media",
+        "ubicacion": [0.4401, 0.085, 0.574, 0.3571],
+        "peor_consecuencia": "Lesión de hombro",
+        "controles_por_jerarquia": {
+          "eliminacion": [],
+          "sustitucion": [],
+          "ingenieria": ["Usar ayudas mecánicas para subir y bajar cajas"],
+          "administrativos": ["Capacitar en manipulación manual de cargas"],
+          "epp": []
+        },
+        "exposicion": "ocasional",
+        "expuestos": 2,
+        "controles_existentes": { "fuente": "Ninguno", "medio": "Ninguno", "individuo": "Procedimiento" },
+        "valoracion": {
+          "nd": null, "ne": 2, "np": null, "interpretacion_np": null, "nc": 25, "nr": null,
+          "nivel_riesgo": "IV", "aceptabilidad": "Aceptable"
+        }
       }
     ],
-    "url_excel": "media/2026-11-20/ipevr-71d3f8a6.xlsx"
+    "url_excel": "media/2026-11-20/ipevr-71d3f8a6.xlsx",
+    "inspeccion_id": "a3f29c0e71b4",
+    "borrador": true,
+    "origen_analisis": "ia",
+    "modelo": "claude-sonnet-5-5",
+    "advertencias": ["No se ve la parte alta de la estantería"],
+    "peligros_descartados": 1,
+    "contexto": { "proceso": "Almacenamiento", "zona": "Bodega de producto terminado", "rutinaria": true }
   },
   "adjuntos": [
     { "tipo": "imagen", "ruta": "media/2026-11-20/71d3f8a6.jpg" },

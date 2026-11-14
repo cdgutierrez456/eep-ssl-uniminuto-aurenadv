@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aurenadv.com/sst/contrato/config_inspector.schema.json",
+  "title": "Configuración del módulo inspector por foto",
+  "description": "Cuerpo de PUT y GET /api/modulos/inspector/config. Lo que el operador ajusta en vivo. Todas las claves son opcionales: la que falte conserva el valor del .env de la estación. El módulo aplica los cambios en el siguiente análisis.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "modelo": {
+      "description": "Modelo de visión. Uno de los que el módulo registra en sus capacidades.",
+      "type": "string",
+      "minLength": 1
+    },
+    "max_peligros": {
+      "description": "Máximo de peligros por foto; se conservan los más graves.",
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 12
+    },
+    "tiempo_maximo_s": {
+      "description": "Segundos máximos de espera por un análisis, incluido un reintento.",
+      "type": "number",
+      "minimum": 10,
+      "maximum": 180
+    },
+    "solo_escenas_preparadas": {
+      "description": "true = no se llama a la IA: la tablet solo ofrece las escenas preparadas (sin internet o para no gastar).",
+      "type": "boolean"
+    }
+  }
+}

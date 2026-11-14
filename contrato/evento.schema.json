@@ -308,11 +308,75 @@
               },
               "efectos": { "type": "string" },
               "controles_propuestos": { "type": "array", "items": { "type": "string" } },
-              "nivel_preliminar": { "enum": ["bajo", "medio", "alto", "muy_alto"] }
+              "nivel_preliminar": { "enum": ["bajo", "medio", "alto", "muy_alto"] },
+              "subclasificacion": { "description": "Opcional. Subcategoría libre, por ejemplo 'trabajo en alturas'.", "type": "string" },
+              "evidencia": { "description": "Opcional. Lo que se ve en la foto que sustenta el peligro.", "type": "string" },
+              "confianza": { "description": "Opcional. Qué tan claro vio la IA el peligro. 'baja' = posible, por verificar.", "enum": ["alta", "media", "baja"] },
+              "ubicacion": {
+                "description": "Opcional. Caja aproximada del peligro sobre la foto adjunta: [x1, y1, x2, y2] de 0 a 1, con (0, 0) arriba a la izquierda.",
+                "type": "array",
+                "items": { "type": "number", "minimum": 0, "maximum": 1 },
+                "minItems": 4,
+                "maxItems": 4
+              },
+              "peor_consecuencia": { "description": "Opcional. La peor consecuencia creíble, en pocas palabras.", "type": "string" },
+              "controles_por_jerarquia": {
+                "description": "Opcional. Los mismos controles propuestos, separados por nivel de la jerarquía.",
+                "type": "object",
+                "properties": {
+                  "eliminacion": { "type": "array", "items": { "type": "string" } },
+                  "sustitucion": { "type": "array", "items": { "type": "string" } },
+                  "ingenieria": { "type": "array", "items": { "type": "string" } },
+                  "administrativos": { "type": "array", "items": { "type": "string" } },
+                  "epp": { "type": "array", "items": { "type": "string" } }
+                }
+              },
+              "exposicion": { "description": "Opcional. Frecuencia de la tarea, respondida por la persona.", "enum": ["continua", "frecuente", "ocasional", "esporadica"] },
+              "expuestos": { "description": "Opcional. Número de personas que hacen la tarea, respondido por la persona.", "type": "integer", "minimum": 1 },
+              "controles_existentes": {
+                "description": "Opcional. Controles que existen hoy, respondidos por la persona.",
+                "type": "object",
+                "properties": {
+                  "fuente": { "type": "string" },
+                  "medio": { "type": "string" },
+                  "individuo": { "type": "string" }
+                }
+              },
+              "valoracion": {
+                "description": "Opcional. Valoración calculada por el módulo (sin IA): NP = ND x NE y NR = NP x NC. Con deficiencia baja, nd, np y nr son null y el nivel es IV.",
+                "type": "object",
+                "properties": {
+                  "nd": { "type": ["integer", "null"] },
+                  "ne": { "type": "integer" },
+                  "np": { "type": ["integer", "null"] },
+                  "interpretacion_np": { "type": ["string", "null"] },
+                  "nc": { "type": "integer" },
+                  "nr": { "type": ["integer", "null"] },
+                  "nivel_riesgo": { "description": "De I (el más grave) a IV. nivel_preliminar lo repite como muy_alto, alto, medio o bajo.", "enum": ["I", "II", "III", "IV"] },
+                  "aceptabilidad": { "type": "string" }
+                }
+              }
             }
           }
         },
-        "url_excel": { "type": "string", "minLength": 1 }
+        "url_excel": { "type": "string", "minLength": 1 },
+        "inspeccion_id": { "description": "Opcional. Identificador de la inspección en el servicio del inspector.", "type": "string", "minLength": 1 },
+        "borrador": { "description": "Opcional. Siempre true: todo lo que propone la IA debe validarse en campo.", "const": true },
+        "origen_analisis": { "description": "Opcional. De dónde salieron los peligros: análisis con IA, caché de una foto ya analizada o escena preparada.", "enum": ["ia", "cache", "escena_preparada"] },
+        "modelo": { "description": "Opcional. Modelo de IA que analizó la foto.", "type": "string" },
+        "advertencias": { "description": "Opcional. Limitaciones de la imagen que afectan el análisis.", "type": "array", "items": { "type": "string" } },
+        "peligros_descartados": { "description": "Opcional. Peligros propuestos por la IA que la persona descartó.", "type": "integer", "minimum": 0 },
+        "contexto": {
+          "description": "Opcional. Campos que la persona llenó en la tablet.",
+          "type": "object",
+          "properties": {
+            "proceso": { "type": "string" },
+            "zona": { "type": "string" },
+            "actividad": { "type": "string" },
+            "tarea": { "type": "string" },
+            "rutinaria": { "type": "boolean" }
+          }
+        }
       }
     },
     "datos_informe_incidente": {
