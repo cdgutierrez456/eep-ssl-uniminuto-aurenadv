@@ -1,0 +1,194 @@
+{
+ "analisis": {
+  "descripcion_general": "Taller o astillero donde un soldador trabaja con electrodo revestido (soldadura por arco) sobre una gran estructura metálica, en posición agachada y bajo el casco o estructura.",
+  "advertencias": [
+   "Los rostros están difuminados.",
+   "No se ve completo el piso ni el entorno a la derecha, por lo que no se alcanza a verificar materiales combustibles cercanos ni la ventilación.",
+   "El fuerte contraste del arco deja zonas oscuras con poco detalle."
+  ],
+  "peligros": [
+   {
+    "n": 1,
+    "descripcion": "Soldador agachado bajo la estructura realizando soldadura por arco, expuesto a humos metálicos que se generan frente a su zona de respiración.",
+    "clasificacion": {
+     "categoria": "quimico",
+     "subcategoria": "humos metálicos de soldadura"
+    },
+    "evidencia_visible": "Arco encendido a corta distancia de la careta y la cabeza del trabajador, sin extractor localizado a la vista ni mascarilla visible; no se alcanza a ver si hay ventilación general.",
+    "ubicacion": [
+     0.2487,
+     0.201,
+     0.8036,
+     0.689
+    ],
+    "confianza": "media",
+    "efectos_posibles": "Irritación respiratoria, fiebre por humos metálicos, enfermedad pulmonar crónica por exposición repetida.",
+    "peor_consecuencia": "enfermedad pulmonar crónica",
+    "nivel_deficiencia_propuesto": "alto",
+    "explicacion_deficiencia": "No se ve extracción localizada ni protección respiratoria, y el trabajador está inclinado sobre el arco.",
+    "consecuencia_propuesta": "muy_grave",
+    "explicacion_consecuencia": "La exposición continua a humos de soldadura puede causar enfermedad respiratoria con incapacidad permanente.",
+    "controles_propuestos": {
+     "eliminacion": [],
+     "sustitucion": [
+      "Evaluar procesos de soldadura con menor generación de humos cuando la tarea lo permita."
+     ],
+     "ingenieria": [
+      "Instalar extracción localizada de humos junto al punto de soldadura."
+     ],
+     "administrativos": [
+      "Verificar la ventilación del sitio antes de iniciar la soldadura."
+     ],
+     "epp": [
+      "Usar respirador para humos metálicos compatible con la careta."
+     ]
+    }
+   },
+   {
+    "n": 2,
+    "descripcion": "Soldador con exposición a radiación ultravioleta e infrarroja del arco por la parte lateral de la cabeza y el cuello, fuera de la protección de la careta de mano.",
+    "clasificacion": {
+     "categoria": "fisico",
+     "subcategoria": "radiaciones no ionizantes"
+    },
+    "evidencia_visible": "Careta de mano oxidada y de aspecto deteriorado, sostenida frente al rostro; el arco brilla muy intenso a un lado y cuello y parte de la cabeza quedan expuestos.",
+    "ubicacion": [
+     0.2487,
+     0.1914,
+     0.8036,
+     0.7081
+    ],
+    "confianza": "media",
+    "efectos_posibles": "Fotoqueratitis, lesiones oculares, quemaduras de piel por radiación.",
+    "peor_consecuencia": "daño ocular permanente",
+    "nivel_deficiencia_propuesto": "medio",
+    "explicacion_deficiencia": "La careta de mano deja zonas laterales sin cubrir y no se ve pantalla de protección para otras personas.",
+    "consecuencia_propuesta": "muy_grave",
+    "explicacion_consecuencia": "La exposición repetida al arco puede dejar lesiones oculares con secuelas.",
+    "controles_propuestos": {
+     "eliminacion": [],
+     "sustitucion": [
+      "Cambiar la careta de mano por casco de soldar con filtro adecuado y buen estado."
+     ],
+     "ingenieria": [
+      "Instalar cortinas o pantallas que contengan la radiación del arco."
+     ],
+     "administrativos": [
+      "Inspeccionar el estado de las caretas y filtros antes de cada turno."
+     ],
+     "epp": [
+      "Usar casco de soldador con filtro, gafas de seguridad y prendas que cubran cuello y cabeza."
+     ]
+    }
+   },
+   {
+    "n": 3,
+    "descripcion": "Chispas y partículas incandescentes proyectadas desde el punto de soldadura hacia el trabajador y el entorno cercano.",
+    "clasificacion": {
+     "categoria": "condiciones_de_seguridad",
+     "subcategoria": "proyección de partículas y quemaduras"
+    },
+    "evidencia_visible": "Abundante lluvia de chispas alrededor del arco, algunas cayendo hacia el piso y hacia el cuerpo del trabajador; ropa de aspecto camuflado de tela común, sin evidencia de prenda retardante a la llama.",
+    "ubicacion": [
+     0.2423,
+     0.134,
+     0.7207,
+     0.9187
+    ],
+    "confianza": "media",
+    "efectos_posibles": "Quemaduras en piel, lesiones oculares por partículas, ignición de materiales cercanos.",
+    "peor_consecuencia": "quemaduras graves o incendio",
+    "nivel_deficiencia_propuesto": "alto",
+    "explicacion_deficiencia": "Se ven chispas proyectadas en todas direcciones y la prenda no parece ser de protección para soldar.",
+    "consecuencia_propuesta": "grave",
+    "explicacion_consecuencia": "Las quemaduras por proyecciones pueden requerir incapacidad temporal.",
+    "controles_propuestos": {
+     "eliminacion": [],
+     "sustitucion": [],
+     "ingenieria": [
+      "Instalar mantas o pantallas ignífugas que contengan las chispas."
+     ],
+     "administrativos": [
+      "Despejar materiales combustibles del área y verificar su ausencia antes de soldar."
+     ],
+     "epp": [
+      "Usar ropa de soldador de cuero o retardante a la llama y protección ocular bajo la careta."
+     ]
+    }
+   },
+   {
+    "n": 4,
+    "descripcion": "Cable de soldadura tendido por el piso entre el trabajador y la estructura, en zona de trabajo desordenada.",
+    "clasificacion": {
+     "categoria": "condiciones_de_seguridad",
+     "subcategoria": "eléctrico y locativo"
+    },
+    "evidencia_visible": "Cable negro cae desde el portaelectrodo y se extiende por el suelo; hay escombros y objetos en el piso; no se alcanza a ver su estado de aislamiento.",
+    "ubicacion": [
+     0.2806,
+     0.5742,
+     0.574,
+     1.0
+    ],
+    "confianza": "baja",
+    "efectos_posibles": "Contacto eléctrico por aislamiento dañado, tropiezos y caídas.",
+    "peor_consecuencia": "descarga eléctrica",
+    "nivel_deficiencia_propuesto": "medio",
+    "explicacion_deficiencia": "El cable queda tendido en el piso y no se alcanza a verificar su aislamiento ni su recorrido.",
+    "consecuencia_propuesta": "muy_grave",
+    "explicacion_consecuencia": "Un cable con aislamiento deteriorado en ambiente metálico puede causar una descarga con lesiones graves.",
+    "controles_propuestos": {
+     "eliminacion": [],
+     "sustitucion": [],
+     "ingenieria": [
+      "Canalizar o elevar el cable fuera de las zonas de paso."
+     ],
+     "administrativos": [
+      "Inspeccionar el aislamiento de cables y portaelectrodo antes de usarlos."
+     ],
+     "epp": [
+      "Usar guantes de soldador secos y en buen estado."
+     ]
+    }
+   },
+   {
+    "n": 5,
+    "descripcion": "Trabajador en postura forzada, agachado y con el tronco inclinado y el brazo extendido para soldar sobre la estructura.",
+    "clasificacion": {
+     "categoria": "biomecanico",
+     "subcategoria": "postura forzada"
+    },
+    "evidencia_visible": "Trabajador en cuclillas o apoyado, con el cuello flexionado detrás de la careta y el brazo alzado hacia la unión soldada.",
+    "ubicacion": [
+     0.4145,
+     0.2105,
+     0.912,
+     1.0
+    ],
+    "confianza": "media",
+    "efectos_posibles": "Dolor y lesiones musculoesqueléticas en cuello, espalda y hombros.",
+    "peor_consecuencia": "trastorno musculoesquelético",
+    "nivel_deficiencia_propuesto": "medio",
+    "explicacion_deficiencia": "La postura agachada y estática se ve sin apoyo ni ajuste del puesto.",
+    "consecuencia_propuesta": "grave",
+    "explicacion_consecuencia": "Las posturas forzadas mantenidas pueden causar lesiones que requieren incapacidad temporal.",
+    "controles_propuestos": {
+     "eliminacion": [],
+     "sustitucion": [],
+     "ingenieria": [
+      "Disponer posicionadores o plataformas para soldar a una altura cómoda."
+     ],
+     "administrativos": [
+      "Establecer pausas y rotación en tareas de soldadura prolongadas."
+     ],
+     "epp": []
+    }
+   }
+  ]
+ },
+ "fecha": "2026-11-14T07:49:40-05:00",
+ "modelo": "claude-sonnet-5-5",
+ "esfuerzo": "medium",
+ "ancho": 1568,
+ "alto": 1045
+}

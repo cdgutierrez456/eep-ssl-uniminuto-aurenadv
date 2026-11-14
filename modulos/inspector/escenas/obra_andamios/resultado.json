@@ -1,0 +1,129 @@
+{
+ "analisis": {
+  "descripcion_general": "Andamio multidireccional de varios niveles con escaleras, visto a contraluz a través de una malla de cerramiento, con varios trabajadores con casco que suben y bajan por las escaleras.",
+  "advertencias": [
+   "Imagen en blanco y negro, a contraluz y con siluetas, a través de una malla que tapa detalles",
+   "No se distinguen con claridad arneses, líneas de vida ni puntos de anclaje",
+   "No se ve el nivel del suelo ni el estado de las plataformas de cada nivel",
+   "Rostros difuminados y personas casi en sombra"
+  ],
+  "peligros": [
+   {
+    "n": 1,
+    "descripcion": "Trabajadores circulando por las escaleras y plataformas del andamio a gran altura, con posible caída a distinto nivel",
+    "clasificacion": {
+     "categoria": "condiciones_de_seguridad",
+     "subcategoria": "trabajo en alturas"
+    },
+    "evidencia_visible": "Varias personas con casco en escaleras y niveles del andamio, a varios pisos sobre el piso; algunas parecen llevar un arnés, pero no se ve si hay línea de vida o anclaje conectado",
+    "ubicacion": [
+     0.4499,
+     0.3444,
+     0.9407,
+     0.8227
+    ],
+    "confianza": "media",
+    "efectos_posibles": "Fracturas, trauma craneoencefálico, politraumatismos por caída a distinto nivel",
+    "peor_consecuencia": "Muerte por caída desde altura",
+    "nivel_deficiencia_propuesto": "alto",
+    "explicacion_deficiencia": "Se ven personas en altura y no se alcanza a confirmar sistema de protección contra caídas conectado ni barandas en todos los tramos.",
+    "consecuencia_propuesta": "mortal",
+    "explicacion_consecuencia": "Una caída desde varios niveles de andamio puede causar la muerte.",
+    "controles_propuestos": {
+     "eliminacion": [
+      "Prefabricar elementos a nivel del suelo para reducir el tiempo de trabajo en altura"
+     ],
+     "sustitucion": [],
+     "ingenieria": [
+      "Instalar líneas de vida y puntos de anclaje certificados a lo largo de las escaleras y plataformas",
+      "Completar barandas y rodapiés en todos los niveles y tramos de escalera"
+     ],
+     "administrativos": [
+      "Exigir permiso de trabajo en alturas y verificación del andamio antes de cada turno",
+      "Inspeccionar el andamio por personal competente y rotularlo con su estado"
+     ],
+     "epp": [
+      "Usar arnés de cuerpo completo con eslingas con absorbedor conectadas en todo momento",
+      "Usar casco con barbuquejo"
+     ]
+    }
+   },
+   {
+    "n": 2,
+    "descripcion": "Trabajadores en los niveles inferiores expuestos a caída de objetos o herramientas desde las plataformas superiores del andamio",
+    "clasificacion": {
+     "categoria": "condiciones_de_seguridad",
+     "subcategoria": "caída de objetos"
+    },
+    "evidencia_visible": "Varias personas en niveles superpuestos del mismo andamio, unas debajo de otras, con plataformas perforadas en niveles superiores y sin rodapiés claros",
+    "ubicacion": [
+     0.7157,
+     0.4719,
+     0.9543,
+     0.8227
+    ],
+    "confianza": "baja",
+    "efectos_posibles": "Golpes, contusiones, heridas en cabeza y extremidades por objetos que caen",
+    "peor_consecuencia": "Trauma craneoencefálico grave por impacto de objeto",
+    "nivel_deficiencia_propuesto": "medio",
+    "explicacion_deficiencia": "Hay personas a distintos niveles en la misma vertical y no se ven rodapiés ni redes de protección, aunque la malla de cerramiento puede retener parte de los objetos.",
+    "consecuencia_propuesta": "muy_grave",
+    "explicacion_consecuencia": "Un objeto que cae desde altura puede causar lesiones graves en la cabeza.",
+    "controles_propuestos": {
+     "eliminacion": [],
+     "sustitucion": [],
+     "ingenieria": [
+      "Instalar rodapiés y mallas de retención en los bordes de las plataformas",
+      "Mantener el cerramiento del andamio en buen estado"
+     ],
+     "administrativos": [
+      "Evitar trabajos simultáneos en la misma vertical",
+      "Amarrar herramientas y delimitar la zona inferior"
+     ],
+     "epp": [
+      "Usar casco con barbuquejo"
+     ]
+    }
+   },
+   {
+    "n": 3,
+    "descripcion": "Cable o manguera sujeto con amarres plásticos en la malla del andamio, que cruza verticalmente todos los niveles junto a la zona de circulación",
+    "clasificacion": {
+     "categoria": "condiciones_de_seguridad",
+     "subcategoria": "eléctrico"
+    },
+    "evidencia_visible": "Cable o línea gruesa que baja a lo largo de la malla, sujeta con múltiples amarres plásticos; no se ve su función ni su estado de aislamiento",
+    "ubicacion": [
+     0.1363,
+     0.0,
+     0.2795,
+     1.0
+    ],
+    "confianza": "baja",
+    "efectos_posibles": "Contacto eléctrico, quemaduras, enganche de personas o elementos",
+    "peor_consecuencia": "Electrocución si está energizado y deteriorado",
+    "nivel_deficiencia_propuesto": "medio",
+    "explicacion_deficiencia": "No se alcanza a ver el estado del aislamiento ni si el cable está energizado, y está amarrado a la malla con amarres plásticos.",
+    "consecuencia_propuesta": "mortal",
+    "explicacion_consecuencia": "Un contacto con un cable energizado en una estructura metálica puede causar la muerte.",
+    "controles_propuestos": {
+     "eliminacion": [],
+     "sustitucion": [],
+     "ingenieria": [
+      "Canalizar y fijar el cable a la estructura con soportes apropiados, alejado de las zonas de paso",
+      "Aislar el andamio metálico de la fuente de energía y verificar la puesta a tierra"
+     ],
+     "administrativos": [
+      "Inspeccionar el cable y el tendido antes de cada turno"
+     ],
+     "epp": []
+    }
+   }
+  ]
+ },
+ "fecha": "2026-11-14T07:49:40-05:00",
+ "modelo": "claude-sonnet-5-5",
+ "esfuerzo": "medium",
+ "ancho": 1467,
+ "alto": 1568
+}

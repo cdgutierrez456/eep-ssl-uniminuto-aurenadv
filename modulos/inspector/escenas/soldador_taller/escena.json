@@ -1,0 +1,12 @@
+{
+  "id": "soldador_taller",
+  "nombre": "Soldadura en taller",
+  "fuente": {
+    "titulo": "Welder in a workshop (Unsplash)",
+    "autor": "Uğur Gürcüoğlu",
+    "licencia": "CC0 1.0",
+    "url_licencia": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "url": "https://commons.wikimedia.org/wiki/File:Welder_in_a_workshop_(Unsplash).jpg",
+    "cambios": "Rostros difuminados y tamaño reducido."
+  }
+}

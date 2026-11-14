@@ -1,0 +1,160 @@
+{
+ "analisis": {
+  "descripcion_general": "Montaje de estructura metálica en un edificio en altura, donde una grúa icha una viga mientras un trabajador la guía y otro camina sobre una viga a gran altura.",
+  "advertencias": [
+   "Imagen de baja resolución y con grano, no se alcanza a ver con claridad si hay arneses conectados",
+   "No se ve el nivel del suelo ni el piso inferior para dimensionar la altura de caída"
+  ],
+  "peligros": [
+   {
+    "n": 1,
+    "descripcion": "Trabajador caminando de pie sobre una viga de acero angosta, a gran altura y sin protección contra caídas visible.",
+    "clasificacion": {
+     "categoria": "condiciones_de_seguridad",
+     "subcategoria": "trabajo en alturas"
+    },
+    "evidencia_visible": "La persona se desplaza erguida sobre el ala de la viga horizontal con edificios al fondo a gran distancia del suelo; no se ve línea de vida ni arnés conectado, solo un cable tensado a la altura de la cintura más adelante.",
+    "ubicacion": [
+     0.5723,
+     0.3812,
+     0.6348,
+     0.5901
+    ],
+    "confianza": "alta",
+    "efectos_posibles": "Politraumatismos, fracturas y traumatismo craneoencefálico por caída a distinto nivel.",
+    "peor_consecuencia": "muerte por caída desde altura",
+    "nivel_deficiencia_propuesto": "muy_alto",
+    "explicacion_deficiencia": "No se ve arnés anclado ni red o plataforma de protección y la superficie de apoyo es muy estrecha.",
+    "consecuencia_propuesta": "mortal",
+    "explicacion_consecuencia": "Una caída desde esta altura sobre un edificio en construcción puede ser mortal.",
+    "controles_propuestos": {
+     "eliminacion": [
+      "Premontar tramos de estructura a nivel del suelo para reducir el desplazamiento sobre vigas."
+     ],
+     "sustitucion": [
+      "Reemplazar el desplazamiento sobre la viga por plataformas elevadoras o canastillas de acceso."
+     ],
+     "ingenieria": [
+      "Instalar líneas de vida horizontales ancladas a la estructura y redes de seguridad bajo el área de montaje."
+     ],
+     "administrativos": [
+      "Exigir permiso de trabajo en alturas y verificar el anclaje del trabajador antes de cada desplazamiento."
+     ],
+     "epp": [
+      "Dotar arnés de cuerpo completo con eslinga de doble gancho y casco con barbuquejo."
+     ]
+    }
+   },
+   {
+    "n": 2,
+    "descripcion": "Trabajador en el borde de la estructura guiando con la mano una viga izada, sin protección contra caídas visible.",
+    "clasificacion": {
+     "categoria": "condiciones_de_seguridad",
+     "subcategoria": "trabajo en alturas"
+    },
+    "evidencia_visible": "La persona está de pie cerca del borde del piso de vigas, con el brazo extendido sujetando la viga suspendida y una cuerda colgando; no se ve línea de vida conectada, aunque porta un cinturón de herramientas.",
+    "ubicacion": [
+     0.084,
+     0.3551,
+     0.3223,
+     0.8551
+    ],
+    "confianza": "media",
+    "efectos_posibles": "Fracturas, politraumatismos y trauma craneoencefálico por caída o por arrastre de la carga.",
+    "peor_consecuencia": "muerte por caída desde altura",
+    "nivel_deficiencia_propuesto": "muy_alto",
+    "explicacion_deficiencia": "No se ve punto de anclaje ni barandas en el borde, y la carga en movimiento puede desequilibrar al trabajador.",
+    "consecuencia_propuesta": "mortal",
+    "explicacion_consecuencia": "La caída desde el borde de un edificio alto es potencialmente mortal.",
+    "controles_propuestos": {
+     "eliminacion": [],
+     "sustitucion": [],
+     "ingenieria": [
+      "Instalar barandas perimetrales o cables de borde y puntos de anclaje certificados cerca de la zona de recibo de vigas."
+     ],
+     "administrativos": [
+      "Definir zona de recibo de cargas con acceso restringido y procedimiento de anclaje obligatorio."
+     ],
+     "epp": [
+      "Dotar arnés de cuerpo completo con eslinga de posicionamiento y absorbedor de energía."
+     ]
+    }
+   },
+   {
+    "n": 3,
+    "descripcion": "Viga de acero suspendida del gancho de la grúa sobre trabajadores que la guían manualmente en la zona de montaje.",
+    "clasificacion": {
+     "categoria": "condiciones_de_seguridad",
+     "subcategoria": "izaje de cargas"
+    },
+    "evidencia_visible": "Una viga larga cuelga inclinada de la grúa, con el gancho y la bola visibles arriba; un trabajador la sostiene con la mano muy cerca y no se ve cuerda guía en el extremo libre.",
+    "ubicacion": [
+     0.2344,
+     0.0,
+     0.5859,
+     0.5614
+    ],
+    "confianza": "alta",
+    "efectos_posibles": "Golpes, atrapamientos, aplastamiento y caída por impacto de la carga en balanceo.",
+    "peor_consecuencia": "muerte por golpe o aplastamiento con la viga",
+    "nivel_deficiencia_propuesto": "alto",
+    "explicacion_deficiencia": "La persona queda dentro del radio de balanceo de la carga y guía con la mano, sin que se vea una cuerda guía en el extremo de la viga.",
+    "consecuencia_propuesta": "mortal",
+    "explicacion_consecuencia": "Una viga de acero en movimiento puede causar la muerte si golpea o atrapa a una persona.",
+    "controles_propuestos": {
+     "eliminacion": [],
+     "sustitucion": [],
+     "ingenieria": [
+      "Usar cuerdas guía o vientos amarrados a la viga para orientarla a distancia."
+     ],
+     "administrativos": [
+      "Designar un señalero y delimitar la zona de izaje, prohibiendo permanecer bajo o junto a la carga suspendida."
+     ],
+     "epp": [
+      "Dotar casco con barbuquejo y guantes de carnaza."
+     ]
+    }
+   },
+   {
+    "n": 4,
+    "descripcion": "Posible caída de herramientas y materiales desde la estructura hacia niveles inferiores, donde pueden estar otras personas.",
+    "clasificacion": {
+     "categoria": "condiciones_de_seguridad",
+     "subcategoria": "caída de objetos"
+    },
+    "evidencia_visible": "El trabajador porta herramientas en el cinturón y hay bordes abiertos de vigas sin cerramientos visibles; no se ve el nivel inferior ni si hay personas debajo.",
+    "ubicacion": [
+     0.084,
+     0.5352,
+     0.1855,
+     0.6919
+    ],
+    "confianza": "baja",
+    "efectos_posibles": "Contusiones, heridas y trauma craneoencefálico en personas ubicadas debajo.",
+    "peor_consecuencia": "lesión grave de cabeza por golpe de objeto desde altura",
+    "nivel_deficiencia_propuesto": "alto",
+    "explicacion_deficiencia": "No se ven rodapiés, redes ni amarre de herramientas, aunque el encuadre no muestra el nivel inferior.",
+    "consecuencia_propuesta": "muy_grave",
+    "explicacion_consecuencia": "Un objeto metálico que cae desde gran altura puede causar lesiones graves o mortales.",
+    "controles_propuestos": {
+     "eliminacion": [],
+     "sustitucion": [],
+     "ingenieria": [
+      "Instalar redes de captura o mallas bajo el área de trabajo."
+     ],
+     "administrativos": [
+      "Acordonar y señalizar la zona inferior y exigir herramientas con amarre anticaída."
+     ],
+     "epp": [
+      "Dotar casco a las personas que trabajan en niveles inferiores."
+     ]
+    }
+   }
+  ]
+ },
+ "fecha": "2026-11-14T07:49:39-05:00",
+ "modelo": "claude-sonnet-5-5",
+ "esfuerzo": "medium",
+ "ancho": 1024,
+ "alto": 766
+}

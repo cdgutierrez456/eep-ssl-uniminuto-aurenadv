@@ -3,6 +3,7 @@
     python -m modulos.inspector.analisis foto.jpg
     python -m modulos.inspector.analisis modulos/inspector/escenas --esfuerzo low --sin-cache
     python -m modulos.inspector.analisis foto.jpg --lado 2576 --modelo claude-opus-5-5
+    python -m modulos.inspector.analisis --costos        (costo promedio por foto)
 
 Sirve para ajustar el prompt y medir tiempo y costo sin levantar el servicio. Cada foto
 pasa por lo mismo que en el stand: se orienta, se difuminan los rostros, se reduce y se
@@ -21,7 +22,7 @@ from ..nucleo.esquema import CATEGORIAS
 from ..nucleo.imagen import ImagenInvalida, anotar, guardar_jpeg, preparar_foto, tokens_de_imagen
 from .cache import CacheDeAnalisis, hash_de_foto
 from .cliente import Analizador, ErrorDeAnalisis, ResultadoAnalisis
-from .costos import NOMBRE_CSV, RegistroDeCostos
+from .costos import NOMBRE_CSV, RegistroDeCostos, resumir, texto_del_resumen
 
 EXTENSIONES = {".jpg", ".jpeg", ".png", ".webp"}
 
@@ -76,7 +77,8 @@ def main(argumentos: list[str] | None = None) -> int:
         sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     base = Ajustes.desde_entorno()
     lector = argparse.ArgumentParser(prog="python -m modulos.inspector.analisis", description=__doc__.split("\n")[0])
-    lector.add_argument("rutas", nargs="+", help="fotos o carpetas con fotos")
+    lector.add_argument("rutas", nargs="*", help="fotos o carpetas con fotos")
+    lector.add_argument("--costos", action="store_true", help="muestra el resumen del registro de costos y termina")
     lector.add_argument("--modelo", default=base.modelo)
     lector.add_argument("--esfuerzo", default=base.esfuerzo, choices=ESFUERZOS)
     lector.add_argument("--lado", type=int, default=base.lado_max, help="lado largo máximo en px (2576 = alta resolución)")
@@ -93,6 +95,13 @@ def main(argumentos: list[str] | None = None) -> int:
         print(f"Ajustes no válidos: {error}")
         return 2
     datos = carpeta_de_datos()
+    if opciones.costos:
+        registro = RegistroDeCostos(datos / NOMBRE_CSV)
+        print(f"Registro: {registro.ruta.resolve()}")
+        print(texto_del_resumen(resumir(registro.leer())))
+        return 0
+    if not opciones.rutas:
+        lector.error("indica al menos una foto o carpeta, o usa --costos")
     salida = opciones.salida or datos / "analisis"
     analizador = Analizador(ajustes, cache=CacheDeAnalisis(datos / "cache"),
                             registro=RegistroDeCostos(datos / NOMBRE_CSV))

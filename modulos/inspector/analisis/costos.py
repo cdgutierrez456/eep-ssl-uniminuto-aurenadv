@@ -1,6 +1,6 @@
 """Registro de costos del inspector: una fila por llamada a la API, en el log y en un CSV.
 
-    python -m modulos.inspector.analisis.costos
+    python -m modulos.inspector.analisis --costos
 
 muestra el resumen: fotos analizadas, costo total, costo promedio por foto, duración
 promedio y cuántos rechazos y errores hubo.
@@ -165,11 +165,3 @@ def texto_del_resumen(resumen: dict) -> str:
         renglones.append(f"  {modelo}: {datos['fotos']} fotos, {datos['costo_usd']:.4f} USD"
                          + (f" ({por_foto:.4f} USD por foto)" if por_foto is not None else ""))
     return "\n".join(renglones)
-
-
-if __name__ == "__main__":
-    from modulos.inspector.configuracion import carpeta_de_datos
-
-    registro = RegistroDeCostos(carpeta_de_datos() / NOMBRE_CSV)
-    print(f"Registro: {registro.ruta.resolve()}")
-    print(texto_del_resumen(resumir(registro.leer())))

@@ -1,0 +1,485 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Inspector por foto · SST en vivo</title>
+<style>
+  :root {
+    --deep: #12343B; --negro: #111414; --marfil: #F2F1EA; --lima: #C8F169;
+    --papel: #FBFAF6; --linea: #D6D6CC; --tenue: #5A6462;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0; background: var(--marfil); color: var(--negro);
+    font: 18px/1.45 "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif;
+    padding-bottom: 76px;
+  }
+  header { background: var(--deep); color: var(--marfil); padding: 16px 20px; }
+  header .marca { font-size: 13px; letter-spacing: .08em; text-transform: uppercase; opacity: .8; }
+  header h1 { margin: 2px 0 0; font-size: 24px; font-weight: 600; }
+  main { max-width: 760px; margin: 0 auto; padding: 20px 16px 8px; }
+  section[hidden] { display: none; }
+  h2 { font-size: 24px; margin: 4px 0 8px; color: var(--deep); text-wrap: balance; }
+  h3 { font-size: 19px; margin: 0 0 6px; color: var(--deep); }
+  p { margin: 0 0 14px; }
+  .tenue { color: var(--tenue); }
+  .pequeno { font-size: 15px; }
+
+  button, .boton {
+    display: flex; align-items: center; justify-content: center; width: 100%; min-height: 68px;
+    margin: 0 0 12px; padding: 14px 18px; border-radius: 12px; border: 2px solid var(--deep);
+    background: var(--papel); color: var(--deep); font: inherit; font-size: 20px; font-weight: 600;
+    text-align: center; cursor: pointer; text-decoration: none;
+  }
+  button.principal, .boton.principal { background: var(--deep); color: var(--marfil); box-shadow: inset 0 -5px 0 var(--lima); }
+  #inicio .principal { min-height: 112px; font-size: 26px; }
+  button.discreto { border-color: transparent; background: transparent; min-height: 52px; font-size: 18px; text-decoration: underline; }
+  button:disabled { opacity: .5; cursor: default; }
+  button:focus-visible, .boton:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+    outline: 3px solid var(--negro); outline-offset: 2px;
+  }
+  input[type=file] { position: absolute; width: 1px; height: 1px; opacity: 0; }
+  input[type=text], input[type=number], select, textarea {
+    width: 100%; min-height: 56px; padding: 12px 14px; border: 2px solid var(--linea); border-radius: 10px;
+    background: var(--papel); color: var(--negro); font: inherit;
+  }
+  label.campo { display: block; margin: 0 0 14px; font-weight: 600; }
+  label.campo span { display: block; margin-bottom: 6px; }
+
+  .tarjeta { background: var(--papel); border: 1px solid var(--linea); border-radius: 14px; padding: 16px; margin: 0 0 16px; }
+  .tarjeta.descartada { opacity: .55; }
+  .cabeza { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 8px; }
+  .numero {
+    flex: none; width: 40px; height: 40px; border-radius: 8px; background: var(--deep); color: var(--marfil);
+    display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 20px;
+  }
+  .etiqueta { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 14px; font-weight: 600; margin: 0 6px 6px 0; border: 1.5px solid var(--deep); color: var(--deep); }
+  .etiqueta.posible { border-style: dashed; background: var(--marfil); }
+  .dato { margin: 0 0 8px; }
+  .dato b { color: var(--deep); }
+  ul.controles { margin: 0 0 8px; padding-left: 20px; }
+  ul.controles li { margin-bottom: 2px; }
+  .foto { width: 100%; border-radius: 12px; border: 1px solid var(--linea); display: block; margin: 0 0 16px; background: #dedfd8; }
+
+  .opciones { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 0 0 14px; }
+  .opciones button { margin: 0; min-height: 60px; font-size: 18px; }
+  .opciones button[aria-pressed=true] { background: var(--deep); color: var(--marfil); }
+  .pregunta { font-weight: 600; margin: 12px 0 8px; }
+  .contador { display: grid; grid-template-columns: 68px 1fr 68px; gap: 10px; margin: 0 0 14px; }
+  .contador button { margin: 0; font-size: 28px; }
+  .contador input { text-align: center; font-size: 22px; font-weight: 600; }
+  .dos { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .falta { border-color: #B23B3B !important; box-shadow: 0 0 0 3px rgba(178, 59, 59, .25); }
+  .aviso-falta { color: #8f2a2a; font-weight: 600; margin: 0 0 12px; }
+
+  ol.pasos { list-style: none; padding: 0; margin: 20px 0; }
+  ol.pasos li { padding: 14px 16px; border-radius: 10px; margin-bottom: 8px; background: var(--papel); border: 1px solid var(--linea); color: var(--tenue); }
+  ol.pasos li.activo { color: var(--negro); font-weight: 600; border-color: var(--deep); border-left: 8px solid var(--lima); }
+  ol.pasos li.hecho { color: var(--deep); }
+  .reloj { font-size: 34px; font-weight: 700; color: var(--deep); font-variant-numeric: tabular-nums; }
+
+  .escenas { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+  .escenas button { display: block; padding: 0; min-height: 0; overflow: hidden; text-align: left; margin: 0; }
+  .escenas img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; display: block; }
+  .escenas span { display: block; padding: 10px 12px; font-size: 17px; }
+
+  table { width: 100%; border-collapse: collapse; margin: 0 0 16px; background: var(--papel); border-radius: 12px; overflow: hidden; }
+  th { background: var(--deep); color: var(--marfil); text-align: left; font-size: 15px; padding: 10px; }
+  td { padding: 10px; border-top: 1px solid var(--linea); vertical-align: top; font-size: 16px; }
+  td.nivel { font-weight: 700; text-align: center; white-space: nowrap; }
+
+  footer {
+    position: fixed; left: 0; right: 0; bottom: 0; background: var(--negro); color: var(--marfil);
+    border-top: 3px solid var(--lima); padding: 12px 16px calc(12px + env(safe-area-inset-bottom)); text-align: center;
+    font-size: 15px; font-weight: 600;
+  }
+  @media (max-width: 420px) { .opciones, .dos, .escenas { grid-template-columns: 1fr; } }
+  @media (prefers-reduced-motion: no-preference) { ol.pasos li { transition: border-color .2s, color .2s; } }
+</style>
+</head>
+<body>
+<header>
+  <div class="marca">Auren · SST en vivo</div>
+  <h1>Inspector por foto</h1>
+</header>
+
+<main>
+  <section id="inicio">
+    <h2>Toma una foto del puesto de trabajo</h2>
+    <p class="tenue">La IA propone los peligros que se ven y sus controles. Tú respondes lo que la foto no muestra y decides qué queda en la matriz.</p>
+    <label class="boton principal" for="camara">Tomar foto</label>
+    <input id="camara" type="file" accept="image/*" capture="environment">
+    <label class="boton" for="archivo">Subir una foto guardada</label>
+    <input id="archivo" type="file" accept="image/*">
+    <button class="discreto" id="ver-escenas" type="button">Usar una escena preparada</button>
+    <label class="campo pequeno"><span>N.º de visitante (opcional)</span>
+      <input id="sesion" type="text" inputmode="text" autocomplete="off" placeholder="V-0142" maxlength="64"></label>
+    <p class="tenue pequeno" id="estado-ia"></p>
+  </section>
+
+  <section id="espera" hidden aria-live="polite">
+    <h2>Analizando la foto</h2>
+    <div class="reloj" id="reloj">0 s</div>
+    <ol class="pasos" id="pasos">
+      <li>Revisando la imagen…</li>
+      <li>Identificando peligros…</li>
+      <li>Proponiendo controles…</li>
+    </ol>
+    <p class="tenue pequeno">Suele tardar entre 10 y 25 segundos. Los rostros se difuminan antes de enviar la foto.</p>
+  </section>
+
+  <section id="error" hidden aria-live="assertive">
+    <h2>No se pudo completar</h2>
+    <p id="mensaje-error"></p>
+    <button class="principal" id="otra-foto" type="button">Intentar con otra foto</button>
+    <button id="error-escenas" type="button">Usar una escena preparada</button>
+  </section>
+
+  <section id="escenas" hidden>
+    <h2>Escenas preparadas</h2>
+    <p class="tenue">Funcionan sin internet: su análisis ya está calculado.</p>
+    <div class="escenas" id="lista-escenas"></div>
+    <button class="discreto" id="volver-inicio" type="button">Volver</button>
+  </section>
+
+  <section id="peligros" hidden>
+    <h2>Peligros propuestos</h2>
+    <img class="foto" id="foto-anotada" alt="Foto con los peligros numerados">
+    <p id="descripcion-general"></p>
+    <p class="tenue pequeno" id="advertencias"></p>
+    <div id="tarjetas"></div>
+    <button class="principal" id="ir-exposicion" type="button">Continuar</button>
+    <button class="discreto" id="reiniciar-1" type="button">Empezar de nuevo</button>
+  </section>
+
+  <section id="exposicion" hidden>
+    <h2>Lo que la foto no muestra</h2>
+    <p class="tenue">Responde por cada peligro. Puedes ajustar lo que propuso la IA o descartar lo que no aplique.</p>
+    <div id="formularios"></div>
+    <div class="tarjeta">
+      <h3>Datos de la tarea (opcional)</h3>
+      <label class="campo"><span>Proceso</span><input id="ctx-proceso" type="text" autocomplete="off"></label>
+      <label class="campo"><span>Zona o lugar</span><input id="ctx-zona" type="text" autocomplete="off"></label>
+      <label class="campo"><span>Actividad</span><input id="ctx-actividad" type="text" autocomplete="off"></label>
+      <label class="campo"><span>Tarea</span><input id="ctx-tarea" type="text" autocomplete="off"></label>
+      <div class="pregunta">¿Es una tarea rutinaria?</div>
+      <div class="opciones" id="ctx-rutinaria">
+        <button type="button" data-valor="si" aria-pressed="false">Sí</button>
+        <button type="button" data-valor="no" aria-pressed="false">No</button>
+      </div>
+    </div>
+    <p class="aviso-falta" id="aviso-falta" hidden>Falta la frecuencia en los peligros marcados en rojo.</p>
+    <button class="principal" id="generar" type="button">Generar la matriz</button>
+    <button class="discreto" id="volver-peligros" type="button">Volver a los peligros</button>
+  </section>
+
+  <section id="resumen" hidden>
+    <h2>Matriz lista para validar</h2>
+    <img class="foto" id="foto-final" alt="Foto con los peligros de la matriz">
+    <table>
+      <thead><tr><th>N.º</th><th>Peligro</th><th>NR</th><th>Nivel</th><th>Aceptabilidad</th></tr></thead>
+      <tbody id="filas"></tbody>
+    </table>
+    <p class="tenue pequeno" id="nota-resumen"></p>
+    <a class="boton principal" id="descargar" href="#" download>Descargar matriz en Excel</a>
+    <button id="corregir" type="button">Corregir respuestas</button>
+    <button class="discreto" id="reiniciar-2" type="button">Nueva inspección</button>
+  </section>
+</main>
+
+<footer>Borrador generado con IA. La IA propone, el profesional de SST decide.</footer>
+
+<script>
+"use strict";
+const JERARQUIA = [["eliminacion", "Eliminación"], ["sustitucion", "Sustitución"], ["ingenieria", "Controles de ingeniería"],
+                   ["administrativos", "Controles administrativos"], ["epp", "EPP"]];
+const CONFIANZA = { alta: "Confianza alta", media: "Confianza media", baja: "Posible — verificar" };
+const estado = { opciones: null, inspeccion: null, respuestas: {}, rutinaria: null, reloj: null };
+const $ = (id) => document.getElementById(id);
+
+/** Crea un elemento. El texto siempre entra como texto, nunca como HTML. */
+function el(etiqueta, atributos = {}, ...hijos) {
+  const nodo = document.createElement(etiqueta);
+  for (const [clave, valor] of Object.entries(atributos)) {
+    if (clave === "class") nodo.className = valor;
+    else if (clave.startsWith("on")) nodo.addEventListener(clave.slice(2), valor);
+    else if (valor !== null && valor !== undefined) nodo.setAttribute(clave, valor);
+  }
+  for (const hijo of hijos.flat()) if (hijo !== null && hijo !== undefined) nodo.append(hijo);
+  return nodo;
+}
+
+function mostrar(seccion) {
+  for (const s of document.querySelectorAll("main > section")) s.hidden = s.id !== seccion;
+  window.scrollTo(0, 0);
+}
+
+async function pedir(ruta, opciones) {
+  const respuesta = await fetch(ruta, opciones);
+  let cuerpo = null;
+  try { cuerpo = await respuesta.json(); } catch (_) { /* sin cuerpo JSON */ }
+  if (!respuesta.ok) throw Object.assign(new Error((cuerpo && cuerpo.mensaje) || "El servicio no respondió bien."), { cuerpo });
+  return cuerpo;
+}
+
+function mostrarError(error) {
+  $("mensaje-error").textContent = error.name === "TypeError"
+    ? "No hay conexión con la PC del stand. Revisa la red e intenta de nuevo."
+    : error.message;
+  mostrar("error");
+}
+
+// ---------------------------------------------------------------- Espera
+function iniciarReloj() {
+  const inicio = Date.now();
+  const pasos = [...$("pasos").children];
+  const pintar = () => {
+    const segundos = Math.floor((Date.now() - inicio) / 1000);
+    $("reloj").textContent = `${segundos} s`;
+    const activo = Math.min(Math.floor(segundos / 5), pasos.length - 1);
+    pasos.forEach((paso, i) => { paso.className = i < activo ? "hecho" : i === activo ? "activo" : ""; });
+  };
+  pintar();
+  estado.reloj = setInterval(pintar, 500);
+}
+function detenerReloj() { clearInterval(estado.reloj); }
+
+// ---------------------------------------------------------------- Análisis
+async function analizar(datos) {
+  const sesion = $("sesion").value.trim();
+  if (sesion) datos.append("sesion_id", sesion);
+  mostrar("espera");
+  iniciarReloj();
+  try {
+    estado.inspeccion = await pedir("/analizar", { method: "POST", body: datos });
+    estado.respuestas = {};
+    for (const peligro of estado.inspeccion.peligros) {
+      estado.respuestas[peligro.n] = { descartado: false, frecuencia: null, expuestos: 1, controles: new Set(), otros: "",
+                                       nivel_deficiencia: peligro.nivel_deficiencia_propuesto, consecuencia: peligro.consecuencia_propuesta };
+    }
+    pintarPeligros();
+    mostrar("peligros");
+  } catch (error) {
+    mostrarError(error);
+  } finally {
+    detenerReloj();
+  }
+}
+
+function alElegirFoto(evento) {
+  const archivo = evento.target.files[0];
+  evento.target.value = "";
+  if (!archivo) return;
+  const datos = new FormData();
+  datos.append("foto", archivo);
+  analizar(datos);
+}
+
+async function verEscenas() {
+  try {
+    const escenas = await pedir("/escenas");
+    const lista = $("lista-escenas");
+    lista.replaceChildren();
+    if (!escenas.length) lista.append(el("p", { class: "tenue" }, "Todavía no hay escenas preparadas en este equipo."));
+    for (const escena of escenas) {
+      lista.append(el("button", { type: "button", onclick: () => {
+        const datos = new FormData();
+        datos.append("escena_preparada", escena.id);
+        analizar(datos);
+      } }, el("img", { src: escena.url_imagen, alt: "", loading: "lazy" }), el("span", {}, escena.nombre)));
+    }
+    mostrar("escenas");
+  } catch (error) { mostrarError(error); }
+}
+
+// ---------------------------------------------------------------- Peligros propuestos
+function nombreDe(lista, id) { return (estado.opciones[lista].find((o) => o.id === id) || { nombre: id }).nombre; }
+
+function pintarPeligros() {
+  const i = estado.inspeccion;
+  $("foto-anotada").src = `${i.url_imagen}?v=${Date.now()}`;
+  $("descripcion-general").textContent = i.descripcion_general;
+  $("advertencias").textContent = i.advertencias.length ? `Advertencias de la imagen: ${i.advertencias.join("; ")}` : "";
+  const tarjetas = $("tarjetas");
+  tarjetas.replaceChildren();
+  if (!i.peligros.length) tarjetas.append(el("div", { class: "tarjeta" }, "No se identificaron peligros visibles en esta foto."));
+  for (const p of i.peligros) {
+    const controles = JERARQUIA.filter(([clave]) => p.controles_propuestos[clave].length).map(([clave, titulo]) =>
+      el("div", {}, el("div", { class: "dato" }, el("b", {}, titulo)),
+         el("ul", { class: "controles" }, p.controles_propuestos[clave].map((c) => el("li", {}, c)))));
+    tarjetas.append(el("article", { class: "tarjeta" },
+      el("div", { class: "cabeza" }, el("div", { class: "numero" }, String(p.n)), el("h3", {}, p.descripcion)),
+      el("div", {}, el("span", { class: "etiqueta" }, `${p.clasificacion.nombre} · ${p.clasificacion.subcategoria}`),
+         el("span", { class: `etiqueta${p.posible ? " posible" : ""}` }, CONFIANZA[p.confianza])),
+      el("p", { class: "dato" }, el("b", {}, "Evidencia: "), p.evidencia_visible),
+      el("p", { class: "dato" }, el("b", {}, "Efectos posibles: "), p.efectos_posibles),
+      el("p", { class: "dato" }, el("b", {}, "Propuesta de la IA: "),
+         `deficiencia ${nombreDe("niveles_deficiencia", p.nivel_deficiencia_propuesto).toLowerCase()}, consecuencia ${nombreDe("consecuencias", p.consecuencia_propuesta).toLowerCase()}`),
+      controles));
+  }
+  $("ir-exposicion").textContent = i.peligros.length ? "Continuar" : "Generar la matriz sin peligros";
+}
+
+// ---------------------------------------------------------------- Exposición
+function grupoDeBotones(opciones, elegido, alElegir, multiple = false) {
+  const grupo = el("div", { class: "opciones" });
+  for (const opcion of opciones) {
+    const activo = multiple ? elegido.has(opcion.id) : elegido === opcion.id;
+    grupo.append(el("button", { type: "button", "aria-pressed": String(activo), onclick: (evento) => {
+      alElegir(opcion.id);
+      if (multiple) evento.currentTarget.setAttribute("aria-pressed", String(elegido.has(opcion.id)));
+      else for (const b of grupo.children) b.setAttribute("aria-pressed", String(b === evento.currentTarget));
+      grupo.classList.remove("falta");
+    } }, opcion.nombre));
+  }
+  return grupo;
+}
+
+function selector(opciones, valor, alCambiar) {
+  const lista = el("select", { onchange: (e) => alCambiar(e.target.value) },
+    opciones.map((o) => el("option", { value: o.id }, o.nombre)));
+  lista.value = valor;
+  return lista;
+}
+
+function pintarExposicion() {
+  const formularios = $("formularios");
+  formularios.replaceChildren();
+  $("aviso-falta").hidden = true;
+  for (const p of estado.inspeccion.peligros) {
+    const r = estado.respuestas[p.n];
+    const numero = el("input", { type: "number", min: "1", max: "9999", inputmode: "numeric", value: String(r.expuestos || 1),
+                                 "aria-label": "Número de personas",
+                                 onchange: (e) => { r.expuestos = Math.max(1, parseInt(e.target.value, 10) || 1); e.target.value = r.expuestos; } });
+    const mover = (delta) => { r.expuestos = Math.max(1, (r.expuestos || 1) + delta); numero.value = r.expuestos; };
+    const cuerpo = el("div", {},
+      el("div", { class: "pregunta" }, "¿Con qué frecuencia se hace esta tarea?"),
+      Object.assign(grupoDeBotones(estado.opciones.frecuencias, r.frecuencia, (id) => { r.frecuencia = id; }), { id: `frecuencia-${p.n}` }),
+      el("div", { class: "pregunta" }, "¿Cuántas personas la hacen?"),
+      el("div", { class: "contador" }, el("button", { type: "button", "aria-label": "Una persona menos", onclick: () => mover(-1) }, "−"),
+         numero, el("button", { type: "button", "aria-label": "Una persona más", onclick: () => mover(1) }, "+")),
+      el("div", { class: "pregunta" }, "¿Qué controles existen hoy?"),
+      grupoDeBotones(estado.opciones.controles_existentes, r.controles, (id) => {
+        if (r.controles.has(id)) r.controles.delete(id); else r.controles.add(id);
+      }, true),
+      el("label", { class: "campo" }, el("span", {}, "Otro control (opcional)"),
+         el("input", { type: "text", autocomplete: "off", value: r.otros, oninput: (e) => { r.otros = e.target.value; } })),
+      el("div", { class: "dos" },
+         el("label", { class: "campo" }, el("span", {}, "Deficiencia"),
+            selector(estado.opciones.niveles_deficiencia, r.nivel_deficiencia, (v) => { r.nivel_deficiencia = v; })),
+         el("label", { class: "campo" }, el("span", {}, "Consecuencia"),
+            selector(estado.opciones.consecuencias, r.consecuencia, (v) => { r.consecuencia = v; }))));
+    const tarjeta = el("article", { class: `tarjeta${r.descartado ? " descartada" : ""}` });
+    const descartar = el("button", { type: "button", class: "discreto", onclick: () => {
+      r.descartado = !r.descartado;
+      tarjeta.classList.toggle("descartada", r.descartado);
+      cuerpo.hidden = r.descartado;
+      descartar.textContent = r.descartado ? "Volver a incluir este peligro" : "Descartar este peligro";
+    } }, r.descartado ? "Volver a incluir este peligro" : "Descartar este peligro");
+    cuerpo.hidden = r.descartado;
+    tarjeta.append(el("div", { class: "cabeza" }, el("div", { class: "numero" }, String(p.n)), el("h3", {}, p.descripcion)), cuerpo, descartar);
+    formularios.append(tarjeta);
+  }
+}
+
+function cuerpoDeValoracion() {
+  const texto = (id) => $(id).value.trim();
+  const contexto = { proceso: texto("ctx-proceso"), zona: texto("ctx-zona"), actividad: texto("ctx-actividad"), tarea: texto("ctx-tarea") };
+  if (estado.rutinaria !== null) contexto.rutinaria = estado.rutinaria;
+  const peligros = estado.inspeccion.peligros.map((p) => {
+    const r = estado.respuestas[p.n];
+    if (r.descartado) return { n: p.n, descartado: true };
+    return { n: p.n, frecuencia: r.frecuencia, expuestos: r.expuestos, controles_existentes: [...r.controles],
+             otros_controles: r.otros.trim(), nivel_deficiencia: r.nivel_deficiencia, consecuencia: r.consecuencia };
+  });
+  return { contexto, peligros };
+}
+
+async function generar() {
+  let falta = false;
+  for (const p of estado.inspeccion.peligros) {
+    const r = estado.respuestas[p.n];
+    const grupo = $(`frecuencia-${p.n}`);
+    const incompleto = !r.descartado && !r.frecuencia;
+    if (grupo) grupo.classList.toggle("falta", incompleto);
+    if (incompleto && !falta) grupo.scrollIntoView({ block: "center" });
+    falta = falta || incompleto;
+  }
+  $("aviso-falta").hidden = !falta;
+  if (falta) return;
+  $("generar").disabled = true;
+  try {
+    const resultado = await pedir(`/valorar/${estado.inspeccion.inspeccion_id}`, {
+      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(cuerpoDeValoracion()) });
+    pintarResumen(resultado);
+    mostrar("resumen");
+  } catch (error) {
+    mostrarError(error);
+  } finally {
+    $("generar").disabled = false;
+  }
+}
+
+// ---------------------------------------------------------------- Resumen
+function pintarResumen(resultado) {
+  $("foto-final").src = `${resultado.url_imagen}?v=${Date.now()}`;
+  const filas = $("filas");
+  filas.replaceChildren();
+  for (const p of resultado.peligros) {
+    const v = p.valoracion;
+    const nivel = estado.opciones.niveles_riesgo.find((n) => n.id === v.nivel_riesgo);
+    filas.append(el("tr", {}, el("td", {}, String(p.n)), el("td", {}, p.descripcion),
+      el("td", {}, v.nr === null ? "—" : String(v.nr)),
+      el("td", { class: "nivel", style: `background:${nivel.color};color:${nivel.color_texto}` }, v.nivel_riesgo),
+      el("td", {}, v.aceptabilidad)));
+  }
+  if (!resultado.peligros.length) filas.append(el("tr", {}, el("td", { colspan: "5" }, "La matriz quedó sin peligros.")));
+  $("nota-resumen").textContent = resultado.descartados
+    ? `Descartaste ${resultado.descartados} de los peligros propuestos. El requisito legal queda en blanco: lo completa el profesional.`
+    : "El requisito legal queda en blanco: lo completa el profesional.";
+  $("descargar").href = resultado.url_excel;
+}
+
+function reiniciar() {
+  estado.inspeccion = null;
+  estado.respuestas = {};
+  estado.rutinaria = null;
+  for (const id of ["ctx-proceso", "ctx-zona", "ctx-actividad", "ctx-tarea"]) $(id).value = "";
+  for (const b of $("ctx-rutinaria").children) b.setAttribute("aria-pressed", "false");
+  mostrar("inicio");
+}
+
+// ---------------------------------------------------------------- Arranque
+$("camara").addEventListener("change", alElegirFoto);
+$("archivo").addEventListener("change", alElegirFoto);
+$("ver-escenas").addEventListener("click", verEscenas);
+$("error-escenas").addEventListener("click", verEscenas);
+$("otra-foto").addEventListener("click", reiniciar);
+$("volver-inicio").addEventListener("click", () => mostrar("inicio"));
+$("reiniciar-1").addEventListener("click", reiniciar);
+$("reiniciar-2").addEventListener("click", reiniciar);
+$("ir-exposicion").addEventListener("click", () => { pintarExposicion(); mostrar("exposicion"); });
+$("volver-peligros").addEventListener("click", () => mostrar("peligros"));
+$("corregir").addEventListener("click", () => mostrar("exposicion"));
+$("generar").addEventListener("click", generar);
+for (const boton of $("ctx-rutinaria").children) {
+  boton.addEventListener("click", () => {
+    estado.rutinaria = boton.dataset.valor === "si";
+    for (const b of $("ctx-rutinaria").children) b.setAttribute("aria-pressed", String(b === boton));
+  });
+}
+
+(async () => {
+  try {
+    estado.opciones = await pedir("/opciones");
+    const salud = await pedir("/salud");
+    if (!salud.ia_disponible) {
+      $("estado-ia").textContent = "El análisis con IA no está disponible en este momento: usa una escena preparada.";
+    }
+  } catch (error) { mostrarError(error); }
+})();
+</script>
+</body>
+</html>

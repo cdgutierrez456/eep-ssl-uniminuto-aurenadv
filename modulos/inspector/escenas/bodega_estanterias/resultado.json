@@ -1,0 +1,88 @@
+{
+ "analisis": {
+  "descripcion_general": "Bodega con estanterías metálicas de varios niveles cargadas con estibas de cajas envueltas en plástico; no se ven personas ni equipos de manejo de carga en la foto.",
+  "advertencias": [
+   "Encuadre en contrapicado y cercano: no se ve el piso, los pasillos ni la base de las estanterías.",
+   "No se ven personas ni montacargas, por lo que no se puede evaluar la operación de carga y descarga."
+  ],
+  "peligros": [
+   {
+    "n": 1,
+    "descripcion": "Caída de estibas o cajas desde los niveles altos de la estantería sobre quienes circulen o trabajen en el pasillo.",
+    "clasificacion": {
+     "categoria": "condiciones_de_seguridad",
+     "subcategoria": "locativo, almacenamiento en altura"
+    },
+    "evidencia_visible": "Estibas a gran altura con carga alta envuelta en plástico, algunas con cajas que sobresalen o con el envoltorio roto y flejes sueltos; no se ve malla ni barrera de protección.",
+    "ubicacion": [
+     0.4688,
+     0.1816,
+     0.7239,
+     0.4143
+    ],
+    "confianza": "media",
+    "efectos_posibles": "Golpes, aplastamiento, traumas craneoencefálicos y fracturas por objetos que caen.",
+    "peor_consecuencia": "muerte por caída de carga desde altura",
+    "nivel_deficiencia_propuesto": "alto",
+    "explicacion_deficiencia": "No se ven barreras ni mallas, y varias estibas tienen el envoltorio roto o la carga mal contenida.",
+    "consecuencia_propuesta": "mortal",
+    "explicacion_consecuencia": "Una estiba o caja que cae desde varios metros puede causar lesiones mortales.",
+    "controles_propuestos": {
+     "eliminacion": [],
+     "sustitucion": [
+      "Cambiar el envoltorio roto por film nuevo y reforzar el amarre de la carga con esquineros y flejes."
+     ],
+     "ingenieria": [
+      "Instalar mallas o paneles de protección en la cara posterior y frontal de las estanterías hacia los pasillos."
+     ],
+     "administrativos": [
+      "Inspeccionar periódicamente la estabilidad y el embalaje de las estibas en altura.",
+      "Restringir el paso de personas bajo zonas de carga o descarga."
+     ],
+     "epp": [
+      "Dotar de casco a quienes ingresen a los pasillos."
+     ]
+    }
+   },
+   {
+    "n": 2,
+    "descripcion": "Posible sobrecarga o daño estructural de la estantería por estibas pesadas apoyadas en vigas y montantes en varios niveles.",
+    "clasificacion": {
+     "categoria": "condiciones_de_seguridad",
+     "subcategoria": "locativo, estructura de almacenamiento"
+    },
+    "evidencia_visible": "Estantería de varios niveles totalmente ocupada con estibas voluminosas; no se alcanza a ver la placa de capacidad ni el estado de las bases y los montantes inferiores.",
+    "ubicacion": [
+     0.0,
+     0.0,
+     1.0,
+     1.0
+    ],
+    "confianza": "baja",
+    "efectos_posibles": "Atrapamiento, golpes y aplastamiento por colapso parcial o total de la estantería.",
+    "peor_consecuencia": "muerte por colapso de la estantería",
+    "nivel_deficiencia_propuesto": "medio",
+    "explicacion_deficiencia": "No se puede verificar el estado de las vigas, los anclajes ni la capacidad señalizada, por lo que hay que confirmarlo en campo.",
+    "consecuencia_propuesta": "mortal",
+    "explicacion_consecuencia": "El colapso de una estantería de este tamaño con carga puede causar lesiones mortales.",
+    "controles_propuestos": {
+     "eliminacion": [],
+     "sustitucion": [],
+     "ingenieria": [
+      "Verificar anclajes, plomada y protecciones de los montantes, y reparar los elementos dañados."
+     ],
+     "administrativos": [
+      "Señalizar la capacidad de carga por nivel y revisar que se respete.",
+      "Hacer inspecciones periódicas de la estructura y registrar los golpes o daños."
+     ],
+     "epp": []
+    }
+   }
+  ]
+ },
+ "fecha": "2026-11-14T07:49:40-05:00",
+ "modelo": "claude-sonnet-5-5",
+ "esfuerzo": "medium",
+ "ancho": 1568,
+ "alto": 881
+}

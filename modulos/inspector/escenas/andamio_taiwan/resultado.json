@@ -1,0 +1,170 @@
+{
+ "analisis": {
+  "descripcion_general": "Torre de andamio tubular metálico a gran altura, donde tres trabajadores se desplazan y trabajan sobre los travesaños, sin plataformas visibles, al parecer armando o desarmando la estructura.",
+  "advertencias": [
+   "Los rostros están difuminados y la imagen es muy abierta, por lo que no se alcanza a ver si hay arneses o líneas de vida a pie de obra.",
+   "No se ve el suelo ni la base del andamio, así que no se puede evaluar su estabilidad."
+  ],
+  "peligros": [
+   {
+    "n": 1,
+    "descripcion": "Dos trabajadores en el nivel superior del andamio se mueven y trabajan apoyados sobre travesaños tubulares, sin plataforma de trabajo visible ni protección contra caídas.",
+    "clasificacion": {
+     "categoria": "condiciones_de_seguridad",
+     "subcategoria": "trabajo en alturas"
+    },
+    "evidencia_visible": "Pisan los tubos horizontales, no hay tablones ni plataformas bajo ellos, no se ven arneses con eslingas conectadas y el borde queda abierto a gran altura.",
+    "ubicacion": [
+     0.1709,
+     0.1704,
+     0.4783,
+     0.4136
+    ],
+    "confianza": "alta",
+    "efectos_posibles": "Fracturas múltiples, traumatismo craneoencefálico, lesiones medulares y politraumatismo por caída.",
+    "peor_consecuencia": "muerte por caída desde altura",
+    "nivel_deficiencia_propuesto": "muy_alto",
+    "explicacion_deficiencia": "No se ve plataforma de trabajo, barandas completas ni sistema de detención de caídas conectado.",
+    "consecuencia_propuesta": "mortal",
+    "explicacion_consecuencia": "Una caída desde esta altura sobre superficie dura puede causar la muerte.",
+    "controles_propuestos": {
+     "eliminacion": [
+      "Armar los módulos en el suelo y elevarlos con grúa para reducir el tiempo de trabajo en altura."
+     ],
+     "sustitucion": [
+      "Usar plataformas elevadoras para las tareas en la parte alta."
+     ],
+     "ingenieria": [
+      "Instalar plataformas completas con barandas y rodapiés en cada nivel de trabajo.",
+      "Instalar líneas de vida y puntos de anclaje certificados."
+     ],
+     "administrativos": [
+      "Exigir permiso de trabajo en alturas y verificación del andamio por persona competente antes de cada turno.",
+      "Capacitar y certificar a los trabajadores en trabajo seguro en alturas."
+     ],
+     "epp": [
+      "Dotar arnés de cuerpo completo con eslinga doble y absorbedor de energía.",
+      "Dotar casco con barbuquejo."
+     ]
+    }
+   },
+   {
+    "n": 2,
+    "descripcion": "Trabajador sin camisa en un nivel intermedio del andamio de pie sobre travesaños, manipulando una barra o vara larga y sin protección contra caídas visible.",
+    "clasificacion": {
+     "categoria": "condiciones_de_seguridad",
+     "subcategoria": "trabajo en alturas"
+    },
+    "evidencia_visible": "Está parado sobre tubos horizontales sin plataforma, sostiene una vara larga con las dos manos, no se ve arnés ni casco y el costado queda abierto.",
+    "ubicacion": [
+     0.2423,
+     0.4992,
+     0.4273,
+     0.8994
+    ],
+    "confianza": "alta",
+    "efectos_posibles": "Fracturas, traumatismo craneoencefálico y lesiones internas por caída o por pérdida de equilibrio al maniobrar la vara.",
+    "peor_consecuencia": "muerte por caída desde altura",
+    "nivel_deficiencia_propuesto": "muy_alto",
+    "explicacion_deficiencia": "No se ve arnés, casco ni plataforma, y la vara larga compromete su equilibrio.",
+    "consecuencia_propuesta": "mortal",
+    "explicacion_consecuencia": "La altura del nivel en que se encuentra permite una caída con lesiones mortales.",
+    "controles_propuestos": {
+     "eliminacion": [],
+     "sustitucion": [
+      "Usar herramientas de menor longitud o manipuladas desde una plataforma segura."
+     ],
+     "ingenieria": [
+      "Instalar plataformas con barandas en el nivel donde se trabaja.",
+      "Disponer líneas de vida horizontales ancladas a la estructura."
+     ],
+     "administrativos": [
+      "Prohibir el trabajo en el andamio sin arnés conectado y sin los EPP completos.",
+      "Supervisar de forma continua las tareas en alturas."
+     ],
+     "epp": [
+      "Dotar arnés de cuerpo completo con eslinga y absorbedor de energía.",
+      "Dotar casco, calzado antideslizante y camisa de trabajo."
+     ]
+    }
+   },
+   {
+    "n": 3,
+    "descripcion": "Ascenso y desplazamiento de trabajadores por la estructura del andamio trepando sobre tubos y diagonales, sin escalera ni acceso seguro visible.",
+    "clasificacion": {
+     "categoria": "condiciones_de_seguridad",
+     "subcategoria": "trabajo en alturas"
+    },
+    "evidencia_visible": "No se ve escalera interna ni de acceso; los trabajadores están en distintos niveles apoyados en los tubos horizontales y diagonales.",
+    "ubicacion": [
+     0.1818,
+     0.3328,
+     0.4911,
+     0.9033
+    ],
+    "confianza": "media",
+    "efectos_posibles": "Caídas por resbalón o pérdida de apoyo, golpes y fracturas.",
+    "peor_consecuencia": "muerte por caída al trepar",
+    "nivel_deficiencia_propuesto": "alto",
+    "explicacion_deficiencia": "No se ve un acceso seguro y los tubos no son una superficie apta para desplazarse.",
+    "consecuencia_propuesta": "mortal",
+    "explicacion_consecuencia": "Una caída al trepar a esta altura puede ser mortal.",
+    "controles_propuestos": {
+     "eliminacion": [],
+     "sustitucion": [],
+     "ingenieria": [
+      "Instalar escaleras de acceso integradas al andamio con compuertas de acceso."
+     ],
+     "administrativos": [
+      "Establecer que el ascenso solo se haga por los accesos dispuestos.",
+      "Inspeccionar el andamio antes de cada turno."
+     ],
+     "epp": [
+      "Dotar arnés con sistema de ascenso con doble conexión."
+     ]
+    }
+   },
+   {
+    "n": 4,
+    "descripcion": "Trabajador a la izquierda en el nivel alto con herramientas colgadas del cinturón y apoyado cerca del borde, con riesgo de caída de objetos hacia niveles inferiores y hacia el suelo.",
+    "clasificacion": {
+     "categoria": "condiciones_de_seguridad",
+     "subcategoria": "caída de objetos"
+    },
+    "evidencia_visible": "Lleva herramientas colgando de la cintura y hay una pieza metálica suelta apoyada en el travesaño cerca de él; no se ven redes ni rodapiés.",
+    "ubicacion": [
+     0.1709,
+     0.1704,
+     0.2902,
+     0.4002
+    ],
+    "confianza": "media",
+    "efectos_posibles": "Golpes, contusiones y traumatismos en personas ubicadas en niveles inferiores.",
+    "peor_consecuencia": "traumatismo craneoencefálico por golpe de objeto",
+    "nivel_deficiencia_propuesto": "alto",
+    "explicacion_deficiencia": "No se ven rodapiés, mallas ni herramientas aseguradas contra caída.",
+    "consecuencia_propuesta": "muy_grave",
+    "explicacion_consecuencia": "Un objeto metálico que cae desde esa altura puede causar lesiones graves a quien esté debajo.",
+    "controles_propuestos": {
+     "eliminacion": [],
+     "sustitucion": [],
+     "ingenieria": [
+      "Instalar rodapiés y malla de protección en el perímetro del andamio."
+     ],
+     "administrativos": [
+      "Acordonar y señalizar el área inferior durante los trabajos.",
+      "Exigir herramientas amarradas con cordón de sujeción."
+     ],
+     "epp": [
+      "Dotar casco a todo el personal debajo y encima del andamio."
+     ]
+    }
+   }
+  ]
+ },
+ "fecha": "2026-11-14T07:49:40-05:00",
+ "modelo": "claude-sonnet-5-5",
+ "esfuerzo": "medium",
+ "ancho": 1568,
+ "alto": 1262
+}

@@ -455,6 +455,18 @@ def test_la_consola_analiza_una_carpeta_y_guarda_la_foto_anotada(tmp_path, monke
     assert (tmp_path / "cola" / "inspector" / "costos.csv").is_file()
 
 
+def test_la_consola_muestra_el_costo_promedio_por_foto(tmp_path, monkeypatch, capsys):
+    monkeypatch.setenv("CARPETA_COLA", str(tmp_path / "cola"))
+    registro = RegistroDeCostos(tmp_path / "cola" / "inspector" / "costos.csv")
+    for identificador, costo in (("a1", "0.030000"), ("a2", "0.050000")):
+        registro.registrar(analisis_id=identificador, intento=1, modelo="claude-sonnet-5-5", resultado="ok",
+                           costo_usd=costo, duracion_s="15.00", tokens_entrada=7000, tokens_salida=2000)
+
+    assert consola.main(["--costos"]) == 0
+    salida = capsys.readouterr().out
+    assert "Fotos analizadas con la API: 2" in salida and "Costo promedio por foto: 0.0400 USD" in salida
+
+
 def test_la_consola_avisa_cuando_no_puede_analizar(tmp_path, monkeypatch, capsys, reloj):
     monkeypatch.setenv("CARPETA_COLA", str(tmp_path / "cola"))
     foto = tmp_path / "taller.jpg"

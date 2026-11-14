@@ -72,7 +72,7 @@ include = ["modulos*", "herramientas*"]
 # Configuración por defecto del módulo de zona
 "modulos.zona.config" = ["*.json"]
 # Esquema de salida del modelo, parámetros de valoración, precios, prompts y datos de ejemplo del módulo inspector
-"modulos.inspector" = ["esquemas/*.json", "config/*.json", "ejemplos/*.json", "prompts/*.md"]
+"modulos.inspector" = ["esquemas/*.json", "config/*.json", "ejemplos/*.json", "prompts/*.md", "interfaz/*.html", "escenas/*/*"]
 
 [tool.pytest.ini_options]
 testpaths = ["pruebas"]

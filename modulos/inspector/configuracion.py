@@ -6,14 +6,23 @@ y este módulo solo sabe decir si está o no.
 
 from __future__ import annotations
 
+import json
 import logging
 import os
 from dataclasses import dataclass, replace
+from functools import lru_cache
 from pathlib import Path
+from typing import Any
 
-from modulos.comun.config import leer_entorno
+from jsonschema import Draft202012Validator
+
+from modulos.comun.config import RAIZ_REPO, leer_entorno
 
 log = logging.getLogger(__name__)
+
+MODULO = ESTACION = "inspector"
+PUERTO_POR_DEFECTO = 8010
+RUTA_ESQUEMA_CONFIG = RAIZ_REPO / "contrato" / "config_inspector.schema.json"
 
 MODELOS = {
     "claude-sonnet-5-5": "Sonnet 5.5 (rápido, por defecto)",
@@ -64,6 +73,7 @@ class Ajustes:
             ("INSPECTOR_MAX_PELIGROS", "max_peligros", int),
             ("INSPECTOR_TIEMPO_MAXIMO_S", "tiempo_maximo_s", float),
             ("INSPECTOR_IMAGEN_LADO_MAX", "lado_max", int),
+            ("INSPECTOR_PROMPT", "prompt", _prompt_existente),
         )
         for variable, campo, convertir in lecturas:
             texto = (os.getenv(variable) or "").strip()
@@ -74,6 +84,81 @@ class Ajustes:
             except ValueError as error:
                 log.warning("%s=%r no sirve (%s); se usa %r", variable, texto, error, getattr(ajustes, campo))
         return ajustes
+
+
+def _prompt_existente(nombre: str) -> str:
+    """El nombre del prompt, si su archivo existe en ``prompts/``."""
+    if not (CARPETA_PROMPTS / f"{nombre}.md").is_file():
+        raise ValueError(f"no existe prompts/{nombre}.md")
+    return nombre
+
+
+# --------------------------------------------------------------------------- #
+# Servicio y configuración remota
+# --------------------------------------------------------------------------- #
+def _booleano(texto: str | None) -> bool:
+    return (texto or "").strip().lower() in ("1", "true", "si", "sí", "on")
+
+
+def puerto_del_servicio() -> int:
+    """Puerto del servicio HTTP (INSPECTOR_PUERTO, 8010 por defecto)."""
+    try:
+        return int(os.getenv("INSPECTOR_PUERTO") or PUERTO_POR_DEFECTO)
+    except ValueError:
+        log.warning("INSPECTOR_PUERTO no es un número; se usa %d", PUERTO_POR_DEFECTO)
+        return PUERTO_POR_DEFECTO
+
+
+def config_por_defecto(ajustes: Ajustes | None = None) -> dict:
+    """Configuración operativa inicial, tomada del .env. Es lo que el operador puede cambiar en vivo."""
+    ajustes = ajustes or Ajustes.desde_entorno()
+    return {
+        "modelo": ajustes.modelo,
+        "max_peligros": ajustes.max_peligros,
+        "tiempo_maximo_s": ajustes.tiempo_maximo_s,
+        "solo_escenas_preparadas": _booleano(os.getenv("INSPECTOR_SOLO_ESCENAS")),
+    }
+
+
+@lru_cache(maxsize=1)
+def _validador_de_config() -> Draft202012Validator:
+    return Draft202012Validator(json.loads(RUTA_ESQUEMA_CONFIG.read_text(encoding="utf-8")))
+
+
+def validar_config(config: Any, base: dict | None = None) -> dict:
+    """Valida una configuración remota y la completa con ``base`` (la del .env).
+
+    Es el validador de ``modulos.comun.obtener_config``: lanza ValueError si la
+    configuración no cumple ``contrato/config_inspector.schema.json`` o pide un modelo
+    que el módulo no conoce, y entonces se conserva la anterior.
+    """
+    if not isinstance(config, dict):
+        raise ValueError("la configuración debe ser un objeto JSON")
+    errores = [f"{'/'.join(str(p) for p in error.absolute_path) or '(raíz)'}: {error.message}"
+               for error in _validador_de_config().iter_errors(config)]
+    if errores:
+        raise ValueError("; ".join(errores[:3]))
+    completa = {**(base if base is not None else config_por_defecto()), **config}
+    if completa["modelo"] not in MODELOS:
+        raise ValueError(f"modelo '{completa['modelo']}' desconocido. Opciones: {', '.join(MODELOS)}")
+    return completa
+
+
+def ajustes_con_config(ajustes: Ajustes, config: dict) -> Ajustes:
+    """Los ajustes de análisis con lo que diga la configuración operativa."""
+    return ajustes.con(modelo=config["modelo"], max_peligros=int(config["max_peligros"]),
+                       tiempo_maximo_s=float(config["tiempo_maximo_s"]))
+
+
+def capacidades(escenas: list[dict]) -> dict:
+    """Lo que el módulo le cuenta a la plataforma para que pinte sus controles."""
+    return {
+        "modelos": [{"id": identificador, "nombre": nombre} for identificador, nombre in MODELOS.items()],
+        "max_peligros": {"minimo": 1, "maximo": 12},
+        "tiempo_maximo_s": {"minimo": 10, "maximo": 180},
+        "ia_disponible": hay_clave(),
+        "escenas_preparadas": [{"id": escena["id"], "nombre": escena["nombre"]} for escena in escenas],
+    }
 
 
 def hay_clave() -> bool:

@@ -110,7 +110,16 @@ def test_el_resumen_de_un_registro_vacio():
 # Ajustes
 # --------------------------------------------------------------------------- #
 VARIABLES = ("INSPECTOR_MODELO", "INSPECTOR_ESFUERZO", "INSPECTOR_MAX_PELIGROS", "INSPECTOR_TIEMPO_MAXIMO_S",
-             "INSPECTOR_IMAGEN_LADO_MAX")
+             "INSPECTOR_IMAGEN_LADO_MAX", "INSPECTOR_PROMPT")
+
+
+def test_la_version_del_prompt_se_elige_en_el_env(sin_variables, monkeypatch, caplog):
+    monkeypatch.setenv("INSPECTOR_PROMPT", "sistema_v1")
+    assert Ajustes.desde_entorno().prompt == "sistema_v1"
+    monkeypatch.setenv("INSPECTOR_PROMPT", "sistema_v99")  # no existe: se conserva el de por defecto
+    with caplog.at_level("WARNING"):
+        assert Ajustes.desde_entorno().prompt == "sistema_v1"
+    assert "INSPECTOR_PROMPT" in caplog.text
 
 
 @pytest.fixture
@@ -142,6 +151,7 @@ def test_un_valor_que_no_sirve_se_ignora_con_un_aviso(sin_variables, monkeypatch
     monkeypatch.setenv("INSPECTOR_MAX_PELIGROS", "muchos")
     monkeypatch.setenv("INSPECTOR_TIEMPO_MAXIMO_S", "-5")
     monkeypatch.setenv("INSPECTOR_IMAGEN_LADO_MAX", "9000")
+    monkeypatch.setenv("INSPECTOR_PROMPT", "no_existe")
     with caplog.at_level("WARNING"):
         assert Ajustes.desde_entorno() == Ajustes()
     for variable in VARIABLES[1:]:

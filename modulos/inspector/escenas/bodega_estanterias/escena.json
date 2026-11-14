@@ -1,0 +1,12 @@
+{
+  "id": "bodega_estanterias",
+  "nombre": "Bodega con estanterías",
+  "fuente": {
+    "titulo": "Warehouse goods",
+    "autor": "ProjectManhattan",
+    "licencia": "CC0 1.0",
+    "url_licencia": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "url": "https://commons.wikimedia.org/wiki/File:Warehouse_goods.jpg",
+    "cambios": "Rostros difuminados y tamaño reducido."
+  }
+}
