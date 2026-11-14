@@ -22,7 +22,7 @@
    "gafas": 0.35,
    "chaleco": 0.5,
    "sin_casco": 0.65,
-   "sin_gafas": 0.65
+   "sin_gafas": 0.75
   },
   "zonas": {
    "casco": [
@@ -526,7 +526,7 @@
   },
   {
    "id": "I08_negativa_bajo_umbral",
-   "descripcion": "sin_gafas con 0.6, bajo su umbral 0.65: se descarta y las gafas cuentan.",
+   "descripcion": "sin_gafas con 0.7, bajo su umbral 0.75: se descarta y las gafas cuentan.",
    "detecciones": [
     {
      "clase": "persona",
@@ -560,7 +560,7 @@
     },
     {
      "clase": "sin_gafas",
-     "confianza": 0.6,
+     "confianza": 0.7,
      "caja": [
       0.42,
       0.2,

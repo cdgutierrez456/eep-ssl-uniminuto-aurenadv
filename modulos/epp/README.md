@@ -6,7 +6,7 @@ que exige el perfil activo. Dos perfiles, cada uno con su modelo:
 | Perfil | Modelo | Exige por defecto | También detecta |
 |---|---|---|---|
 | `alimentos` (Planta de alimentos) | `epp-alimentos-v1.pt` | cofia, gafas, tapabocas | — |
-| `industria` (Industria) | `epp-industria-v1.pt` | casco, gafas | chaleco |
+| `industria` (Industria) | `epp-industria-v2.pt` | casco, gafas | chaleco |
 
 Qué perfil está activo y qué elementos se exigen se cambia **desde la plataforma** (o el
 receptor de prueba) sin reiniciar. El resultado es un **borrador: validar en campo**.
@@ -26,7 +26,7 @@ Además de la instalación base del repositorio (ver [README](../../README.md)):
 - **No instales el paquete `roboflow`**: reemplaza OpenCV 5 por una versión vieja. La
   descarga de datasets usa la API REST directamente.
 - Los pesos no están en git. Deben estar en `modulos/epp/modelos/`:
-  `epp-alimentos-v1.pt` y `epp-industria-v1.pt`. Si falta uno, ese perfil queda no
+  `epp-alimentos-v1.pt` y `epp-industria-v2.pt`. Si falta uno, ese perfil queda no
   disponible y el otro sigue funcionando.
 
 ## Cómo correr
@@ -141,6 +141,38 @@ Si cambias zonas o umbrales de `industria`, actualiza el bloque `reglas` de
 - Métricas del v1 en [entrenamiento/reporte_evaluacion.md](entrenamiento/reporte_evaluacion.md):
   casco, persona y chaleco sobre 0,90 de mAP50; **gafas 0,57** y las clases negativas
   0,35–0,50. Por eso las negativas tienen umbral alto en `perfiles.yaml`.
+
+### Modelo v2 (el activo)
+
+El v1 fallaba con las gafas en vivo. El v2 es el v1 afinado una época con fotos propias
+tomadas con la cámara del stand (anotadas solas por `datos/capturar.py`) y copias reducidas
+de fotos con gafas:
+
+```
+.venv\Scripts\python -m modulos.epp.datos.capturar --gafas si --casco si
+.venv\Scripts\python -m modulos.epp.datos.capturar --gafas no --casco si --para evaluar
+.venv\Scripts\python -m modulos.epp.datos.ampliar_dataset
+.venv\Scripts\python -m modulos.epp.entrenamiento.entrenar --nombre industria_v2 --modelo epp-industria-v1.pt --data datasets/epp_industria_v2/data.yaml --epocas 30 --paciencia 10
+.venv\Scripts\python -m modulos.epp.entrenamiento.medir_gafas --pesos modulos/epp/modelos/epp-industria-v1.pt runs/epp/industria_v2/weights/best.pt --partes propias
+```
+
+| Medida | v1 | v2 |
+|---|---|---|
+| Gafas encontradas en fotos propias de evaluar (143) | 100 | 128 |
+| Casco encontrado en fotos propias de evaluar (288) | 274 | 288 |
+| «Gafas» falsas sin llevarlas (145) | 0 | 0 |
+| mAP50 en prueba pública | 0,695 | 0,670 |
+| Recall de gafas pequeñas (3–6 % del ancho) en datos públicos | 0,26 | 0,17 |
+
+Límites conocidos: las fotos propias son de una sola persona en un solo lugar, así que la
+mejora con otros visitantes puede ser menor; y a distancia (gafas de menos del 6 % del
+ancho de la imagen) sigue fallando: conviene que el visitante se acerque a ~1 m. Seguir
+entrenando más épocas subía el resultado en las fotos propias pero lo bajaba en las
+públicas (memoriza), por eso se quedó en la primera. Sumar fotos de más personas es la
+siguiente mejora.
+
+Las fotos propias se guardan sin difuminar (excepción de `CLAUDE.md`): quedan en
+`datasets/fotos_propias/`, fuera de git, y no se suben.
 
 ### Sumar fotos propias
 

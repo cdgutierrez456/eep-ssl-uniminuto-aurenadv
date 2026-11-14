@@ -65,12 +65,13 @@ perfiles:
 
   industria:
     nombre: Industria
-    modelo: epp-industria-v1.pt
+    modelo: epp-industria-v2.pt
     elementos_requeridos: [casco, gafas]
     umbral_persona: 0.375
     elementos:
-      # Las negativas del modelo v1 son débiles (mAP50 ~0,35-0,50): umbral alto para que
-      # un sin_gafas dudoso no tumbe a quien sí lleva gafas.
+      # Las negativas son débiles en datos públicos: umbral alto para que un sin_gafas
+      # dudoso no tumbe a quien sí lleva gafas. Con el modelo v2, 0,75 dejó en cero los
+      # sin_gafas falsos en las fotos propias de evaluación (con 0,65 había un 3 %).
       casco:   {nombre: Casco,   umbral: 0.5,  zona: [0.0, 0.5],   negativa: sin_casco, umbral_negativa: 0.65}
-      gafas:   {nombre: Gafas,   umbral: 0.35, zona: [0.0, 0.625], negativa: sin_gafas, umbral_negativa: 0.65}
+      gafas:   {nombre: Gafas,   umbral: 0.35, zona: [0.0, 0.625], negativa: sin_gafas, umbral_negativa: 0.75}
       chaleco: {nombre: Chaleco, umbral: 0.5,  zona: [0.2, 1.0]}
