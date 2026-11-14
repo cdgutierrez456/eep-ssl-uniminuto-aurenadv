@@ -166,7 +166,8 @@ de fotos con gafas:
 
 Límites conocidos: las fotos propias son de una sola persona en un solo lugar, así que la
 mejora con otros visitantes puede ser menor; y a distancia (gafas de menos del 6 % del
-ancho de la imagen) sigue fallando: conviene que el visitante se acerque a ~1 m. Seguir
+ancho de la imagen) sigue fallando en los datos públicos. En la prueba en vivo con la
+Logitech C930e funcionó bien hasta cerca de 1,5 m; más lejos no está comprobado. Seguir
 entrenando más épocas subía el resultado en las fotos propias pero lo bajaba en las
 públicas (memoriza), por eso se quedó en la primera. Sumar fotos de más personas es la
 siguiente mejora.
