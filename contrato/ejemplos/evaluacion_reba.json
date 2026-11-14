@@ -10,7 +10,24 @@
     "puntaje": 9,
     "nivel": "alto",
     "angulos": { "tronco": 62.5, "cuello": 24.0, "brazo": 71.3, "antebrazo": 48.9, "muneca": 17.2, "piernas": 35.0 },
-    "duracion_s": 6.4
+    "duracion_s": 6.4,
+    "puntajes": {
+      "tronco": 4, "cuello": 2, "piernas": 2, "brazo": 3, "antebrazo": 2, "muneca": 2,
+      "tabla_a": 6, "carga": 1, "puntaje_a": 7,
+      "tabla_b": 5, "agarre": 0, "puntaje_b": 5,
+      "tabla_c": 9, "actividad": 0
+    },
+    "lado": "derecho",
+    "intento": 1,
+    "segmentos_no_estimados": [],
+    "segmentos_asumidos": [],
+    "ajustes_aplicados": [],
+    "no_evaluado": ["torsion", "inclinacion_lateral", "abduccion"],
+    "desde_piso": true,
+    "tecnica": { "espalda_max": 98.2, "nivel_espalda": "alta", "rodillas_max": 36.4, "piernas": "poco_flexionadas" },
+    "postura_neutra": { "tronco": -9.5, "cuello": 28.0 },
+    "peso_carga_kg": 5,
+    "agarre": "bueno"
   },
   "adjuntos": [ { "tipo": "imagen", "ruta": "media/2026-11-20/8f3c2a1e.jpg" } ],
   "origen": { "dispositivo": "pc-stand", "modulo_version": "0.1.0" }

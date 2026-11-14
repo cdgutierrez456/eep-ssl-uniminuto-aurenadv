@@ -120,3 +120,141 @@ Sirve para que el tablero confirme al operador que el cambio llegó a la estaci�
   (rostros difuminados) subida antes por `POST /api/medios`. Severidad `info` si cumple y
   `media` si falta algo. Puede llegar más de uno por visitante si su veredicto cambia.
 - `POST /api/eventos`, `GET /api/eventos`, `POST /api/medios` y el latido, sin cambios.
+
+---
+
+# Cambios de contrato — módulo de ergonomía REBA
+
+Para Cristian. Lo que agrega el módulo de ergonomía. Todo es aditivo: `version_esquema`
+sigue en 1 y nada de lo anterior cambia.
+
+## 1. Configuración del módulo de ergonomía
+
+Usa los mismos endpoints genéricos (`/api/modulos/ergonomia/capacidades` y
+`/api/modulos/ergonomia/config`). Esquema:
+[`contrato/config_ergonomia.schema.json`](../contrato/config_ergonomia.schema.json).
+
+```json
+{
+  "peso_carga_kg": 5,
+  "agarre": "bueno",
+  "golpe_o_fuerza_brusca": false,
+  "actividad": { "estatica": false, "repetitiva": false, "cambios_rapidos": false },
+  "modo_deteccion": "auto",
+  "lado": "auto",
+  "camara": null,
+  "ajuste_brazo_inclinada": true,
+  "umbral_tronco_inclinado": 45,
+  "tolerancia_brazo_vertical": 20
+}
+```
+
+- Todas las claves son opcionales: la que falte conserva su valor por defecto.
+- `camara`: índice o nombre; `null` = la del `.env` de la estación.
+- El módulo aplica los cambios en vivo, en el siguiente fotograma.
+- Capacidades que registra: `agarres`, `modos_deteccion`, `lados`, `condiciones_actividad`
+  (con `id` y `nombre`) y el rango de `peso_carga_kg`, para pintar los controles.
+
+## 2. Pendiente: `config_actualizada` solo admite la estación `epp`
+
+El esquema fija `config_actualizada` a `estacion: "epp"` y a los campos `perfil_activo` y
+`elementos_requeridos`. Por eso **ergonomía aplica la configuración en vivo pero no publica
+ese evento**: el tablero no recibe confirmación de que el cambio llegó a la estación. Si se
+quiere esa confirmación para ergonomía hay que abrir el esquema (permitir otras estaciones
+y una forma de `datos` por módulo). Queda como decisión conjunta; no se cambió nada.
+
+## 3. Cámaras: EPP debería adoptar `conectar_camara`
+
+`modulos/comun/camara_stand.py` trae `conectar_camara(ConfigCamara)`: selección por índice
+o nombre, MJPG 1280x720 a 30 fps, enfoque fijo, exposición opcional y reconexión
+automática. Ergonomía ya la usa. **EPP sigue con `abrir_camara(indice)`** y su propia
+reconexión; conviene migrarlo después (no se tocó `modulos/epp/`). No afecta a la plataforma.
+
+## 4. `evaluacion_reba`: campos opcionales nuevos
+
+Añadidos a `datos` en [`contrato/evento.schema.json`](../contrato/evento.schema.json); ejemplo
+actualizado en [`contrato/ejemplos/evaluacion_reba.json`](../contrato/ejemplos/evaluacion_reba.json).
+`puntaje` y `nivel` siguen siendo los únicos obligatorios: un tablero que solo lea esos dos
+sigue funcionando.
+
+| Campo | Tipo | Qué trae |
+|---|---|---|
+| `puntajes` | objeto | Desglose: puntaje de cada segmento estimado (`tronco`, `cuello`, `piernas`, `brazo`, `antebrazo`, `muneca`) y `tabla_a`, `carga`, `puntaje_a`, `tabla_b`, `agarre`, `puntaje_b`, `tabla_c`, `actividad` |
+| `lado` | `izquierdo` o `derecho` | Lado del cuerpo evaluado |
+| `intento` | entero ≥ 1 | Número del intento dentro de la visita. Sirve para armar "Intento 1 → Intento 2" |
+| `segmentos_no_estimados` | lista | Segmentos que la cámara no pudo medir. No traen ángulo ni puntaje |
+| `segmentos_asumidos` | lista | Segmentos no estimados que entraron al cálculo con su mínimo (solo la muñeca). Si no está vacía, el puntaje es una cota inferior |
+| `ajustes_aplicados` | lista | Ajustes automáticos del método; hoy `brazo_persona_inclinada` (−1 al brazo) |
+| `no_evaluado` | lista | Siempre `torsion`, `inclinacion_lateral`, `abduccion`: una cámara lateral 2D no los mide y no suman |
+| `peso_carga_kg`, `agarre` | número, texto | Condiciones de la tarea usadas en el cálculo |
+
+Cómo llega el evento:
+
+- **Uno por levantamiento**, al terminar. Un visitante puede generar varios (uno por intento);
+  todos llevan el mismo `sesion_id` si el operador lo tecleó, y ninguno si no.
+- `puntaje`, `angulos` y `puntajes` son los del **fotograma crítico**: el de mayor puntaje
+  sostenido durante 0,3 s dentro del levantamiento.
+- `angulos` solo trae los segmentos estimados (un segmento sin estimar no lleva número).
+- `duracion_s`: desde que empieza a agacharse hasta que vuelve a estar erguido.
+- `severidad`: 1 → `info`; 2–3 → `baja`; 4–7 → `media`; 8–10 → `alta`; 11–15 → `critica`.
+- Trae **una imagen adjunta**: el fotograma crítico con los rostros difuminados y el
+  esqueleto dibujado encima, subida antes por `POST /api/medios`.
+- El latido (`estado_modulo`) sale con `estacion: "ergonomia"` y `modulo: "ergonomia"`; pasa
+  a `estado: "error"` con el mensaje "Cámara desconectada, reconectando…" si se cae la cámara.
+
+## 5. Postura neutra por persona
+
+De pie y derecha, una persona no da 0° con los puntos de la cámara: el tronco sale en unos
+−10° y el cuello en unos 30°. El módulo ahora calibra esa postura (la persona quieta de pie
+0,7 s, una vez por persona) y mide tronco, cuello y brazo desde ahí.
+
+- Configuración: clave nueva `postura_neutra` (booleano, por defecto `true`) en
+  [`contrato/config_ergonomia.schema.json`](../contrato/config_ergonomia.schema.json).
+  También `deteccion` (objeto con los umbrales del modo automático).
+- Evento `evaluacion_reba`: campo opcional `datos.postura_neutra` = `{ "tronco", "cuello" }`
+  con la postura de pie medida, en grados crudos. Cuando viene, `angulos.tronco`,
+  `angulos.cuello` y `angulos.brazo` ya están corregidos. Si falta, la persona se agachó
+  sin haber estado quieta antes y los ángulos van sin corregir.
+
+Para el tablero: lo que la buena técnica cambia es `angulos.tronco` (la flexión de espalda),
+más que `puntaje`. Recoger una caja del piso da REBA alto doblando la espalda **y** en
+sentadilla, porque el método suma 2 puntos por rodillas a más de 60°. Un ranking de "mejor
+técnica" debería ordenar por `angulos.tronco` del fotograma crítico, no por `puntaje`.
+
+## 6. Qué significa el puntaje, técnica de levantamiento y `desde_piso`
+
+REBA no califica si la persona levantó "bien" o "mal": estima el riesgo de una postura si
+forma parte de un trabajo y qué tan urgente es intervenir **la tarea**. La estación ahora lo
+dice así, y conviene que el tablero use el mismo lenguaje. Los textos están en
+[`modulos/ergonomia/nucleo/mensajes_reba.json`](../modulos/ergonomia/nucleo/mensajes_reba.json)
+(etiqueta corta, mensaje del panel, nivel de acción y texto ampliado para el reporte, por nivel).
+
+| Nivel | Puntaje | Etiqueta | Nivel de acción |
+|---|---|---|---|
+| `insignificante` | 1 | Riesgo insignificante | No es necesario intervenir. |
+| `bajo` | 2–3 | Riesgo bajo | Puede ser necesario intervenir. |
+| `medio` | 4–7 | Riesgo medio · intervenir | Es necesario intervenir. |
+| `alto` | 8–10 | Riesgo alto · intervenir pronto | Es necesario intervenir pronto. |
+| `muy_alto` | 11–15 | Riesgo muy alto · intervenir ya | Es necesario intervenir de inmediato. |
+
+Línea fija que acompaña siempre al puntaje: «REBA no califica tu técnica: estima el riesgo de
+una postura si forma parte de un trabajo.»
+
+Campos opcionales nuevos en `datos` de `evaluacion_reba` (aditivos; `version_esquema` sigue en 1):
+
+| Campo | Tipo | Qué trae |
+|---|---|---|
+| `desde_piso` | booleano | `true` si el levantamiento empezó desde el piso (las muñecas bajaron de la altura de las rodillas); `false` si la carga estaba elevada. Si falta, no se pudo determinar |
+| `tecnica.espalda_max` | número | Mayor flexión del tronco durante el levantamiento, en grados |
+| `tecnica.nivel_espalda` | `baja`, `media`, `alta` | Hasta 20°; de 20° a 60°; más de 60° (las franjas del tronco de REBA) |
+| `tecnica.rodillas_max` | número | Mayor flexión de rodillas durante el levantamiento, en grados |
+| `tecnica.piernas` | `rectas`, `poco_flexionadas`, `flexionadas` | Menos de 30°; de 30° a 60°; más de 60° (las franjas de rodilla de REBA) |
+
+`tecnica` no es un método de evaluación: muestra lo que la técnica de levantamiento cambia
+(cuánto se dobla la espalda y si el esfuerzo lo hacen las piernas), con las mismas franjas de
+REBA. Va junto al puntaje, no en su lugar.
+
+Por qué importa `desde_piso`: desde el piso, incluso con buena técnica, el REBA rara vez baja
+de medio, porque el método suma por la flexión de espalda **o** por la de rodillas. Lo que
+más reduce el puntaje es cambiar la tarea (elevar o acercar la carga). Para un ranking de
+"mejor técnica", ordenar por `tecnica.espalda_max` y no por `puntaje`.

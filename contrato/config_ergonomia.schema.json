@@ -1,0 +1,148 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aurenadv.com/sst/contrato/config_ergonomia.schema.json",
+  "title": "Configuración del módulo de ergonomía REBA",
+  "description": "Cuerpo de PUT y GET /api/modulos/ergonomia/config. Lo que el operador ajusta en vivo. Todas las claves son opcionales: la que falte conserva su valor por defecto.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "peso_carga_kg": {
+      "description": "Peso de la caja. REBA: menos de 5 kg = 0; de 5 a 10 kg = 1; más de 10 kg = 2.",
+      "type": "number",
+      "minimum": 0,
+      "maximum": 200
+    },
+    "agarre": {
+      "description": "Calidad del agarre de la carga.",
+      "enum": [
+        "bueno",
+        "regular",
+        "malo",
+        "inaceptable"
+      ]
+    },
+    "golpe_o_fuerza_brusca": {
+      "description": "Suma 1 al puntaje de carga.",
+      "type": "boolean"
+    },
+    "actividad": {
+      "description": "Condiciones de actividad: cada una suma 1 al puntaje final.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "estatica": {
+          "description": "Una o más partes del cuerpo estáticas más de 1 minuto.",
+          "type": "boolean"
+        },
+        "repetitiva": {
+          "description": "Acciones repetidas en rango pequeño más de 4 veces por minuto.",
+          "type": "boolean"
+        },
+        "cambios_rapidos": {
+          "description": "Cambios posturales rápidos y amplios, o base inestable.",
+          "type": "boolean"
+        }
+      }
+    },
+    "modo_deteccion": {
+      "description": "auto: el módulo detecta el inicio y el fin del levantamiento. manual: barra espaciadora.",
+      "enum": [
+        "auto",
+        "manual"
+      ]
+    },
+    "lado": {
+      "description": "Lado del cuerpo que se evalúa. auto: el más visible.",
+      "enum": [
+        "auto",
+        "izquierdo",
+        "derecho"
+      ]
+    },
+    "camara": {
+      "description": "Índice o nombre de la cámara. null: la del .env de la estación.",
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "integer",
+          "minimum": 0
+        },
+        {
+          "type": "string",
+          "minLength": 1
+        }
+      ]
+    },
+    "ajuste_brazo_inclinada": {
+      "description": "Resta 1 al brazo cuando la persona está inclinada y el brazo cuelga vertical.",
+      "type": "boolean"
+    },
+    "umbral_tronco_inclinado": {
+      "description": "Flexión del tronco (grados) a partir de la que aplica el ajuste del brazo.",
+      "type": "number",
+      "minimum": 0,
+      "maximum": 90
+    },
+    "tolerancia_brazo_vertical": {
+      "description": "Grados que el brazo puede apartarse de la vertical para que aplique el ajuste.",
+      "type": "number",
+      "minimum": 0,
+      "maximum": 90
+    },
+    "deteccion": {
+      "description": "Umbrales del modo de detección automática del levantamiento.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "tronco_inicio": {
+          "description": "Flexión del tronco (grados) que inicia el levantamiento, con las manos bajo la cadera.",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 180
+        },
+        "tronco_erguido": {
+          "description": "Hasta cuántos grados de inclinación del tronco cuenta como erguido.",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 180
+        },
+        "rodilla_erguida": {
+          "description": "Hasta cuánta flexión de rodilla (grados) cuenta como erguido.",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 180
+        },
+        "segundos_erguido": {
+          "description": "Segundos erguido y con las manos arriba para dar por terminado el levantamiento.",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 120
+        },
+        "duracion_minima_s": {
+          "description": "Un movimiento más corto no cuenta como levantamiento.",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 120
+        },
+        "duracion_maxima_s": {
+          "description": "Tiempo máximo por levantamiento.",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 120
+        },
+        "ventana_sostenida_s": {
+          "description": "Segundos que debe sostenerse un puntaje para ser el del fotograma crítico.",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 120
+        }
+      }
+    },
+    "postura_neutra": {
+      "description": "Mide tronco y cuello desde la postura de pie de cada persona (se calibra sola al estar quieta un momento). false: ángulos crudos.",
+      "type": "boolean"
+    }
+  }
+}

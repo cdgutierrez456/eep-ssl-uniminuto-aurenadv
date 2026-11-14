@@ -149,7 +149,73 @@
             "piernas": { "type": "number" }
           }
         },
-        "duracion_s": { "description": "Duración de la evaluación en segundos.", "type": "number", "minimum": 0 }
+        "duracion_s": { "description": "Duración de la evaluación en segundos.", "type": "number", "minimum": 0 },
+        "puntajes": {
+          "description": "Opcional. Desglose del cálculo REBA: puntaje de cada segmento estimado, tablas A, B y C, carga, agarre y actividad.",
+          "type": "object",
+          "properties": {
+            "tronco": { "type": "integer", "minimum": 1, "maximum": 5 },
+            "cuello": { "type": "integer", "minimum": 1, "maximum": 3 },
+            "piernas": { "type": "integer", "minimum": 1, "maximum": 4 },
+            "brazo": { "type": "integer", "minimum": 1, "maximum": 6 },
+            "antebrazo": { "type": "integer", "minimum": 1, "maximum": 2 },
+            "muneca": { "type": "integer", "minimum": 1, "maximum": 3 },
+            "tabla_a": { "type": "integer", "minimum": 1, "maximum": 9 },
+            "carga": { "type": "integer", "minimum": 0, "maximum": 3 },
+            "puntaje_a": { "type": "integer", "minimum": 1, "maximum": 12 },
+            "tabla_b": { "type": "integer", "minimum": 1, "maximum": 9 },
+            "agarre": { "type": "integer", "minimum": 0, "maximum": 3 },
+            "puntaje_b": { "type": "integer", "minimum": 1, "maximum": 12 },
+            "tabla_c": { "type": "integer", "minimum": 1, "maximum": 12 },
+            "actividad": { "type": "integer", "minimum": 0, "maximum": 3 }
+          }
+        },
+        "lado": { "description": "Opcional. Lado del cuerpo evaluado (el que mira a la cámara).", "enum": ["izquierdo", "derecho"] },
+        "intento": { "description": "Opcional. Número del intento dentro de la visita (1, 2…).", "type": "integer", "minimum": 1 },
+        "segmentos_no_estimados": {
+          "description": "Opcional. Segmentos que la cámara no pudo medir en el fotograma crítico.",
+          "type": "array",
+          "items": { "enum": ["tronco", "cuello", "piernas", "brazo", "antebrazo", "muneca"] }
+        },
+        "segmentos_asumidos": {
+          "description": "Opcional. Segmentos no estimados que entraron al cálculo con su puntaje mínimo (hoy solo la muñeca). Si no está vacío, el puntaje es una cota inferior.",
+          "type": "array",
+          "items": { "enum": ["tronco", "cuello", "piernas", "brazo", "antebrazo", "muneca"] }
+        },
+        "ajustes_aplicados": {
+          "description": "Opcional. Ajustes automáticos del método aplicados, por ejemplo brazo_persona_inclinada (-1 al brazo).",
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "no_evaluado": {
+          "description": "Opcional. Lo que una cámara lateral 2D no mide y por eso no suma al puntaje: torsion, inclinacion_lateral, abduccion.",
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "desde_piso": {
+          "description": "Opcional. true si el levantamiento empezó desde el piso (las muñecas bajaron de la altura de las rodillas); false si la carga estaba elevada. Si falta, no se pudo determinar.",
+          "type": "boolean"
+        },
+        "tecnica": {
+          "description": "Opcional. Técnica de levantamiento: no es REBA, es lo que cambia entre doblar la espalda y usar las piernas. Mayor flexión de espalda y de rodillas durante el levantamiento, con las mismas franjas que REBA usa para tronco (20° y 60°) y rodillas (30° y 60°).",
+          "type": "object",
+          "properties": {
+            "espalda_max": { "description": "Mayor flexión del tronco durante el levantamiento, en grados.", "type": "number" },
+            "nivel_espalda": { "description": "Hasta 20° baja; de 20° a 60° media; más de 60° alta.", "enum": ["baja", "media", "alta"] },
+            "rodillas_max": { "description": "Mayor flexión de rodillas durante el levantamiento, en grados.", "type": "number" },
+            "piernas": { "description": "Menos de 30° rectas; de 30° a 60° poco_flexionadas; más de 60° flexionadas.", "enum": ["flexionadas", "poco_flexionadas", "rectas"] }
+          }
+        },
+        "postura_neutra": {
+          "description": "Opcional. Postura de pie de la persona, en grados crudos, tomada como cero: los ángulos de tronco, cuello y brazo ya van medidos desde ahí. Si falta, los ángulos van sin corregir.",
+          "type": "object",
+          "properties": {
+            "tronco": { "type": "number" },
+            "cuello": { "type": "number" }
+          }
+        },
+        "peso_carga_kg": { "description": "Opcional. Peso de la carga usado en el cálculo.", "type": "number", "minimum": 0 },
+        "agarre": { "description": "Opcional. Calidad del agarre usada en el cálculo.", "enum": ["bueno", "regular", "malo", "inaceptable"] }
       }
     },
     "datos_reporte_generado": {

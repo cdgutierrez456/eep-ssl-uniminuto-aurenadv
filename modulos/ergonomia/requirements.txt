@@ -1,0 +1,32 @@
+# Entorno propio del módulo de ergonomía (modulos/ergonomia/.venv).
+#
+# MediaPipe instala opencv-contrib-python, que choca con el opencv-python del entorno
+# compartido (los dos escriben en la misma carpeta cv2). Por eso este módulo vive en su
+# propio entorno y aquí NO se lista opencv-python: cv2 lo trae opencv-contrib-python.
+#
+# Instalación, desde la raíz del repositorio (ver modulos/ergonomia/README.md):
+#   py -3.12 -m venv modulos\ergonomia\.venv
+#   modulos\ergonomia\.venv\Scripts\python -m pip install -r modulos\ergonomia\requirements.txt
+#   modulos\ergonomia\.venv\Scripts\python -m pip install --no-deps -e .
+
+# Pose, reporte PDF y QR.
+# MediaPipe va fijo en 1.2.2: Smart App Control de Windows bloquea la DLL sin firmar de la
+# 1.2.3 (WinError 4551) y sí deja cargar la de la 1.2.2. Antes de subir de versión, probar
+# que arranca en la PC del stand.
+mediapipe==1.2.2
+fpdf2>=2.9
+qrcode>=8.0
+
+# Lo que necesita modulos/comun (igual que pyproject.toml, sin opencv-python)
+httpx>=0.27
+jsonschema>=4.21
+python-dotenv>=1.0
+numpy>=1.26
+tzdata>=2024.1
+
+# Receptor de prueba y pruebas
+fastapi>=0.110
+uvicorn>=0.29
+python-multipart>=0.0.9
+pytest>=8.0
+pyyaml>=6.0

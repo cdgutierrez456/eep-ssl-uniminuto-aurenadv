@@ -1,0 +1,3 @@
+# Los modelos se descargan (ver ../pose/mediapipe_pose.py); no van en git
+*
+!.gitignore

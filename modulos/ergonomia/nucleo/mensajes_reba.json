@@ -1,0 +1,40 @@
+{
+  "linea_fija": "REBA no califica tu técnica: estima el riesgo de una postura si forma parte de un trabajo.",
+  "cierre_varios_intentos": "La técnica de levantamiento reduce el riesgo; rediseñar la tarea (elevar la carga, acercarla al cuerpo, reducir su peso) es lo que más lo reduce.",
+  "pistas": {
+    "desde_piso": "Desde el piso, incluso con buena técnica, el riesgo rara vez baja de medio. Lo que más lo reduce es elevar la carga.",
+    "carga_elevada": "Elevar la carga es un control de ingeniería: cambia la tarea, no solo la técnica."
+  },
+  "niveles": {
+    "insignificante": {
+      "etiqueta": "Riesgo insignificante",
+      "panel": "Esta postura no representa un riesgo relevante, aun repetida en un trabajo.",
+      "accion": "No es necesario intervenir.",
+      "ampliado": "El puntaje indica que esta postura exige muy poco al cuerpo. Si formara parte de un trabajo habitual, no haría falta cambiar la tarea por razones posturales. Conviene evaluarla de nuevo si cambian la carga, el ritmo o el puesto."
+    },
+    "bajo": {
+      "etiqueta": "Riesgo bajo",
+      "panel": "Si esta postura se repite en un trabajo, el riesgo es bajo.",
+      "accion": "Puede ser necesario intervenir.",
+      "ampliado": "La postura evaluada tiene una exigencia baja. Repetida en un trabajo el riesgo es bajo, aunque puede ser necesario intervenir si se suma a otros factores, como la frecuencia, la duración o el peso de la carga. Vale la pena observar la tarea completa antes de descartarla."
+    },
+    "medio": {
+      "etiqueta": "Riesgo medio · intervenir",
+      "panel": "Si esta postura se repite en un trabajo, la tarea debería modificarse.",
+      "accion": "Es necesario intervenir.",
+      "ampliado": "La postura evaluada exige al cuerpo lo suficiente como para que, repetida en un trabajo, la tarea deba modificarse. El resultado habla de la tarea, no de la persona: recoger una carga desde abajo obliga a flexionar la espalda o las rodillas, aun con buena técnica. Elevar el punto de agarre o acercar la carga al cuerpo es lo que más ayuda."
+    },
+    "alto": {
+      "etiqueta": "Riesgo alto · intervenir pronto",
+      "panel": "Si esta postura se repite en un trabajo, la tarea debe modificarse pronto.",
+      "accion": "Es necesario intervenir pronto.",
+      "ampliado": "La postura evaluada tiene una exigencia alta. Si forma parte de un trabajo, la tarea debe modificarse pronto, antes de que la repetición la convierta en molestia o en lesión. La técnica ayuda, pero la mejora mayor viene de cambiar la tarea: elevar la carga, acercarla al cuerpo o reducir su peso."
+    },
+    "muy_alto": {
+      "etiqueta": "Riesgo muy alto · intervenir ya",
+      "panel": "Si esta postura se repite en un trabajo, la tarea debe modificarse de inmediato.",
+      "accion": "Es necesario intervenir de inmediato.",
+      "ampliado": "La postura evaluada está entre las de mayor exigencia que mide el método. Si forma parte de un trabajo, la tarea debe modificarse de inmediato. Ninguna técnica compensa una tarea así: hay que cambiar la altura, la distancia o el peso de la carga, o usar ayudas mecánicas."
+    }
+  }
+}

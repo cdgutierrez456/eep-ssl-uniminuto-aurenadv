@@ -15,10 +15,15 @@ hace falta saber hacia qué lado de la imagen mira (``frente``: +1 derecha, -1 i
 from __future__ import annotations
 
 import math
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Mapping, NamedTuple
 
 UMBRAL_VISIBILIDAD = 0.5
+# Con el tronco más inclinado que esto, la cabeza ya no sirve para saber hacia dónde mira
+INCLINACION_MAXIMA_PARA_FRENTE_POR_CABEZA = 60.0
+# El neutro del tronco corrige del todo con la persona de pie y se desvanece al inclinarse
+# estos grados respecto a su postura de pie (ver ``correccion_de_tronco``)
+DESVANECER_NEUTRO_TRONCO = 30.0
 
 LADOS = ("izquierdo", "derecho")
 # Puntos con los que se decide qué lado del cuerpo mira a la cámara
@@ -55,9 +60,42 @@ class AngulosCuerpo:
         """Los seis ángulos REBA, con las claves del contrato de eventos."""
         return {n: getattr(self, n) for n in ("tronco", "cuello", "piernas", "brazo", "antebrazo", "muneca")}
 
+    def con_neutro(self, tronco_neutro: float, cuello_neutro: float) -> "AngulosCuerpo":
+        """Copia con tronco y cuello medidos desde la postura neutra de la persona.
+
+        El cuello se corrige completo. El tronco, solo cerca de la postura de pie (ver
+        ``correccion_de_tronco``). El brazo se mide respecto a la línea del tronco, así que
+        lleva la misma corrección que el tronco; su ángulo respecto a la vertical del piso
+        no cambia. Sin frente conocido los ángulos no tienen signo y no se corrigen.
+        """
+        if self.frente is None:
+            return self
+        def menos(valor: float | None, resta: float) -> float | None:
+            return None if valor is None else valor - resta
+        del_tronco = 0.0 if self.tronco is None else correccion_de_tronco(self.tronco, tronco_neutro)
+        return replace(self, tronco=menos(self.tronco, del_tronco), cuello=menos(self.cuello, cuello_neutro),
+                       brazo=menos(self.brazo, del_tronco))
+
     def para_reba(self) -> dict[str, float | None]:
         """Lo que recibe ``calcular_reba``: los seis ángulos más los auxiliares."""
         return {**self.como_dict(), "brazo_vertical": self.brazo_vertical}
+
+
+def correccion_de_tronco(tronco_crudo: float, tronco_neutro: float,
+                         desvanecer: float = DESVANECER_NEUTRO_TRONCO) -> float:
+    """Cuánto restarle al tronco crudo para medirlo desde la postura neutra de la persona.
+
+    De pie se resta el neutro completo (queda en 0°). A medida que la persona se inclina, la
+    corrección se desvanece y a ``desvanecer`` grados de su postura de pie ya no se resta nada.
+
+    Por qué no restar siempre el neutro: el desfase que se ve de pie (el hombro algo por
+    detrás de la cadera) depende de la postura y del punto de vista de la cámara, y no se
+    conserva al agacharse. Visto en vivo: con el tronco casi horizontal y el hombro todavía
+    por encima de la cadera (83° medidos), restar un neutro de −17° daba 100°, que significaría
+    el hombro por debajo de la cadera. Agachado, el ángulo crudo es el que coincide con la imagen.
+    """
+    peso = max(0.0, 1.0 - abs(tronco_crudo - tronco_neutro) / desvanecer)
+    return tronco_neutro * peso
 
 
 # --------------------------------------------------------------------------- #
@@ -133,11 +171,18 @@ def angulo_muneca(codo: Punto, muneca: Punto, indice: Punto, menique: Punto) -> 
 # --------------------------------------------------------------------------- #
 # Lado, frente y cálculo conjunto
 # --------------------------------------------------------------------------- #
-def elegir_lado(puntos: Puntos) -> str:
-    """Lado del cuerpo con mayor visibilidad media (el que mira a la cámara)."""
+def elegir_lado(puntos: Puntos, actual: str | None = None, margen: float = 0.0) -> str:
+    """Lado del cuerpo con mayor visibilidad media (el que mira a la cámara).
+
+    Con ``actual`` y ``margen`` hay histéresis: el lado vigente se conserva mientras el
+    otro no lo supere por más de ``margen``, para que no salte de un fotograma a otro.
+    """
     def media(lado: str) -> float:
         return sum(puntos[f"{p}_{lado}"].visibilidad if f"{p}_{lado}" in puntos else 0.0
                    for p in PUNTOS_DE_LADO) / len(PUNTOS_DE_LADO)
+    if actual in LADOS:
+        otro = LADOS[1 - LADOS.index(actual)]
+        return otro if media(otro) > media(actual) + margen else actual
     return max(LADOS, key=media)  # en empate gana el izquierdo
 
 
@@ -155,13 +200,20 @@ def _visibles(puntos: Puntos, nombres: tuple[str, ...], umbral: float) -> tuple[
 def direccion_frente(puntos: Puntos, lado: str, umbral: float = UMBRAL_VISIBILIDAD) -> int | None:
     """Hacia qué lado de la imagen mira la persona: +1 derecha, -1 izquierda, None si no se sabe.
 
-    Primero por la cabeza (la nariz queda delante de la oreja) y, si no se ve, por el pie
-    (la punta queda delante del talón).
+    Primero por el pie (la punta queda delante del talón): está apoyado en el piso y no
+    cambia durante el levantamiento. Si no se ve, por la cabeza (la nariz queda delante de
+    la oreja), pero solo con el tronco más o menos erguido: al agacharse a fondo la cabeza
+    cuelga y esa señal se invierte.
     """
-    for atras, adelante in ((f"oreja_{lado}", "nariz"), (f"talon_{lado}", f"punta_pie_{lado}")):
-        par = _visibles(puntos, (atras, adelante), umbral)
-        if par is not None and par[1].x != par[0].x:
-            return 1 if par[1].x > par[0].x else -1
+    pie = _visibles(puntos, (f"talon_{lado}", f"punta_pie_{lado}"), umbral)
+    if pie is not None and pie[1].x != pie[0].x:
+        return 1 if pie[1].x > pie[0].x else -1
+    tronco = _visibles(puntos, (f"cadera_{lado}", f"hombro_{lado}"), umbral)
+    if tronco is not None and abs(angulo_tronco(*tronco)) > INCLINACION_MAXIMA_PARA_FRENTE_POR_CABEZA:
+        return None
+    cabeza = _visibles(puntos, (f"oreja_{lado}", "nariz"), umbral)
+    if cabeza is not None and cabeza[1].x != cabeza[0].x:
+        return 1 if cabeza[1].x > cabeza[0].x else -1
     return None
 
 

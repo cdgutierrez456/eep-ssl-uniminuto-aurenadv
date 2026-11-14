@@ -1,0 +1,26 @@
+{
+  "peso_carga_kg": 5,
+  "agarre": "bueno",
+  "golpe_o_fuerza_brusca": false,
+  "actividad": {
+    "estatica": false,
+    "repetitiva": false,
+    "cambios_rapidos": false
+  },
+  "modo_deteccion": "auto",
+  "lado": "auto",
+  "camara": null,
+  "ajuste_brazo_inclinada": true,
+  "umbral_tronco_inclinado": 45,
+  "tolerancia_brazo_vertical": 20,
+  "deteccion": {
+    "tronco_inicio": 20,
+    "tronco_erguido": 20,
+    "rodilla_erguida": 30,
+    "segundos_erguido": 1.0,
+    "duracion_minima_s": 0.7,
+    "duracion_maxima_s": 20,
+    "ventana_sostenida_s": 0.3
+  },
+  "postura_neutra": true
+}

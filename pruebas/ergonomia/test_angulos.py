@@ -198,3 +198,19 @@ def test_brazo_respecto_a_la_vertical_del_piso(tronco, brazo, esperado):
     assert a.brazo_vertical == pytest.approx(esperado, **APROX)
     assert a.para_reba()["brazo_vertical"] == a.brazo_vertical
     assert "brazo_vertical" not in a.como_dict()  # no es un ángulo del contrato
+
+
+@pytest.mark.parametrize("frente", [1, -1])
+def test_frente_agachado_a_fondo_lo_decide_el_pie_no_la_cabeza(frente):
+    # Tronco a 100°: la cabeza cuelga y la nariz queda "detrás" de la oreja
+    puntos = postura(tronco=100, frente=frente)
+    oreja = puntos["oreja_derecho"]
+    puntos["nariz"] = Punto(oreja.x - frente * 40, oreja.y + 10)
+    assert angulos.direccion_frente(puntos, "derecho") == frente
+    assert calcular_angulos(puntos).tronco == pytest.approx(100, **APROX)
+
+
+def test_frente_agachado_sin_ver_el_pie_no_se_fia_de_la_cabeza():
+    puntos = postura(tronco=100)
+    puntos["talon_derecho"] = puntos["talon_derecho"]._replace(visibilidad=0.0)
+    assert angulos.direccion_frente(puntos, "derecho") is None
