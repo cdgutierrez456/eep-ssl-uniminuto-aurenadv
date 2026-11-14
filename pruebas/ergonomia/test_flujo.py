@@ -278,8 +278,8 @@ def test_publica_evaluacion_reba_con_su_fotograma_critico(entorno, tmp_path, mon
     assert not (FRAME != 120).any()  # el fotograma original no se tocó
 
     recibidos = httpx.get(entorno.url + "/api/eventos").json()
-    assert recibidos == [publicado.evento]
-    evento = recibidos[0]
+    assert [e for e in recibidos if e["tipo"] == "evaluacion_reba"] == [publicado.evento]
+    evento = publicado.evento
     assert (evento["estacion"], evento["tipo"], evento["sesion_id"]) == ("ergonomia", "evaluacion_reba", "V-0142")
     assert evento["severidad"] == intento.resultado.severidad == "alta"
     assert evento["datos"]["puntaje"] == intento.puntaje and evento["datos"]["intento"] == 1
@@ -299,7 +299,8 @@ def test_sin_sesion_el_evento_no_lleva_sesion_id_y_sin_receptor_queda_en_cola(en
     assert not esperar_envios(1.0)
     entorno.encender()  # al volver la plataforma, el evento se entrega solo
     assert esperar_envios(20)
-    assert [e["id"] for e in httpx.get(entorno.url + "/api/eventos").json()] == [publicado.evento["id"]]
+    evaluaciones = [e for e in httpx.get(entorno.url + "/api/eventos").json() if e["tipo"] == "evaluacion_reba"]
+    assert [e["id"] for e in evaluaciones] == [publicado.evento["id"]]
 
 
 def test_el_flujo_publica_cada_intento_con_el_numero_de_visitante(entorno, tmp_path):
@@ -314,7 +315,7 @@ def test_el_flujo_publica_cada_intento_con_el_numero_de_visitante(entorno, tmp_p
     sim.levantar(SENTADILLA)
     publicador.cerrar()
     assert esperar_envios(10)
-    recibidos = httpx.get(entorno.url + "/api/eventos").json()
+    recibidos = [e for e in httpx.get(entorno.url + "/api/eventos").json() if e["tipo"] == "evaluacion_reba"]
     assert [(e["sesion_id"], e["datos"]["intento"]) for e in recibidos] == [("V-0142", 1), ("V-0142", 2)]
     assert recibidos[0]["datos"]["puntaje"] > recibidos[1]["datos"]["puntaje"]
     assert all((tmp_path / "receptor" / e["adjuntos"][0]["ruta"]).is_file() for e in recibidos)
@@ -362,7 +363,11 @@ def test_espalda_mas_recta_pero_reba_no_baja_se_dice_tal_cual():
 def test_correcciones_al_comparar_dos_intentos():
     # Las correcciones describen la postura; no regañan a la persona
     assert sugerir_correcciones(_visita(PROFUNDA, DOBLADA)) == ["La espalda se dobló más esta vez. Inténtalo de nuevo"]
-    assert sugerir_correcciones(_visita(DOBLADA, {**DOBLADA, "tronco": 93}))[0].startswith("Espalda parecida.")
+    assert sugerir_correcciones(_visita(DOBLADA, {**DOBLADA, "tronco": 93})) == [
+        "Espalda parecida. Flexiona las rodillas y acerca la caja"]
+    # A quien ya flexiona las rodillas no se le pide flexionarlas
+    assert sugerir_correcciones(_visita(PROFUNDA, {**PROFUNDA, "tronco": 51})) == [
+        "Espalda parecida al intento anterior. Mantén la carga cerca del cuerpo"]
     visita = _visita(DOBLADA, SILLA)
     assert visita.comparacion().diferencia < 0
     assert sugerir_correcciones(visita) == ["Espalda 84° más recta y REBA más bajo"]

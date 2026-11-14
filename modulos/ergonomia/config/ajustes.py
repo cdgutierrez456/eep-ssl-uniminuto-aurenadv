@@ -63,6 +63,9 @@ class AjustesLocales:
     umbral_visibilidad: float = 0.5
     segundos_resultado: float = 8.0  # cuánto se deja en pantalla el resultado de un intento
     segundos_nueva_visita: float = 20.0  # sin nadie en cuadro este tiempo, empieza otra visita
+    # URL pública del servidor de Auren (BASE_URL_PUBLICA). Con ella y un número de visitante,
+    # la pantalla muestra un QR hacia {base}/r/{sesion_id}. Vacía = sin QR.
+    base_url_publica: str | None = None
 
     @classmethod
     def desde_entorno(cls) -> "AjustesLocales":
@@ -82,6 +85,7 @@ class AjustesLocales:
             umbral_visibilidad=numero("ERGONOMIA_UMBRAL_VISIBILIDAD", 0.5, float),
             segundos_resultado=numero("ERGONOMIA_SEGUNDOS_RESULTADO", 8.0, float),
             segundos_nueva_visita=numero("ERGONOMIA_SEGUNDOS_NUEVA_VISITA", 20.0, float),
+            base_url_publica=(os.getenv("BASE_URL_PUBLICA") or "").strip().rstrip("/") or None,
         )
 
 

@@ -147,7 +147,8 @@ class Flujo:
                  "" if levantamiento.sostenido else " [máximo de un solo fotograma: el puntaje no se sostuvo]")
         if self.publicador is not None:
             self.publicaciones.append(
-                self.publicador.publicar_levantamiento(critico, intento, self.visita.sesion_id, config))
+                self.publicador.publicar_levantamiento(critico, intento, self.visita.sesion_id, config,
+                                                       tuple(self.visita.intentos), self.visita.codigo))
         return intento
 
     # ------------------------------------------------------------------ #
@@ -240,6 +241,16 @@ class Flujo:
         ultimo, comparacion = self.visita.ultimo, self.visita.comparacion()
         anterior = comparacion.anterior.puntaje if comparacion is not None else None
         return pista_contextual(ultimo.puntaje, ultimo.desde_piso, anterior)
+
+    def url_del_pasaporte(self, base_url_publica: str | None) -> str | None:
+        """Dirección del pasaporte del visitante para el QR: ``{base}/r/{sesion_id}``.
+
+        None si no hay URL pública configurada, si no se tecleó el número de visitante o si
+        todavía no hay ningún intento (no habría reporte que ver).
+        """
+        if not base_url_publica or not self.visita.sesion_id or not self.visita.intentos:
+            return None
+        return f"{base_url_publica.rstrip('/')}/r/{self.visita.sesion_id}"
 
     def resultado_reciente(self, t: float) -> tuple[Intento, AngulosCuerpo, tuple[float, float] | None] | None:
         """El intento que acaba de terminar, con los ángulos y la postura neutra de su fotograma

@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import logging
 import uuid
+from datetime import datetime
 from concurrent.futures import Future, ThreadPoolExecutor
 from dataclasses import dataclass
 from pathlib import Path
@@ -21,12 +22,14 @@ import numpy as np
 
 from modulos.comun import publicar, subir_medio
 from modulos.comun.config import leer_entorno
+from modulos.comun.eventos import ZONA_HORARIA
 
 from . import __version__
 from .interfaz.dibujo import imagen_para_guardar
 from .nucleo.angulos import AngulosCuerpo, Punto
 from .nucleo.intentos import Intento
 from .nucleo.reba import SEGMENTOS
+from .reporte.contenido import DatosReporte
 
 log = logging.getLogger(__name__)
 
@@ -92,6 +95,17 @@ def guardar_imagen(imagen: np.ndarray, ruta: Path) -> Path:
     return ruta
 
 
+def id_de_reporte(sesion_id: str | None, intento: int, codigo_visita: str | None = None) -> str:
+    """Identificador del reporte: "REBA-0142-01" para el visitante V-0142, intento 1.
+
+    Sin número de visitante usa el código de la visita (el mismo en todos sus reportes) o,
+    si tampoco hay, seis caracteres al azar.
+    """
+    visitante = ("".join(c for c in (sesion_id or "") if c.isalnum() and c not in "Vv")
+                 or codigo_visita or uuid.uuid4().hex[:6].upper())
+    return f"REBA-{visitante}-{intento:02d}"
+
+
 @dataclass(frozen=True)
 class Publicado:
     """Resultado de publicar un levantamiento."""
@@ -99,6 +113,10 @@ class Publicado:
     evento: dict
     ruta_imagen: Path  # copia local del fotograma crítico (difuminado, con esqueleto)
     ruta_medio: str  # la ruta que devolvió subir_medio
+    # Reporte PDF; None si no se pudo generar (la evaluación se publica igual)
+    evento_reporte: dict | None = None
+    ruta_pdf: Path | None = None
+    ruta_medio_pdf: str | None = None
 
 
 class Publicador:
@@ -106,12 +124,20 @@ class Publicador:
 
     def __init__(self, carpeta: Path | None = None) -> None:
         self.carpeta = carpeta or leer_entorno().carpeta_cola / ESTACION / "capturas"
+        self.carpeta_reportes = self.carpeta.parent / "reportes"
         self._hilo = ThreadPoolExecutor(max_workers=1, thread_name_prefix="publicar-ergonomia")
 
     def publicar_levantamiento(self, critico: Critico, intento: Intento, sesion_id: str | None,
-                               config: Mapping[str, Any]) -> Future:
-        """Encola la publicación y vuelve de inmediato. El futuro entrega un ``Publicado``."""
-        futuro = self._hilo.submit(self._publicar, critico, intento, sesion_id, dict(config))
+                               config: Mapping[str, Any], intentos: tuple[Intento, ...] = (),
+                               codigo_visita: str | None = None) -> Future:
+        """Encola la publicación y vuelve de inmediato. El futuro entrega un ``Publicado``.
+
+        ``intentos`` son los de la visita hasta este, en orden; el reporte los usa para la
+        comparación; ``codigo_visita`` identifica los reportes de una visita sin número.
+        Publica ``evaluacion_reba`` con su imagen y luego ``reporte_generado`` con el PDF.
+        """
+        futuro = self._hilo.submit(self._publicar, critico, intento, sesion_id, dict(config), tuple(intentos),
+                                   codigo_visita)
         futuro.add_done_callback(self._avisar_si_falla)
         return futuro
 
@@ -121,7 +147,8 @@ class Publicador:
 
     # ------------------------------------------------------------------ #
     def _publicar(self, critico: Critico, intento: Intento, sesion_id: str | None,
-                  config: dict[str, Any]) -> Publicado:
+                  config: dict[str, Any], intentos: tuple[Intento, ...] = (),
+                  codigo_visita: str | None = None) -> Publicado:
         r = intento.resultado
         imagen = imagen_para_guardar(critico.frame, critico.puntos, critico.angulos.lado, r.segmentos,
                                      critico.angulos.como_dict())
@@ -133,7 +160,37 @@ class Publicador:
             severidad=r.severidad, sesion_id=sesion_id,
             adjuntos=[{"tipo": "imagen", "ruta": ruta_medio}], modulo_version=__version__,
         )
-        return Publicado(evento, ruta_imagen, ruta_medio)
+        try:
+            reporte = self._publicar_reporte(critico, intento, intentos or (intento,), sesion_id, config,
+                                             ruta_imagen, evento, codigo_visita)
+        except Exception:  # el reporte es un extra: si falla, la evaluación ya quedó publicada
+            log.exception("No se pudo generar o publicar el reporte PDF del intento %d", intento.numero)
+            return Publicado(evento, ruta_imagen, ruta_medio)
+        return Publicado(evento, ruta_imagen, ruta_medio, *reporte)
+
+    def _publicar_reporte(self, critico: Critico, intento: Intento, intentos: tuple[Intento, ...],
+                          sesion_id: str | None, config: dict[str, Any], ruta_imagen: Path,
+                          evaluacion: dict, codigo_visita: str | None = None) -> tuple[dict, Path, str]:
+        """Genera el PDF de una página, lo sube y publica ``reporte_generado``."""
+        from .reporte.pdf import generar_reporte  # fpdf2 solo se carga si de verdad se genera un reporte
+
+        reporte_id = id_de_reporte(sesion_id, intento.numero, codigo_visita)
+        datos = DatosReporte(
+            reporte_id=reporte_id, fecha=datetime.now(ZONA_HORARIA), intento=intento, angulos=critico.angulos,
+            intentos=intentos, sesion_id=sesion_id, neutra=critico.neutra,
+            peso_carga_kg=config["peso_carga_kg"], agarre=config["agarre"], ruta_imagen=ruta_imagen,
+            ventana_sostenida_s=config.get("deteccion", {}).get("ventana_sostenida_s", 0.3),
+        )
+        generado = generar_reporte(datos, self.carpeta_reportes / f"{reporte_id.lower()}-{uuid.uuid4().hex[:8]}.pdf")
+        ruta_medio_pdf = subir_medio(generado.ruta)
+        evento = publicar(
+            ESTACION, "reporte_generado",
+            {"reporte_id": reporte_id, "url_reporte": ruta_medio_pdf, "intento": intento.numero,
+             "evaluacion_id": evaluacion["id"]},
+            severidad="info", sesion_id=sesion_id, adjuntos=[{"tipo": "pdf", "ruta": ruta_medio_pdf}],
+            modulo_version=__version__,
+        )
+        return evento, generado.ruta, ruta_medio_pdf
 
     @staticmethod
     def _avisar_si_falla(futuro: Future) -> None:

@@ -1,0 +1,67 @@
+{
+  "descripcion": "Reglas escritas para las recomendaciones del reporte. Por cada segmento, la regla que aplica es la de mayor 'desde' que el puntaje alcance. Los textos hablan de la tarea y de la postura, nunca culpan a la persona, y no usan IA: funcionan sin internet. En el tronco, 'texto_con_rodillas_flexionadas' reemplaza al texto cuando las piernas ya puntúan 3 o más: no tiene sentido pedir que flexione las rodillas a quien ya lo hizo.",
+  "segmentos": {
+    "tronco": [
+      {
+        "desde": 4,
+        "texto": "La espalda se dobló más de 60°. Flexiona las rodillas y mantén la espalda recta; si la tarea se repite, eleva la carga para no tener que agacharte tanto.",
+        "texto_con_rodillas_flexionadas": "La espalda se dobló más de 60° aun con las rodillas flexionadas. Si la tarea se repite, eleva la carga para no tener que agacharte tanto."
+      },
+      {
+        "desde": 3,
+        "texto": "Flexiona las rodillas y mantén la espalda recta. Una carga a la altura de la cadera evita inclinar el tronco.",
+        "texto_con_rodillas_flexionadas": "Mantén la espalda recta al subir con la carga. Una carga a la altura de la cadera evita inclinar el tronco."
+      }
+    ],
+    "piernas": [
+      {
+        "desde": 3,
+        "texto": "Agacharse a fondo carga las rodillas. Subir la carga a una plataforma o una mesa baja evita bajar tanto."
+      },
+      {
+        "desde": 2,
+        "texto": "Busca una base estable: los pies separados al ancho de los hombros y el peso repartido en los dos."
+      }
+    ],
+    "brazo": [
+      {
+        "desde": 3,
+        "texto": "Acerca la carga al cuerpo antes de levantarla: con los brazos estirados hacia adelante, el esfuerzo en hombros y espalda es mayor."
+      }
+    ],
+    "cuello": [
+      {
+        "desde": 2,
+        "texto": "Mantén el cuello alineado con la espalda: mira la carga al recogerla, sin levantar ni girar la cabeza."
+      }
+    ],
+    "muneca": [
+      {
+        "desde": 2,
+        "texto": "Sujeta la carga con las muñecas rectas. Unas asas o un agarre firme ayudan a no doblarlas."
+      }
+    ],
+    "antebrazo": [
+      {
+        "desde": 2,
+        "texto": "Sujeta la carga con los codos algo flexionados y cerca del cuerpo, no con los brazos del todo estirados."
+      }
+    ]
+  },
+  "carga": [
+    {
+      "desde": 2,
+      "texto": "La carga supera los 10 kg. Reducir su peso, dividirla o usar una ayuda mecánica baja el riesgo más que cualquier técnica."
+    }
+  ],
+  "agarre": [
+    {
+      "desde": 2,
+      "texto": "El agarre es deficiente. Unas asas, una caja con aberturas o guantes adecuados mejoran el control de la carga."
+    }
+  ],
+  "generales": [
+    "Evita girar el tronco mientras sostienes la carga: gira con los pies.",
+    "Mantén la carga cerca del cuerpo durante todo el recorrido."
+  ]
+}

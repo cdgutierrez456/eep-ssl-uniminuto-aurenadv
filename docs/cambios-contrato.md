@@ -258,3 +258,32 @@ Por qué importa `desde_piso`: desde el piso, incluso con buena técnica, el REB
 de medio, porque el método suma por la flexión de espalda **o** por la de rodillas. Lo que
 más reduce el puntaje es cambiar la tarea (elevar o acercar la carga). Para un ranking de
 "mejor técnica", ordenar por `tecnica.espalda_max` y no por `puntaje`.
+
+## 7. `reporte_generado`: un PDF por intento
+
+Al terminar cada levantamiento, después de `evaluacion_reba`, la estación genera un PDF de
+una página, lo sube con `POST /api/medios` y publica `reporte_generado`
+([ejemplo](../contrato/ejemplos/reporte_generado.json)).
+
+- `datos.reporte_id`: `REBA-0142-01` para el visitante `V-0142`, intento 1. Sin número de
+  visitante, el lugar del número lo ocupa un código al azar de seis caracteres, el mismo
+  para todos los intentos de esa visita (`REBA-7F3A9C-01`, `REBA-7F3A9C-02`).
+- `datos.url_reporte`: la ruta que devolvió `POST /api/medios`; es la misma del adjunto
+  (`adjuntos: [{ "tipo": "pdf", "ruta": ... }]`).
+- Campos opcionales nuevos (aditivos): `datos.intento` (número del intento) y
+  `datos.evaluacion_id` (el `id` del `evaluacion_reba` del mismo intento), para enlazar el
+  reporte con su evaluación.
+- `severidad`: siempre `info`. Lleva `sesion_id` si el operador tecleó el número.
+- Con varios intentos en la visita hay un PDF por intento; el último trae la comparación
+  con los anteriores. Para el pasaporte basta con mostrar el de `intento` más alto.
+- Si el PDF no se puede generar, `evaluacion_reba` se publica igual y no hay `reporte_generado`.
+
+Qué trae el PDF: fotograma crítico (rostros difuminados, con esqueleto), puntaje y nivel con
+su nivel de acción, tabla de ángulos y puntajes por segmento, el cálculo (tablas A, B y C),
+la sección "Qué significa este resultado", la comparación de intentos si la hay, de 2 a 4
+recomendaciones por reglas escritas (sin IA, funciona sin internet) y cómo se midió.
+
+**QR en la estación:** si la PC tiene `BASE_URL_PUBLICA` en su `.env` y el operador tecleó
+el número de visitante, la pantalla de ergonomía muestra un QR hacia
+`{BASE_URL_PUBLICA}/r/{sesion_id}` desde el primer intento. Sin esa variable no hay QR. La
+URL pública sigue siendo una decisión abierta del brief: la estación solo la lee.

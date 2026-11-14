@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import uuid
 from dataclasses import dataclass, field
 
 from .reba import SEGMENTOS, ResultadoReba
@@ -119,6 +120,8 @@ class Visita:
 
     sesion_id: str | None = None
     intentos: list[Intento] = field(default_factory=list)
+    # Código al azar de la visita: identifica sus reportes cuando no se tecleó el número de visitante
+    codigo: str = field(default_factory=lambda: uuid.uuid4().hex[:6].upper(), compare=False)
 
     def registrar(self, resultado: ResultadoReba, duracion_s: float, espalda_max: float | None = None,
                   rodillas_max: float | None = None, desde_piso: bool | None = None) -> Intento:
@@ -173,4 +176,7 @@ def sugerir_correcciones(visita: Visita) -> list[str]:
         return [f"Espalda {grados}° más recta. Mira qué segmentos cambiaron"]
     if grados <= -CAMBIO_MINIMO_DE_ESPALDA:
         return ["La espalda se dobló más esta vez. Inténtalo de nuevo"]
+    if comparacion.actual.tecnica.piernas == "flexionadas":
+        # Ya flexiona las rodillas: no tiene sentido pedírselo
+        return ["Espalda parecida al intento anterior. Mantén la carga cerca del cuerpo"]
     return ["Espalda parecida. Flexiona las rodillas y acerca la caja"]

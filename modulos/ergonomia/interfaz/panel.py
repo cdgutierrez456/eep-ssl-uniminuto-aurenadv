@@ -70,6 +70,7 @@ class EstadoPanel:
     titulo_reba: str = "Puntaje REBA"  # "Resultado del intento N" mientras se muestra un intento terminado
     tecnica: Tecnica | None = None  # espalda y rodillas a mostrar; None = las del fotograma en vivo
     pista: str | None = None  # pista contextual tras un intento; va después de las correcciones
+    qr_url: str | None = None  # dirección del pasaporte del visitante; None = sin QR
 
     def clave(self) -> tuple:
         """Resumen de lo visible, redondeado: si no cambia, no hace falta volver a dibujar."""
@@ -86,7 +87,7 @@ class EstadoPanel:
         )
 
     def clave_franjas(self) -> tuple:
-        return (self.superior, self.inferior, self.color_inferior)
+        return (self.superior, self.inferior, self.color_inferior, self.qr_url)
 
 
 class Panel:
@@ -295,6 +296,7 @@ class Pantalla:
         self.alto_franja = round(ALTO_FRANJA_BASE * alto / 1080)
         self.panel = Panel(self.ancho_panel, alto)
         self._clave_franjas: tuple | None = None
+        self._qr: tuple[str, Image.Image] | None = None  # último QR generado, por dirección
         self._franjas: tuple[np.ndarray, np.ndarray] | None = None
 
     def _dibujar_franjas(self, estado: EstadoPanel) -> tuple[np.ndarray, np.ndarray]:
@@ -312,14 +314,35 @@ class Pantalla:
         inferior = Image.new("RGB", tamano, marca.NEGRO)
         d = ImageDraw.Draw(inferior)
         principal, secundaria, detalle = estado.inferior
+        ancho_texto = self.ancho_video - p(110)
+        if estado.qr_url:
+            # QR hacia el pasaporte del visitante, a la derecha de la franja
+            lado = self.alto_franja - 2 * p(14)
+            x_qr = self.ancho_video - p(40) - lado
+            inferior.paste(self._imagen_qr(estado.qr_url, lado), (x_qr, p(14)))
+            d.text((x_qr - p(18), centro - p(14)), "Tu reporte", font=f(24, True), fill=marca.MARFIL, anchor="rm")
+            d.text((x_qr - p(18), centro + p(16)), "Escanea el código", font=f(17), fill=marca.MARFIL_TENUE, anchor="rm")
+            ancho_texto = x_qr - p(18) - p(220) - p(70)
         if principal:
             d.rectangle((p(40), p(22), p(48), self.alto_franja - p(22)), fill=estado.color_inferior or marca.MARFIL_TENUE)
             d.text((p(70), p(40)), principal, font=f(36, True), fill=marca.MARFIL, anchor="lm")
             d.text((p(70), p(88)), secundaria, font=f(25), fill=marca.MARFIL, anchor="lm")
             # La línea del REBA se achica si no cabe, para no cortar los segmentos que cambiaron
-            tamano_detalle = next((t for t in (18, 16, 14) if d.textlength(detalle, font=f(t)) <= self.ancho_video - p(110)), 14)
+            tamano_detalle = next((t for t in (18, 16, 14, 12) if d.textlength(detalle, font=f(t)) <= ancho_texto), 12)
             d.text((p(70), p(126)), detalle, font=f(tamano_detalle), fill=marca.MARFIL_TENUE, anchor="lm")
         return tuple(cv2.cvtColor(np.asarray(imagen), cv2.COLOR_RGB2BGR) for imagen in (superior, inferior))
+
+    def _imagen_qr(self, url: str, lado: int) -> Image.Image:
+        """Código QR de ``url`` en los colores de la marca (negro Auren sobre marfil), de ``lado`` píxeles."""
+        if self._qr is None or self._qr[0] != url or self._qr[1].width != lado:
+            import qrcode  # solo se carga si hay una URL pública configurada
+
+            codigo = qrcode.QRCode(border=2, error_correction=qrcode.constants.ERROR_CORRECT_M)
+            codigo.add_data(url)
+            codigo.make(fit=True)
+            imagen = codigo.make_image(fill_color=marca.NEGRO, back_color=marca.MARFIL).convert("RGB")
+            self._qr = (url, imagen.resize((lado, lado), Image.NEAREST))
+        return self._qr[1]
 
     def componer(self, vista: np.ndarray | None, estado: EstadoPanel) -> np.ndarray:
         """``vista`` es el fotograma ya con el esqueleto (o None si no hay imagen)."""

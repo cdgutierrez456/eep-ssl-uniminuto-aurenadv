@@ -237,6 +237,7 @@ class Estacion:
     def _textos(self, estado: EstadoPanel, t: float, config: dict[str, Any]) -> None:
         estado.instruccion = self.flujo.instruccion(t, config)
         estado.pista = self.flujo.pista(t)
+        estado.qr_url = self.flujo.url_del_pasaporte(self.ajustes.base_url_publica)
         # Al terminar un intento, el panel muestra su resultado (no la postura de pie en vivo)
         reciente = self.flujo.resultado_reciente(t)
         if reciente is not None:

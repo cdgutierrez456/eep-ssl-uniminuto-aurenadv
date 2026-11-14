@@ -223,7 +223,9 @@
       "required": ["reporte_id", "url_reporte"],
       "properties": {
         "reporte_id": { "type": "string", "minLength": 1 },
-        "url_reporte": { "type": "string", "minLength": 1 }
+        "url_reporte": { "type": "string", "minLength": 1 },
+        "intento": { "description": "Opcional. Número del intento al que corresponde el reporte.", "type": "integer", "minimum": 1 },
+        "evaluacion_id": { "description": "Opcional. id del evento evaluacion_reba del mismo intento.", "type": "string", "format": "uuid" }
       }
     },
     "datos_verificacion_epp": {

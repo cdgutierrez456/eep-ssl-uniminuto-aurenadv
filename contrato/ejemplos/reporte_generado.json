@@ -6,7 +6,7 @@
   "timestamp": "2026-11-20T10:32:41-05:00",
   "sesion_id": "V-0142",
   "severidad": "info",
-  "datos": { "reporte_id": "REBA-0142-01", "url_reporte": "media/2026-11-20/reba-0142-01.pdf" },
+  "datos": { "reporte_id": "REBA-0142-01", "url_reporte": "media/2026-11-20/reba-0142-01.pdf", "intento": 1, "evaluacion_id": "8f3c2a1e-5b7d-4e8a-9c21-7d4e5f6a8b90" },
   "adjuntos": [ { "tipo": "pdf", "ruta": "media/2026-11-20/reba-0142-01.pdf" } ],
   "origen": { "dispositivo": "pc-stand", "modulo_version": "0.1.0" }
 }
