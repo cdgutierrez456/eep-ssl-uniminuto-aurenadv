@@ -9,7 +9,7 @@ from pathlib import Path
 
 import httpx
 
-from .config import obtener_config
+from .config import leer_entorno
 from .eventos import ZONA_HORARIA
 
 log = logging.getLogger(__name__)
@@ -30,7 +30,7 @@ def subir_medio(ruta_archivo: str | Path) -> str:
     if not ruta_archivo.is_file():
         raise FileNotFoundError(f"No existe el archivo a subir: {ruta_archivo}")
 
-    config = obtener_config()
+    config = leer_entorno()
     tipo_mime = mimetypes.guess_type(ruta_archivo.name)[0] or "application/octet-stream"
     try:
         with open(ruta_archivo, "rb") as archivo:

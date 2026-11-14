@@ -24,7 +24,7 @@ class Configuracion:
     ruta_esquema: Path
 
 
-def obtener_config() -> Configuracion:
+def leer_entorno() -> Configuracion:
     """Lee la configuración desde las variables de entorno.
 
     Se lee en cada llamada (no se guarda en caché) para que un cambio de

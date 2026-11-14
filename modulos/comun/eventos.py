@@ -6,7 +6,7 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 
 from .cola import obtener_cola
-from .config import obtener_config
+from .config import leer_entorno
 from .esquema import validar_evento
 
 log = logging.getLogger(__name__)
@@ -39,7 +39,7 @@ def construir_evento(
         "severidad": severidad,
         "datos": datos,
         "origen": {
-            "dispositivo": obtener_config().dispositivo,
+            "dispositivo": leer_entorno().dispositivo,
             "modulo_version": modulo_version or VERSION_MODULO,
         },
     }

@@ -26,9 +26,14 @@ Léelo antes de un cambio grande.
   (`publicar`, `iniciar_latido`, `subir_medio`). Nunca HTTP directo a la plataforma.
 - **Primero un pipeline funcional de punta a punta**; la optimización viene después.
 - **Funciona sin internet**, salvo los módulos que llaman IA en la nube (inspector e incidente).
-- **Toda imagen guardada o mostrada lleva los rostros difuminados**: pasa por
-  `modulos.comun.difuminar_rostros(frame)` antes de escribirla, subirla o enseñarla.
-  No se guarda video, solo fotogramas puntuales.
+- **Toda imagen guardada o enviada lleva los rostros difuminados**: pasa por
+  `modulos.comun.difuminar_rostros(frame)` antes de escribirla en disco o subirla, y las
+  cajas y etiquetas se dibujan **después** del difuminado. No se guarda video, solo
+  fotogramas puntuales.
+- **Excepción, la vista en vivo**: en los módulos de visión, la imagen de la cámara que se
+  muestra en pantalla en el momento es un espejo y **no** se difumina, porque no se guarda
+  ni se envía. En cuanto un fotograma sale de esa vista (archivo, subida, adjunto, captura
+  para un reporte), aplica la regla anterior sin excepciones.
 - **Configuración por `.env`** (con `.env.example` versionado). Nunca claves en el código.
 - Debe funcionar en **Windows y Linux**: rutas con `pathlib`, archivos con `encoding="utf-8"`.
 - **Marca Auren** en cualquier interfaz visual: Auren Deep `#12343B`, Auren Black `#111414`,

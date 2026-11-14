@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aurenadv.com/sst/contrato/config_epp.schema.json",
+  "title": "Configuración del módulo EPP",
+  "description": "Cuerpo de GET y PUT /api/modulos/epp/config. La plataforma manda: el módulo la consulta cada pocos segundos. Los perfiles y elementos válidos son los que el módulo registró en PUT /api/modulos/epp/capacidades.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["perfil_activo"],
+  "properties": {
+    "perfil_activo": {
+      "description": "Perfil que se verifica ahora. Debe ser uno de los perfiles registrados en las capacidades; si no, el módulo rechaza la configuración y conserva la anterior.",
+      "type": "string",
+      "minLength": 1
+    },
+    "perfiles": {
+      "description": "Elementos exigidos por perfil. Un perfil que no aparezca conserva sus valores por defecto.",
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["elementos_requeridos"],
+        "properties": {
+          "elementos_requeridos": {
+            "description": "Elementos exigidos. Uno que el modelo del perfil no sepa detectar se ignora con una advertencia.",
+            "type": "array",
+            "items": { "type": "string", "minLength": 1 }
+          }
+        }
+      }
+    }
+  }
+}

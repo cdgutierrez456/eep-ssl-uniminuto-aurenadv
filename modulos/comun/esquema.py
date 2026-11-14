@@ -6,7 +6,7 @@ from pathlib import Path
 
 from jsonschema import Draft202012Validator
 
-from .config import obtener_config
+from .config import leer_entorno
 
 
 class EventoInvalido(ValueError):
@@ -24,7 +24,7 @@ def _validador(ruta: Path) -> Draft202012Validator:
 
 def errores_de(evento: object) -> list[str]:
     """Devuelve la lista de errores legibles del evento (vacía si es válido)."""
-    validador = _validador(obtener_config().ruta_esquema)
+    validador = _validador(leer_entorno().ruta_esquema)
     errores = []
     for error in sorted(validador.iter_errors(evento), key=lambda e: list(e.absolute_path)):
         campo = "/".join(str(parte) for parte in error.absolute_path) or "(sobre)"

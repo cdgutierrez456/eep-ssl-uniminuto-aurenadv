@@ -1,0 +1,44 @@
+{
+  "version_contrato": "1.0",
+  "descripcion": "Reglas de veredicto EPP. Este archivo es inmutable por version: cualquier cambio sube version_contrato. hash_reglas = SHA-256 de los bytes exactos de este archivo (UTF-8, LF).",
+  "clase_persona": "persona",
+  "elementos_requeridos": ["cofia", "gafas", "tapabocas"],
+  "clases_negativas": {
+    "cofia": "sin_cofia",
+    "gafas": "sin_gafas",
+    "tapabocas": "sin_tapabocas"
+  },
+  "umbral_confianza": {
+    "persona": 0.375,
+    "cofia": 0.5,
+    "gafas": 0.375,
+    "tapabocas": 0.5,
+    "sin_cofia": 0.5,
+    "sin_gafas": 0.5,
+    "sin_tapabocas": 0.5
+  },
+  "asociacion": {
+    "franja_superior": 0.625
+  },
+  "primer_plano": {
+    "modo": "auto",
+    "minimo_evidencias": 1,
+    "caja_virtual": [0.0, 0.0, 1.0, 1.0],
+    "franja_superior": 1.0
+  },
+  "suavizado": {
+    "ventana_cuadros": 7,
+    "iou_minimo": 0.3,
+    "mayoria": 0.5,
+    "minimo_observaciones": 3,
+    "confirmacion_positiva": 3,
+    "cuadros_sin_ver_max": 5
+  },
+  "detector": {
+    "umbral_previo": 0.25,
+    "iou_nms": 0.5,
+    "nms_por_clase": true,
+    "max_det": 50,
+    "imgsz": 640
+  }
+}

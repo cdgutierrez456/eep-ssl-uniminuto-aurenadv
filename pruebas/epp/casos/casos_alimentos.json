@@ -1,0 +1,720 @@
+{
+  "version_contrato": "1.0",
+  "descripcion": "Casos dorados de las reglas EPP. Cada caso usa contrato/reglas_epp.json salvo que traiga 'reglas_override' (reemplaza claves de primer nivel completas). 'casos_imagen' se evaluan con evaluar_cuadro; 'secuencias' pasan cada paso por evaluar_cuadro y luego por el suavizador de la misma sesion (un paso con 'reiniciar': true reinicia el suavizador antes de procesarlo). En las secuencias, 'esperado' solo lista las claves que se comparan.",
+  "convenciones": {
+    "persona_A": "caja [0.25, 0.0, 0.75, 1.0]: cx 0.5, cy 0.5, area 0.5, limite de franja 0.625",
+    "elementos_A": "cofia [0.4,0.05,0.6,0.2] (centro 0.5,0.125); gafas [0.4,0.2,0.6,0.3] (0.5,0.25); tapabocas [0.4,0.3,0.6,0.45] (0.5,0.375)",
+    "umbrales": "persona 0.375, cofia 0.5, gafas 0.375, tapabocas 0.5, negativas 0.5"
+  },
+  "casos_imagen": [
+    {
+      "id": "01_persona_completa",
+      "descripcion": "Una persona con los tres elementos asociados: cumple.",
+      "detecciones": [
+        {"clase": "persona", "confianza": 0.9, "caja": [0.25, 0.0, 0.75, 1.0]},
+        {"clase": "cofia", "confianza": 0.9, "caja": [0.4, 0.05, 0.6, 0.2]},
+        {"clase": "gafas", "confianza": 0.8, "caja": [0.4, 0.2, 0.6, 0.3]},
+        {"clase": "tapabocas", "confianza": 0.85, "caja": [0.4, 0.3, 0.6, 0.45]}
+      ],
+      "esperado": {
+        "personas": [
+          {"id": 1, "caja": [0.25, 0.0, 0.75, 1.0], "inferida": false,
+           "elementos": {"cofia": true, "gafas": true, "tapabocas": true},
+           "evidencia": {"cofia": "positivo", "gafas": "positivo", "tapabocas": "positivo"},
+           "faltantes": [], "cumple": true}
+        ],
+        "resumen": {"personas": 1, "cumplen": 1, "no_cumplen": 0, "cumple_global": true}
+      }
+    },
+    {
+      "id": "02_falta_un_elemento",
+      "descripcion": "Persona con cofia y tapabocas; no hay deteccion de gafas: falta gafas (evidencia desconocido).",
+      "detecciones": [
+        {"clase": "persona", "confianza": 0.9, "caja": [0.25, 0.0, 0.75, 1.0]},
+        {"clase": "cofia", "confianza": 0.9, "caja": [0.4, 0.05, 0.6, 0.2]},
+        {"clase": "tapabocas", "confianza": 0.85, "caja": [0.4, 0.3, 0.6, 0.45]}
+      ],
+      "esperado": {
+        "personas": [
+          {"id": 1, "caja": [0.25, 0.0, 0.75, 1.0], "inferida": false,
+           "elementos": {"cofia": true, "gafas": false, "tapabocas": true},
+           "evidencia": {"cofia": "positivo", "gafas": "desconocido", "tapabocas": "positivo"},
+           "faltantes": ["gafas"], "cumple": false}
+        ],
+        "resumen": {"personas": 1, "cumplen": 0, "no_cumplen": 1, "cumple_global": false}
+      }
+    },
+    {
+      "id": "03_faltan_todos",
+      "descripcion": "Solo se detecta la persona: faltan los tres elementos en el orden de elementos_requeridos.",
+      "detecciones": [
+        {"clase": "persona", "confianza": 0.9, "caja": [0.25, 0.0, 0.75, 1.0]}
+      ],
+      "esperado": {
+        "personas": [
+          {"id": 1, "caja": [0.25, 0.0, 0.75, 1.0], "inferida": false,
+           "elementos": {"cofia": false, "gafas": false, "tapabocas": false},
+           "evidencia": {"cofia": "desconocido", "gafas": "desconocido", "tapabocas": "desconocido"},
+           "faltantes": ["cofia", "gafas", "tapabocas"], "cumple": false}
+        ],
+        "resumen": {"personas": 1, "cumplen": 0, "no_cumplen": 1, "cumple_global": false}
+      }
+    },
+    {
+      "id": "04_dos_personas_veredictos_distintos",
+      "descripcion": "Dos personas lado a lado. La de la derecha llega primero en la entrada pero recibe id 2 por el orden total (cx). Tiene sin_gafas.",
+      "detecciones": [
+        {"clase": "persona", "confianza": 0.8, "caja": [0.5, 0.0, 1.0, 1.0]},
+        {"clase": "cofia", "confianza": 0.9, "caja": [0.7, 0.05, 0.8, 0.2]},
+        {"clase": "sin_gafas", "confianza": 0.7, "caja": [0.7, 0.2, 0.8, 0.3]},
+        {"clase": "tapabocas", "confianza": 0.9, "caja": [0.7, 0.3, 0.8, 0.45]},
+        {"clase": "persona", "confianza": 0.9, "caja": [0.0, 0.0, 0.5, 1.0]},
+        {"clase": "cofia", "confianza": 0.9, "caja": [0.2, 0.05, 0.3, 0.2]},
+        {"clase": "gafas", "confianza": 0.8, "caja": [0.2, 0.2, 0.3, 0.3]},
+        {"clase": "tapabocas", "confianza": 0.85, "caja": [0.2, 0.3, 0.3, 0.45]}
+      ],
+      "esperado": {
+        "personas": [
+          {"id": 1, "caja": [0.0, 0.0, 0.5, 1.0], "inferida": false,
+           "elementos": {"cofia": true, "gafas": true, "tapabocas": true},
+           "evidencia": {"cofia": "positivo", "gafas": "positivo", "tapabocas": "positivo"},
+           "faltantes": [], "cumple": true},
+          {"id": 2, "caja": [0.5, 0.0, 1.0, 1.0], "inferida": false,
+           "elementos": {"cofia": true, "gafas": false, "tapabocas": true},
+           "evidencia": {"cofia": "positivo", "gafas": "negativo", "tapabocas": "positivo"},
+           "faltantes": ["gafas"], "cumple": false}
+        ],
+        "resumen": {"personas": 2, "cumplen": 1, "no_cumplen": 1, "cumple_global": false}
+      }
+    },
+    {
+      "id": "05_personas_superpuestas_menor_area_gana",
+      "descripcion": "Persona grande [0,0,1,1] y persona pequena [0.25,0,0.75,0.5] (franja hasta 0.3125). Cofia y gafas caen en ambas franjas: van a la pequena (menor area). El tapabocas (cy 0.35) solo cae en la grande. Orden: misma cx, la pequena tiene menor cy -> id 1.",
+      "detecciones": [
+        {"clase": "persona", "confianza": 0.9, "caja": [0.0, 0.0, 1.0, 1.0]},
+        {"clase": "persona", "confianza": 0.9, "caja": [0.25, 0.0, 0.75, 0.5]},
+        {"clase": "cofia", "confianza": 0.9, "caja": [0.45, 0.05, 0.55, 0.15]},
+        {"clase": "gafas", "confianza": 0.8, "caja": [0.45, 0.15, 0.55, 0.25]},
+        {"clase": "tapabocas", "confianza": 0.9, "caja": [0.45, 0.3, 0.55, 0.4]}
+      ],
+      "esperado": {
+        "personas": [
+          {"id": 1, "caja": [0.25, 0.0, 0.75, 0.5], "inferida": false,
+           "elementos": {"cofia": true, "gafas": true, "tapabocas": false},
+           "evidencia": {"cofia": "positivo", "gafas": "positivo", "tapabocas": "desconocido"},
+           "faltantes": ["tapabocas"], "cumple": false},
+          {"id": 2, "caja": [0.0, 0.0, 1.0, 1.0], "inferida": false,
+           "elementos": {"cofia": false, "gafas": false, "tapabocas": true},
+           "evidencia": {"cofia": "desconocido", "gafas": "desconocido", "tapabocas": "positivo"},
+           "faltantes": ["cofia", "gafas"], "cumple": false}
+        ],
+        "resumen": {"personas": 2, "cumplen": 0, "no_cumplen": 2, "cumple_global": false}
+      }
+    },
+    {
+      "id": "06_primer_plano_auto_con_elementos",
+      "descripcion": "Sin persona detectada pero con tres elementos sobre umbral: modo auto infiere una persona [0,0,1,1] que cumple.",
+      "detecciones": [
+        {"clase": "cofia", "confianza": 0.8, "caja": [0.3, 0.0, 0.7, 0.2]},
+        {"clase": "gafas", "confianza": 0.7, "caja": [0.3, 0.3, 0.7, 0.4]},
+        {"clase": "tapabocas", "confianza": 0.9, "caja": [0.3, 0.5, 0.7, 0.7]}
+      ],
+      "esperado": {
+        "personas": [
+          {"id": 1, "caja": [0.0, 0.0, 1.0, 1.0], "inferida": true,
+           "elementos": {"cofia": true, "gafas": true, "tapabocas": true},
+           "evidencia": {"cofia": "positivo", "gafas": "positivo", "tapabocas": "positivo"},
+           "faltantes": [], "cumple": true}
+        ],
+        "resumen": {"personas": 1, "cumplen": 1, "no_cumplen": 0, "cumple_global": true}
+      }
+    },
+    {
+      "id": "07_primer_plano_auto_con_negativa",
+      "descripcion": "Sin persona; cofia y sin_tapabocas: persona inferida con cofia, sin gafas (desconocido) y tapabocas negativo.",
+      "detecciones": [
+        {"clase": "cofia", "confianza": 0.8, "caja": [0.3, 0.0, 0.7, 0.2]},
+        {"clase": "sin_tapabocas", "confianza": 0.8, "caja": [0.3, 0.5, 0.7, 0.7]}
+      ],
+      "esperado": {
+        "personas": [
+          {"id": 1, "caja": [0.0, 0.0, 1.0, 1.0], "inferida": true,
+           "elementos": {"cofia": true, "gafas": false, "tapabocas": false},
+           "evidencia": {"cofia": "positivo", "gafas": "desconocido", "tapabocas": "negativo"},
+           "faltantes": ["gafas", "tapabocas"], "cumple": false}
+        ],
+        "resumen": {"personas": 1, "cumplen": 0, "no_cumplen": 1, "cumple_global": false}
+      }
+    },
+    {
+      "id": "08_imagen_vacia",
+      "descripcion": "Sin detecciones: ninguna persona, cumple_global false.",
+      "detecciones": [],
+      "esperado": {
+        "personas": [],
+        "resumen": {"personas": 0, "cumplen": 0, "no_cumplen": 0, "cumple_global": false}
+      }
+    },
+    {
+      "id": "09_modo_siempre_imagen_vacia",
+      "descripcion": "primer_plano.modo = siempre e imagen vacia: una persona inferida con todo desconocido, no cumple.",
+      "reglas_override": {
+        "primer_plano": {"modo": "siempre", "minimo_evidencias": 1, "caja_virtual": [0.0, 0.0, 1.0, 1.0], "franja_superior": 1.0}
+      },
+      "detecciones": [],
+      "esperado": {
+        "personas": [
+          {"id": 1, "caja": [0.0, 0.0, 1.0, 1.0], "inferida": true,
+           "elementos": {"cofia": false, "gafas": false, "tapabocas": false},
+           "evidencia": {"cofia": "desconocido", "gafas": "desconocido", "tapabocas": "desconocido"},
+           "faltantes": ["cofia", "gafas", "tapabocas"], "cumple": false}
+        ],
+        "resumen": {"personas": 1, "cumplen": 0, "no_cumplen": 1, "cumple_global": false}
+      }
+    },
+    {
+      "id": "10_modo_siempre_ignora_persona_detectada",
+      "descripcion": "primer_plano.modo = siempre con una persona detectada: se ignora su caja y se evalua una unica persona inferida [0,0,1,1].",
+      "reglas_override": {
+        "primer_plano": {"modo": "siempre", "minimo_evidencias": 1, "caja_virtual": [0.0, 0.0, 1.0, 1.0], "franja_superior": 1.0}
+      },
+      "detecciones": [
+        {"clase": "persona", "confianza": 0.9, "caja": [0.25, 0.0, 0.75, 1.0]},
+        {"clase": "cofia", "confianza": 0.9, "caja": [0.4, 0.05, 0.6, 0.2]},
+        {"clase": "gafas", "confianza": 0.8, "caja": [0.4, 0.2, 0.6, 0.3]},
+        {"clase": "tapabocas", "confianza": 0.85, "caja": [0.4, 0.3, 0.6, 0.45]}
+      ],
+      "esperado": {
+        "personas": [
+          {"id": 1, "caja": [0.0, 0.0, 1.0, 1.0], "inferida": true,
+           "elementos": {"cofia": true, "gafas": true, "tapabocas": true},
+           "evidencia": {"cofia": "positivo", "gafas": "positivo", "tapabocas": "positivo"},
+           "faltantes": [], "cumple": true}
+        ],
+        "resumen": {"personas": 1, "cumplen": 1, "no_cumplen": 0, "cumple_global": true}
+      }
+    },
+    {
+      "id": "11_modo_nunca_sin_persona",
+      "descripcion": "primer_plano.modo = nunca y elementos sin persona: no se infiere nadie.",
+      "reglas_override": {
+        "primer_plano": {"modo": "nunca", "minimo_evidencias": 1, "caja_virtual": [0.0, 0.0, 1.0, 1.0], "franja_superior": 1.0}
+      },
+      "detecciones": [
+        {"clase": "cofia", "confianza": 0.8, "caja": [0.3, 0.0, 0.7, 0.2]},
+        {"clase": "tapabocas", "confianza": 0.9, "caja": [0.3, 0.5, 0.7, 0.7]}
+      ],
+      "esperado": {
+        "personas": [],
+        "resumen": {"personas": 0, "cumplen": 0, "no_cumplen": 0, "cumple_global": false}
+      }
+    },
+    {
+      "id": "12_elemento_fuera_de_la_persona",
+      "descripcion": "La cofia esta a la derecha de la caja de la persona (cx 0.875 > x2 0.75): no se asocia.",
+      "detecciones": [
+        {"clase": "persona", "confianza": 0.9, "caja": [0.25, 0.0, 0.75, 1.0]},
+        {"clase": "cofia", "confianza": 0.9, "caja": [0.8, 0.05, 0.95, 0.2]},
+        {"clase": "gafas", "confianza": 0.8, "caja": [0.4, 0.2, 0.6, 0.3]},
+        {"clase": "tapabocas", "confianza": 0.85, "caja": [0.4, 0.3, 0.6, 0.45]}
+      ],
+      "esperado": {
+        "personas": [
+          {"id": 1, "caja": [0.25, 0.0, 0.75, 1.0], "inferida": false,
+           "elementos": {"cofia": false, "gafas": true, "tapabocas": true},
+           "evidencia": {"cofia": "desconocido", "gafas": "positivo", "tapabocas": "positivo"},
+           "faltantes": ["cofia"], "cumple": false}
+        ],
+        "resumen": {"personas": 1, "cumplen": 0, "no_cumplen": 1, "cumple_global": false}
+      }
+    },
+    {
+      "id": "13_elemento_en_franja_inferior",
+      "descripcion": "El tapabocas tiene cy 0.8 > limite 0.625: esta dentro de la caja pero fuera de la franja superior, no se asocia.",
+      "detecciones": [
+        {"clase": "persona", "confianza": 0.9, "caja": [0.25, 0.0, 0.75, 1.0]},
+        {"clase": "cofia", "confianza": 0.9, "caja": [0.4, 0.05, 0.6, 0.2]},
+        {"clase": "gafas", "confianza": 0.8, "caja": [0.4, 0.2, 0.6, 0.3]},
+        {"clase": "tapabocas", "confianza": 0.85, "caja": [0.4, 0.7, 0.6, 0.9]}
+      ],
+      "esperado": {
+        "personas": [
+          {"id": 1, "caja": [0.25, 0.0, 0.75, 1.0], "inferida": false,
+           "elementos": {"cofia": true, "gafas": true, "tapabocas": false},
+           "evidencia": {"cofia": "positivo", "gafas": "positivo", "tapabocas": "desconocido"},
+           "faltantes": ["tapabocas"], "cumple": false}
+        ],
+        "resumen": {"personas": 1, "cumplen": 0, "no_cumplen": 1, "cumple_global": false}
+      }
+    },
+    {
+      "id": "14_confianza_exacta_en_umbral",
+      "descripcion": "Todas las confianzas iguales a su umbral (comparacion inclusiva >=): cuentan.",
+      "detecciones": [
+        {"clase": "persona", "confianza": 0.375, "caja": [0.25, 0.0, 0.75, 1.0]},
+        {"clase": "cofia", "confianza": 0.5, "caja": [0.4, 0.05, 0.6, 0.2]},
+        {"clase": "gafas", "confianza": 0.375, "caja": [0.4, 0.2, 0.6, 0.3]},
+        {"clase": "tapabocas", "confianza": 0.5, "caja": [0.4, 0.3, 0.6, 0.45]}
+      ],
+      "esperado": {
+        "personas": [
+          {"id": 1, "caja": [0.25, 0.0, 0.75, 1.0], "inferida": false,
+           "elementos": {"cofia": true, "gafas": true, "tapabocas": true},
+           "evidencia": {"cofia": "positivo", "gafas": "positivo", "tapabocas": "positivo"},
+           "faltantes": [], "cumple": true}
+        ],
+        "resumen": {"personas": 1, "cumplen": 1, "no_cumplen": 0, "cumple_global": true}
+      }
+    },
+    {
+      "id": "15_confianza_bajo_umbral",
+      "descripcion": "Cofia 0.49 (< 0.5) y gafas 0.365 (< 0.375) se descartan; tapabocas 0.51 cuenta.",
+      "detecciones": [
+        {"clase": "persona", "confianza": 0.9, "caja": [0.25, 0.0, 0.75, 1.0]},
+        {"clase": "cofia", "confianza": 0.49, "caja": [0.4, 0.05, 0.6, 0.2]},
+        {"clase": "gafas", "confianza": 0.365, "caja": [0.4, 0.2, 0.6, 0.3]},
+        {"clase": "tapabocas", "confianza": 0.51, "caja": [0.4, 0.3, 0.6, 0.45]}
+      ],
+      "esperado": {
+        "personas": [
+          {"id": 1, "caja": [0.25, 0.0, 0.75, 1.0], "inferida": false,
+           "elementos": {"cofia": false, "gafas": false, "tapabocas": true},
+           "evidencia": {"cofia": "desconocido", "gafas": "desconocido", "tapabocas": "positivo"},
+           "faltantes": ["cofia", "gafas"], "cumple": false}
+        ],
+        "resumen": {"personas": 1, "cumplen": 0, "no_cumplen": 1, "cumple_global": false}
+      }
+    },
+    {
+      "id": "16_confianza_justo_sobre_umbral",
+      "descripcion": "Confianzas umbral + 0.01: todas cuentan.",
+      "detecciones": [
+        {"clase": "persona", "confianza": 0.385, "caja": [0.25, 0.0, 0.75, 1.0]},
+        {"clase": "cofia", "confianza": 0.51, "caja": [0.4, 0.05, 0.6, 0.2]},
+        {"clase": "gafas", "confianza": 0.385, "caja": [0.4, 0.2, 0.6, 0.3]},
+        {"clase": "tapabocas", "confianza": 0.51, "caja": [0.4, 0.3, 0.6, 0.45]}
+      ],
+      "esperado": {
+        "personas": [
+          {"id": 1, "caja": [0.25, 0.0, 0.75, 1.0], "inferida": false,
+           "elementos": {"cofia": true, "gafas": true, "tapabocas": true},
+           "evidencia": {"cofia": "positivo", "gafas": "positivo", "tapabocas": "positivo"},
+           "faltantes": [], "cumple": true}
+        ],
+        "resumen": {"personas": 1, "cumplen": 1, "no_cumplen": 0, "cumple_global": true}
+      }
+    },
+    {
+      "id": "17_centro_exacto_en_limite_franja",
+      "descripcion": "Persona [0,0,1,1] -> limite 0.625. Tapabocas [0.4,0.5,0.6,0.75] tiene cy = 0.625 exacto: inclusivo, se asocia.",
+      "detecciones": [
+        {"clase": "persona", "confianza": 0.9, "caja": [0.0, 0.0, 1.0, 1.0]},
+        {"clase": "cofia", "confianza": 0.9, "caja": [0.4, 0.05, 0.6, 0.2]},
+        {"clase": "gafas", "confianza": 0.8, "caja": [0.4, 0.2, 0.6, 0.3]},
+        {"clase": "tapabocas", "confianza": 0.85, "caja": [0.4, 0.5, 0.6, 0.75]}
+      ],
+      "esperado": {
+        "personas": [
+          {"id": 1, "caja": [0.0, 0.0, 1.0, 1.0], "inferida": false,
+           "elementos": {"cofia": true, "gafas": true, "tapabocas": true},
+           "evidencia": {"cofia": "positivo", "gafas": "positivo", "tapabocas": "positivo"},
+           "faltantes": [], "cumple": true}
+        ],
+        "resumen": {"personas": 1, "cumplen": 1, "no_cumplen": 0, "cumple_global": true}
+      }
+    },
+    {
+      "id": "18_centro_justo_bajo_limite_franja",
+      "descripcion": "Igual que 17 pero el tapabocas [0.4,0.625,0.6,0.75] tiene cy 0.6875 > 0.625: no se asocia.",
+      "detecciones": [
+        {"clase": "persona", "confianza": 0.9, "caja": [0.0, 0.0, 1.0, 1.0]},
+        {"clase": "cofia", "confianza": 0.9, "caja": [0.4, 0.05, 0.6, 0.2]},
+        {"clase": "gafas", "confianza": 0.8, "caja": [0.4, 0.2, 0.6, 0.3]},
+        {"clase": "tapabocas", "confianza": 0.85, "caja": [0.4, 0.625, 0.6, 0.75]}
+      ],
+      "esperado": {
+        "personas": [
+          {"id": 1, "caja": [0.0, 0.0, 1.0, 1.0], "inferida": false,
+           "elementos": {"cofia": true, "gafas": true, "tapabocas": false},
+           "evidencia": {"cofia": "positivo", "gafas": "positivo", "tapabocas": "desconocido"},
+           "faltantes": ["tapabocas"], "cumple": false}
+        ],
+        "resumen": {"personas": 1, "cumplen": 0, "no_cumplen": 1, "cumple_global": false}
+      }
+    },
+    {
+      "id": "19_negativa_gana_sobre_positiva",
+      "descripcion": "Tapabocas (0.9) y sin_tapabocas (0.6) asociados a la misma persona: la negativa gana.",
+      "detecciones": [
+        {"clase": "persona", "confianza": 0.9, "caja": [0.25, 0.0, 0.75, 1.0]},
+        {"clase": "cofia", "confianza": 0.9, "caja": [0.4, 0.05, 0.6, 0.2]},
+        {"clase": "gafas", "confianza": 0.8, "caja": [0.4, 0.2, 0.6, 0.3]},
+        {"clase": "tapabocas", "confianza": 0.9, "caja": [0.4, 0.3, 0.6, 0.45]},
+        {"clase": "sin_tapabocas", "confianza": 0.6, "caja": [0.4, 0.3, 0.6, 0.45]}
+      ],
+      "esperado": {
+        "personas": [
+          {"id": 1, "caja": [0.25, 0.0, 0.75, 1.0], "inferida": false,
+           "elementos": {"cofia": true, "gafas": true, "tapabocas": false},
+           "evidencia": {"cofia": "positivo", "gafas": "positivo", "tapabocas": "negativo"},
+           "faltantes": ["tapabocas"], "cumple": false}
+        ],
+        "resumen": {"personas": 1, "cumplen": 0, "no_cumplen": 1, "cumple_global": false}
+      }
+    },
+    {
+      "id": "20_elementos_requeridos_reducidos",
+      "descripcion": "Planta que no exige gafas: elementos_requeridos = [cofia, tapabocas]. La deteccion de gafas se ignora en el veredicto.",
+      "reglas_override": {"elementos_requeridos": ["cofia", "tapabocas"]},
+      "detecciones": [
+        {"clase": "persona", "confianza": 0.9, "caja": [0.25, 0.0, 0.75, 1.0]},
+        {"clase": "cofia", "confianza": 0.9, "caja": [0.4, 0.05, 0.6, 0.2]},
+        {"clase": "gafas", "confianza": 0.8, "caja": [0.4, 0.2, 0.6, 0.3]},
+        {"clase": "tapabocas", "confianza": 0.85, "caja": [0.4, 0.3, 0.6, 0.45]}
+      ],
+      "esperado": {
+        "personas": [
+          {"id": 1, "caja": [0.25, 0.0, 0.75, 1.0], "inferida": false,
+           "elementos": {"cofia": true, "tapabocas": true},
+           "evidencia": {"cofia": "positivo", "tapabocas": "positivo"},
+           "faltantes": [], "cumple": true}
+        ],
+        "resumen": {"personas": 1, "cumplen": 1, "no_cumplen": 0, "cumple_global": true}
+      }
+    },
+    {
+      "id": "21_entradas_invalidas_se_descartan",
+      "descripcion": "Cofia totalmente fuera de la imagen (queda con area cero tras recortar), gafas con caja invertida, clase desconocida 'casco' y una cofia con confianza 1.5: todas se descartan. Solo el tapabocas cuenta.",
+      "detecciones": [
+        {"clase": "persona", "confianza": 0.9, "caja": [0.25, 0.0, 0.75, 1.0]},
+        {"clase": "cofia", "confianza": 0.9, "caja": [1.2, 0.05, 1.5, 0.2]},
+        {"clase": "gafas", "confianza": 0.8, "caja": [0.6, 0.3, 0.4, 0.2]},
+        {"clase": "casco", "confianza": 0.9, "caja": [0.4, 0.05, 0.6, 0.2]},
+        {"clase": "cofia", "confianza": 1.5, "caja": [0.4, 0.05, 0.6, 0.2]},
+        {"clase": "tapabocas", "confianza": 0.85, "caja": [0.4, 0.3, 0.6, 0.45]}
+      ],
+      "esperado": {
+        "personas": [
+          {"id": 1, "caja": [0.25, 0.0, 0.75, 1.0], "inferida": false,
+           "elementos": {"cofia": false, "gafas": false, "tapabocas": true},
+           "evidencia": {"cofia": "desconocido", "gafas": "desconocido", "tapabocas": "positivo"},
+           "faltantes": ["cofia", "gafas"], "cumple": false}
+        ],
+        "resumen": {"personas": 1, "cumplen": 0, "no_cumplen": 1, "cumple_global": false}
+      }
+    },
+    {
+      "id": "22_caja_recortada_parcialmente",
+      "descripcion": "Cofia [-0.1,-0.05,0.6,0.2] se recorta a [0,0,0.6,0.2] (centro 0.3,0.1), dentro de la franja de la persona: se asocia.",
+      "detecciones": [
+        {"clase": "persona", "confianza": 0.9, "caja": [0.25, 0.0, 0.75, 1.0]},
+        {"clase": "cofia", "confianza": 0.9, "caja": [-0.1, -0.05, 0.6, 0.2]},
+        {"clase": "gafas", "confianza": 0.8, "caja": [0.4, 0.2, 0.6, 0.3]},
+        {"clase": "tapabocas", "confianza": 0.85, "caja": [0.4, 0.3, 0.6, 0.45]}
+      ],
+      "esperado": {
+        "personas": [
+          {"id": 1, "caja": [0.25, 0.0, 0.75, 1.0], "inferida": false,
+           "elementos": {"cofia": true, "gafas": true, "tapabocas": true},
+           "evidencia": {"cofia": "positivo", "gafas": "positivo", "tapabocas": "positivo"},
+           "faltantes": [], "cumple": true}
+        ],
+        "resumen": {"personas": 1, "cumplen": 1, "no_cumplen": 0, "cumple_global": true}
+      }
+    },
+    {
+      "id": "23_permutacion_de_entrada_misma_salida",
+      "descripcion": "Las mismas detecciones del caso 04 en otro orden: la salida debe ser identica.",
+      "detecciones": [
+        {"clase": "tapabocas", "confianza": 0.85, "caja": [0.2, 0.3, 0.3, 0.45]},
+        {"clase": "gafas", "confianza": 0.8, "caja": [0.2, 0.2, 0.3, 0.3]},
+        {"clase": "persona", "confianza": 0.9, "caja": [0.0, 0.0, 0.5, 1.0]},
+        {"clase": "tapabocas", "confianza": 0.9, "caja": [0.7, 0.3, 0.8, 0.45]},
+        {"clase": "cofia", "confianza": 0.9, "caja": [0.2, 0.05, 0.3, 0.2]},
+        {"clase": "sin_gafas", "confianza": 0.7, "caja": [0.7, 0.2, 0.8, 0.3]},
+        {"clase": "persona", "confianza": 0.8, "caja": [0.5, 0.0, 1.0, 1.0]},
+        {"clase": "cofia", "confianza": 0.9, "caja": [0.7, 0.05, 0.8, 0.2]}
+      ],
+      "esperado": {
+        "personas": [
+          {"id": 1, "caja": [0.0, 0.0, 0.5, 1.0], "inferida": false,
+           "elementos": {"cofia": true, "gafas": true, "tapabocas": true},
+           "evidencia": {"cofia": "positivo", "gafas": "positivo", "tapabocas": "positivo"},
+           "faltantes": [], "cumple": true},
+          {"id": 2, "caja": [0.5, 0.0, 1.0, 1.0], "inferida": false,
+           "elementos": {"cofia": true, "gafas": false, "tapabocas": true},
+           "evidencia": {"cofia": "positivo", "gafas": "negativo", "tapabocas": "positivo"},
+           "faltantes": ["gafas"], "cumple": false}
+        ],
+        "resumen": {"personas": 2, "cumplen": 1, "no_cumplen": 1, "cumple_global": false}
+      }
+    },
+    {
+      "id": "24_persona_bajo_umbral_activa_primer_plano",
+      "descripcion": "La persona tiene confianza 0.3 (< 0.375) y se descarta; con elementos sobre umbral el modo auto infiere una persona.",
+      "detecciones": [
+        {"clase": "persona", "confianza": 0.3, "caja": [0.25, 0.0, 0.75, 1.0]},
+        {"clase": "cofia", "confianza": 0.9, "caja": [0.4, 0.05, 0.6, 0.2]},
+        {"clase": "gafas", "confianza": 0.8, "caja": [0.4, 0.2, 0.6, 0.3]},
+        {"clase": "tapabocas", "confianza": 0.85, "caja": [0.4, 0.3, 0.6, 0.45]}
+      ],
+      "esperado": {
+        "personas": [
+          {"id": 1, "caja": [0.0, 0.0, 1.0, 1.0], "inferida": true,
+           "elementos": {"cofia": true, "gafas": true, "tapabocas": true},
+           "evidencia": {"cofia": "positivo", "gafas": "positivo", "tapabocas": "positivo"},
+           "faltantes": [], "cumple": true}
+        ],
+        "resumen": {"personas": 1, "cumplen": 1, "no_cumplen": 0, "cumple_global": true}
+      }
+    },
+    {
+      "id": "25_primer_plano_auto_sin_evidencia_minima",
+      "descripcion": "Persona 0.3 y cofia 0.4, ambas bajo umbral: tras filtrar no queda evidencia, el modo auto no infiere a nadie.",
+      "detecciones": [
+        {"clase": "persona", "confianza": 0.3, "caja": [0.25, 0.0, 0.75, 1.0]},
+        {"clase": "cofia", "confianza": 0.4, "caja": [0.4, 0.05, 0.6, 0.2]}
+      ],
+      "esperado": {
+        "personas": [],
+        "resumen": {"personas": 0, "cumplen": 0, "no_cumplen": 0, "cumple_global": false}
+      }
+    }
+  ],
+  "secuencias": [
+    {
+      "id": "S01_arranque_y_estabilizacion",
+      "descripcion": "Tres cuadros iguales con persona completa: estable=false hasta la tercera observacion.",
+      "pasos": [
+        {"detecciones": [
+          {"clase": "persona", "confianza": 0.9, "caja": [0.25, 0.0, 0.75, 1.0]},
+          {"clase": "cofia", "confianza": 0.9, "caja": [0.4, 0.05, 0.6, 0.2]},
+          {"clase": "gafas", "confianza": 0.8, "caja": [0.4, 0.2, 0.6, 0.3]},
+          {"clase": "tapabocas", "confianza": 0.85, "caja": [0.4, 0.3, 0.6, 0.45]}],
+         "esperado": {"personas": [{"id": 1, "estable": false, "elementos": {"cofia": true, "gafas": true, "tapabocas": true}, "faltantes": [], "cumple": true}],
+                      "resumen": {"personas": 1, "cumplen": 1, "no_cumplen": 0, "cumple_global": true}}},
+        {"detecciones": [
+          {"clase": "persona", "confianza": 0.9, "caja": [0.25, 0.0, 0.75, 1.0]},
+          {"clase": "cofia", "confianza": 0.9, "caja": [0.4, 0.05, 0.6, 0.2]},
+          {"clase": "gafas", "confianza": 0.8, "caja": [0.4, 0.2, 0.6, 0.3]},
+          {"clase": "tapabocas", "confianza": 0.85, "caja": [0.4, 0.3, 0.6, 0.45]}],
+         "esperado": {"personas": [{"id": 1, "estable": false, "elementos": {"cofia": true, "gafas": true, "tapabocas": true}, "faltantes": [], "cumple": true}],
+                      "resumen": {"personas": 1, "cumplen": 1, "no_cumplen": 0, "cumple_global": true}}},
+        {"detecciones": [
+          {"clase": "persona", "confianza": 0.9, "caja": [0.25, 0.0, 0.75, 1.0]},
+          {"clase": "cofia", "confianza": 0.9, "caja": [0.4, 0.05, 0.6, 0.2]},
+          {"clase": "gafas", "confianza": 0.8, "caja": [0.4, 0.2, 0.6, 0.3]},
+          {"clase": "tapabocas", "confianza": 0.85, "caja": [0.4, 0.3, 0.6, 0.45]}],
+         "esperado": {"personas": [{"id": 1, "estable": true, "elementos": {"cofia": true, "gafas": true, "tapabocas": true}, "faltantes": [], "cumple": true}],
+                      "resumen": {"personas": 1, "cumplen": 1, "no_cumplen": 0, "cumple_global": true}}}
+      ]
+    },
+    {
+      "id": "S02_arranque_contradictorio_y_recuperacion",
+      "descripcion": "Cuadro 1 completo; cuadro 2 con sin_gafas (bloquea de inmediato, aun en arranque); cuadros 3-5 completos: hacen falta 3 positivas consecutivas para recuperar gafas.",
+      "pasos": [
+        {"detecciones": [
+          {"clase": "persona", "confianza": 0.9, "caja": [0.25, 0.0, 0.75, 1.0]},
+          {"clase": "cofia", "confianza": 0.9, "caja": [0.4, 0.05, 0.6, 0.2]},
+          {"clase": "gafas", "confianza": 0.8, "caja": [0.4, 0.2, 0.6, 0.3]},
+          {"clase": "tapabocas", "confianza": 0.85, "caja": [0.4, 0.3, 0.6, 0.45]}],
+         "esperado": {"personas": [{"id": 1, "estable": false, "elementos": {"cofia": true, "gafas": true, "tapabocas": true}, "faltantes": [], "cumple": true}]}},
+        {"detecciones": [
+          {"clase": "persona", "confianza": 0.9, "caja": [0.25, 0.0, 0.75, 1.0]},
+          {"clase": "cofia", "confianza": 0.9, "caja": [0.4, 0.05, 0.6, 0.2]},
+          {"clase": "sin_gafas", "confianza": 0.7, "caja": [0.4, 0.2, 0.6, 0.3]},
+          {"clase": "tapabocas", "confianza": 0.85, "caja": [0.4, 0.3, 0.6, 0.45]}],
+         "esperado": {"personas": [{"id": 1, "estable": false, "elementos": {"cofia": true, "gafas": false, "tapabocas": true}, "faltantes": ["gafas"], "cumple": false}]}},
+        {"detecciones": [
+          {"clase": "persona", "confianza": 0.9, "caja": [0.25, 0.0, 0.75, 1.0]},
+          {"clase": "cofia", "confianza": 0.9, "caja": [0.4, 0.05, 0.6, 0.2]},
+          {"clase": "gafas", "confianza": 0.8, "caja": [0.4, 0.2, 0.6, 0.3]},
+          {"clase": "tapabocas", "confianza": 0.85, "caja": [0.4, 0.3, 0.6, 0.45]}],
+         "esperado": {"personas": [{"id": 1, "estable": true, "elementos": {"cofia": true, "gafas": false, "tapabocas": true}, "faltantes": ["gafas"], "cumple": false}]}},
+        {"detecciones": [
+          {"clase": "persona", "confianza": 0.9, "caja": [0.25, 0.0, 0.75, 1.0]},
+          {"clase": "cofia", "confianza": 0.9, "caja": [0.4, 0.05, 0.6, 0.2]},
+          {"clase": "gafas", "confianza": 0.8, "caja": [0.4, 0.2, 0.6, 0.3]},
+          {"clase": "tapabocas", "confianza": 0.85, "caja": [0.4, 0.3, 0.6, 0.45]}],
+         "esperado": {"personas": [{"id": 1, "estable": true, "elementos": {"cofia": true, "gafas": false, "tapabocas": true}, "faltantes": ["gafas"], "cumple": false}]}},
+        {"detecciones": [
+          {"clase": "persona", "confianza": 0.9, "caja": [0.25, 0.0, 0.75, 1.0]},
+          {"clase": "cofia", "confianza": 0.9, "caja": [0.4, 0.05, 0.6, 0.2]},
+          {"clase": "gafas", "confianza": 0.8, "caja": [0.4, 0.2, 0.6, 0.3]},
+          {"clase": "tapabocas", "confianza": 0.85, "caja": [0.4, 0.3, 0.6, 0.45]}],
+         "esperado": {"personas": [{"id": 1, "estable": true, "elementos": {"cofia": true, "gafas": true, "tapabocas": true}, "faltantes": [], "cumple": true}],
+                      "resumen": {"personas": 1, "cumplen": 1, "no_cumplen": 0, "cumple_global": true}}}
+      ]
+    },
+    {
+      "id": "S03_retirada_con_negativa_explicita",
+      "descripcion": "Tres cuadros completos y luego sin_gafas: el veredicto cambia en una sola observacion.",
+      "pasos": [
+        {"detecciones": [
+          {"clase": "persona", "confianza": 0.9, "caja": [0.25, 0.0, 0.75, 1.0]},
+          {"clase": "cofia", "confianza": 0.9, "caja": [0.4, 0.05, 0.6, 0.2]},
+          {"clase": "gafas", "confianza": 0.8, "caja": [0.4, 0.2, 0.6, 0.3]},
+          {"clase": "tapabocas", "confianza": 0.85, "caja": [0.4, 0.3, 0.6, 0.45]}],
+         "esperado": {"personas": [{"id": 1, "cumple": true}]}},
+        {"detecciones": [
+          {"clase": "persona", "confianza": 0.9, "caja": [0.25, 0.0, 0.75, 1.0]},
+          {"clase": "cofia", "confianza": 0.9, "caja": [0.4, 0.05, 0.6, 0.2]},
+          {"clase": "gafas", "confianza": 0.8, "caja": [0.4, 0.2, 0.6, 0.3]},
+          {"clase": "tapabocas", "confianza": 0.85, "caja": [0.4, 0.3, 0.6, 0.45]}],
+         "esperado": {"personas": [{"id": 1, "cumple": true}]}},
+        {"detecciones": [
+          {"clase": "persona", "confianza": 0.9, "caja": [0.25, 0.0, 0.75, 1.0]},
+          {"clase": "cofia", "confianza": 0.9, "caja": [0.4, 0.05, 0.6, 0.2]},
+          {"clase": "gafas", "confianza": 0.8, "caja": [0.4, 0.2, 0.6, 0.3]},
+          {"clase": "tapabocas", "confianza": 0.85, "caja": [0.4, 0.3, 0.6, 0.45]}],
+         "esperado": {"personas": [{"id": 1, "estable": true, "cumple": true}]}},
+        {"detecciones": [
+          {"clase": "persona", "confianza": 0.9, "caja": [0.25, 0.0, 0.75, 1.0]},
+          {"clase": "cofia", "confianza": 0.9, "caja": [0.4, 0.05, 0.6, 0.2]},
+          {"clase": "sin_gafas", "confianza": 0.7, "caja": [0.4, 0.2, 0.6, 0.3]},
+          {"clase": "tapabocas", "confianza": 0.85, "caja": [0.4, 0.3, 0.6, 0.45]}],
+         "esperado": {"personas": [{"id": 1, "estable": true, "elementos": {"cofia": true, "gafas": false, "tapabocas": true}, "faltantes": ["gafas"], "cumple": false}],
+                      "resumen": {"personas": 1, "cumplen": 0, "no_cumplen": 1, "cumple_global": false}}}
+      ]
+    },
+    {
+      "id": "S04_retirada_sin_negativa_ventana_llena",
+      "descripcion": "Siete cuadros completos (ventana llena de positivas) y luego cuadros sin deteccion de gafas (desconocido): la mayoria cae en la cuarta observacion desconocida (3/7 < 0.5).",
+      "pasos": [
+        {"detecciones": [{"clase": "persona", "confianza": 0.9, "caja": [0.25, 0.0, 0.75, 1.0]}, {"clase": "cofia", "confianza": 0.9, "caja": [0.4, 0.05, 0.6, 0.2]}, {"clase": "gafas", "confianza": 0.8, "caja": [0.4, 0.2, 0.6, 0.3]}, {"clase": "tapabocas", "confianza": 0.85, "caja": [0.4, 0.3, 0.6, 0.45]}], "esperado": {"personas": [{"id": 1, "cumple": true}]}},
+        {"detecciones": [{"clase": "persona", "confianza": 0.9, "caja": [0.25, 0.0, 0.75, 1.0]}, {"clase": "cofia", "confianza": 0.9, "caja": [0.4, 0.05, 0.6, 0.2]}, {"clase": "gafas", "confianza": 0.8, "caja": [0.4, 0.2, 0.6, 0.3]}, {"clase": "tapabocas", "confianza": 0.85, "caja": [0.4, 0.3, 0.6, 0.45]}], "esperado": {"personas": [{"id": 1, "cumple": true}]}},
+        {"detecciones": [{"clase": "persona", "confianza": 0.9, "caja": [0.25, 0.0, 0.75, 1.0]}, {"clase": "cofia", "confianza": 0.9, "caja": [0.4, 0.05, 0.6, 0.2]}, {"clase": "gafas", "confianza": 0.8, "caja": [0.4, 0.2, 0.6, 0.3]}, {"clase": "tapabocas", "confianza": 0.85, "caja": [0.4, 0.3, 0.6, 0.45]}], "esperado": {"personas": [{"id": 1, "cumple": true}]}},
+        {"detecciones": [{"clase": "persona", "confianza": 0.9, "caja": [0.25, 0.0, 0.75, 1.0]}, {"clase": "cofia", "confianza": 0.9, "caja": [0.4, 0.05, 0.6, 0.2]}, {"clase": "gafas", "confianza": 0.8, "caja": [0.4, 0.2, 0.6, 0.3]}, {"clase": "tapabocas", "confianza": 0.85, "caja": [0.4, 0.3, 0.6, 0.45]}], "esperado": {"personas": [{"id": 1, "cumple": true}]}},
+        {"detecciones": [{"clase": "persona", "confianza": 0.9, "caja": [0.25, 0.0, 0.75, 1.0]}, {"clase": "cofia", "confianza": 0.9, "caja": [0.4, 0.05, 0.6, 0.2]}, {"clase": "gafas", "confianza": 0.8, "caja": [0.4, 0.2, 0.6, 0.3]}, {"clase": "tapabocas", "confianza": 0.85, "caja": [0.4, 0.3, 0.6, 0.45]}], "esperado": {"personas": [{"id": 1, "cumple": true}]}},
+        {"detecciones": [{"clase": "persona", "confianza": 0.9, "caja": [0.25, 0.0, 0.75, 1.0]}, {"clase": "cofia", "confianza": 0.9, "caja": [0.4, 0.05, 0.6, 0.2]}, {"clase": "gafas", "confianza": 0.8, "caja": [0.4, 0.2, 0.6, 0.3]}, {"clase": "tapabocas", "confianza": 0.85, "caja": [0.4, 0.3, 0.6, 0.45]}], "esperado": {"personas": [{"id": 1, "cumple": true}]}},
+        {"detecciones": [{"clase": "persona", "confianza": 0.9, "caja": [0.25, 0.0, 0.75, 1.0]}, {"clase": "cofia", "confianza": 0.9, "caja": [0.4, 0.05, 0.6, 0.2]}, {"clase": "gafas", "confianza": 0.8, "caja": [0.4, 0.2, 0.6, 0.3]}, {"clase": "tapabocas", "confianza": 0.85, "caja": [0.4, 0.3, 0.6, 0.45]}], "esperado": {"personas": [{"id": 1, "estable": true, "cumple": true}]}},
+        {"detecciones": [{"clase": "persona", "confianza": 0.9, "caja": [0.25, 0.0, 0.75, 1.0]}, {"clase": "cofia", "confianza": 0.9, "caja": [0.4, 0.05, 0.6, 0.2]}, {"clase": "tapabocas", "confianza": 0.85, "caja": [0.4, 0.3, 0.6, 0.45]}], "esperado": {"personas": [{"id": 1, "elementos": {"cofia": true, "gafas": true, "tapabocas": true}, "cumple": true}]}},
+        {"detecciones": [{"clase": "persona", "confianza": 0.9, "caja": [0.25, 0.0, 0.75, 1.0]}, {"clase": "cofia", "confianza": 0.9, "caja": [0.4, 0.05, 0.6, 0.2]}, {"clase": "tapabocas", "confianza": 0.85, "caja": [0.4, 0.3, 0.6, 0.45]}], "esperado": {"personas": [{"id": 1, "elementos": {"cofia": true, "gafas": true, "tapabocas": true}, "cumple": true}]}},
+        {"detecciones": [{"clase": "persona", "confianza": 0.9, "caja": [0.25, 0.0, 0.75, 1.0]}, {"clase": "cofia", "confianza": 0.9, "caja": [0.4, 0.05, 0.6, 0.2]}, {"clase": "tapabocas", "confianza": 0.85, "caja": [0.4, 0.3, 0.6, 0.45]}], "esperado": {"personas": [{"id": 1, "elementos": {"cofia": true, "gafas": true, "tapabocas": true}, "cumple": true}]}},
+        {"detecciones": [{"clase": "persona", "confianza": 0.9, "caja": [0.25, 0.0, 0.75, 1.0]}, {"clase": "cofia", "confianza": 0.9, "caja": [0.4, 0.05, 0.6, 0.2]}, {"clase": "tapabocas", "confianza": 0.85, "caja": [0.4, 0.3, 0.6, 0.45]}], "esperado": {"personas": [{"id": 1, "estable": true, "elementos": {"cofia": true, "gafas": false, "tapabocas": true}, "faltantes": ["gafas"], "cumple": false}], "resumen": {"personas": 1, "cumplen": 0, "no_cumplen": 1, "cumple_global": false}}}
+      ]
+    },
+    {
+      "id": "S05_recuperacion_racha_rota_por_desconocido",
+      "descripcion": "Bloqueo por sin_gafas en el cuadro 4; una positiva, un desconocido (rompe la racha), y luego tres positivas consecutivas recuperan gafas en el cuadro 9.",
+      "pasos": [
+        {"detecciones": [{"clase": "persona", "confianza": 0.9, "caja": [0.25, 0.0, 0.75, 1.0]}, {"clase": "cofia", "confianza": 0.9, "caja": [0.4, 0.05, 0.6, 0.2]}, {"clase": "gafas", "confianza": 0.8, "caja": [0.4, 0.2, 0.6, 0.3]}, {"clase": "tapabocas", "confianza": 0.85, "caja": [0.4, 0.3, 0.6, 0.45]}], "esperado": {"personas": [{"id": 1, "cumple": true}]}},
+        {"detecciones": [{"clase": "persona", "confianza": 0.9, "caja": [0.25, 0.0, 0.75, 1.0]}, {"clase": "cofia", "confianza": 0.9, "caja": [0.4, 0.05, 0.6, 0.2]}, {"clase": "gafas", "confianza": 0.8, "caja": [0.4, 0.2, 0.6, 0.3]}, {"clase": "tapabocas", "confianza": 0.85, "caja": [0.4, 0.3, 0.6, 0.45]}], "esperado": {"personas": [{"id": 1, "cumple": true}]}},
+        {"detecciones": [{"clase": "persona", "confianza": 0.9, "caja": [0.25, 0.0, 0.75, 1.0]}, {"clase": "cofia", "confianza": 0.9, "caja": [0.4, 0.05, 0.6, 0.2]}, {"clase": "gafas", "confianza": 0.8, "caja": [0.4, 0.2, 0.6, 0.3]}, {"clase": "tapabocas", "confianza": 0.85, "caja": [0.4, 0.3, 0.6, 0.45]}], "esperado": {"personas": [{"id": 1, "estable": true, "cumple": true}]}},
+        {"detecciones": [{"clase": "persona", "confianza": 0.9, "caja": [0.25, 0.0, 0.75, 1.0]}, {"clase": "cofia", "confianza": 0.9, "caja": [0.4, 0.05, 0.6, 0.2]}, {"clase": "sin_gafas", "confianza": 0.7, "caja": [0.4, 0.2, 0.6, 0.3]}, {"clase": "tapabocas", "confianza": 0.85, "caja": [0.4, 0.3, 0.6, 0.45]}], "esperado": {"personas": [{"id": 1, "elementos": {"cofia": true, "gafas": false, "tapabocas": true}, "cumple": false}]}},
+        {"detecciones": [{"clase": "persona", "confianza": 0.9, "caja": [0.25, 0.0, 0.75, 1.0]}, {"clase": "cofia", "confianza": 0.9, "caja": [0.4, 0.05, 0.6, 0.2]}, {"clase": "gafas", "confianza": 0.8, "caja": [0.4, 0.2, 0.6, 0.3]}, {"clase": "tapabocas", "confianza": 0.85, "caja": [0.4, 0.3, 0.6, 0.45]}], "esperado": {"personas": [{"id": 1, "elementos": {"cofia": true, "gafas": false, "tapabocas": true}, "cumple": false}]}},
+        {"detecciones": [{"clase": "persona", "confianza": 0.9, "caja": [0.25, 0.0, 0.75, 1.0]}, {"clase": "cofia", "confianza": 0.9, "caja": [0.4, 0.05, 0.6, 0.2]}, {"clase": "tapabocas", "confianza": 0.85, "caja": [0.4, 0.3, 0.6, 0.45]}], "esperado": {"personas": [{"id": 1, "elementos": {"cofia": true, "gafas": false, "tapabocas": true}, "cumple": false}]}},
+        {"detecciones": [{"clase": "persona", "confianza": 0.9, "caja": [0.25, 0.0, 0.75, 1.0]}, {"clase": "cofia", "confianza": 0.9, "caja": [0.4, 0.05, 0.6, 0.2]}, {"clase": "gafas", "confianza": 0.8, "caja": [0.4, 0.2, 0.6, 0.3]}, {"clase": "tapabocas", "confianza": 0.85, "caja": [0.4, 0.3, 0.6, 0.45]}], "esperado": {"personas": [{"id": 1, "elementos": {"cofia": true, "gafas": false, "tapabocas": true}, "cumple": false}]}},
+        {"detecciones": [{"clase": "persona", "confianza": 0.9, "caja": [0.25, 0.0, 0.75, 1.0]}, {"clase": "cofia", "confianza": 0.9, "caja": [0.4, 0.05, 0.6, 0.2]}, {"clase": "gafas", "confianza": 0.8, "caja": [0.4, 0.2, 0.6, 0.3]}, {"clase": "tapabocas", "confianza": 0.85, "caja": [0.4, 0.3, 0.6, 0.45]}], "esperado": {"personas": [{"id": 1, "elementos": {"cofia": true, "gafas": false, "tapabocas": true}, "cumple": false}]}},
+        {"detecciones": [{"clase": "persona", "confianza": 0.9, "caja": [0.25, 0.0, 0.75, 1.0]}, {"clase": "cofia", "confianza": 0.9, "caja": [0.4, 0.05, 0.6, 0.2]}, {"clase": "gafas", "confianza": 0.8, "caja": [0.4, 0.2, 0.6, 0.3]}, {"clase": "tapabocas", "confianza": 0.85, "caja": [0.4, 0.3, 0.6, 0.45]}], "esperado": {"personas": [{"id": 1, "estable": true, "elementos": {"cofia": true, "gafas": true, "tapabocas": true}, "faltantes": [], "cumple": true}]}}
+      ]
+    },
+    {
+      "id": "S06_desaparicion_reaparicion_y_caducidad",
+      "descripcion": "Track estable; 3 cuadros vacios (no caduca, cuadros_sin_ver_max 5) y reaparece con id 1; luego 6 cuadros vacios: caduca al superar 5 y la siguiente aparicion recibe id 2.",
+      "pasos": [
+        {"detecciones": [{"clase": "persona", "confianza": 0.9, "caja": [0.25, 0.0, 0.75, 1.0]}, {"clase": "cofia", "confianza": 0.9, "caja": [0.4, 0.05, 0.6, 0.2]}, {"clase": "gafas", "confianza": 0.8, "caja": [0.4, 0.2, 0.6, 0.3]}, {"clase": "tapabocas", "confianza": 0.85, "caja": [0.4, 0.3, 0.6, 0.45]}], "esperado": {"personas": [{"id": 1, "estable": false}]}},
+        {"detecciones": [{"clase": "persona", "confianza": 0.9, "caja": [0.25, 0.0, 0.75, 1.0]}, {"clase": "cofia", "confianza": 0.9, "caja": [0.4, 0.05, 0.6, 0.2]}, {"clase": "gafas", "confianza": 0.8, "caja": [0.4, 0.2, 0.6, 0.3]}, {"clase": "tapabocas", "confianza": 0.85, "caja": [0.4, 0.3, 0.6, 0.45]}], "esperado": {"personas": [{"id": 1, "estable": false}]}},
+        {"detecciones": [{"clase": "persona", "confianza": 0.9, "caja": [0.25, 0.0, 0.75, 1.0]}, {"clase": "cofia", "confianza": 0.9, "caja": [0.4, 0.05, 0.6, 0.2]}, {"clase": "gafas", "confianza": 0.8, "caja": [0.4, 0.2, 0.6, 0.3]}, {"clase": "tapabocas", "confianza": 0.85, "caja": [0.4, 0.3, 0.6, 0.45]}], "esperado": {"personas": [{"id": 1, "estable": true, "cumple": true}]}},
+        {"detecciones": [], "esperado": {"personas": [], "resumen": {"personas": 0, "cumplen": 0, "no_cumplen": 0, "cumple_global": false}}},
+        {"detecciones": [], "esperado": {"personas": []}},
+        {"detecciones": [], "esperado": {"personas": []}},
+        {"detecciones": [{"clase": "persona", "confianza": 0.9, "caja": [0.25, 0.0, 0.75, 1.0]}, {"clase": "cofia", "confianza": 0.9, "caja": [0.4, 0.05, 0.6, 0.2]}, {"clase": "gafas", "confianza": 0.8, "caja": [0.4, 0.2, 0.6, 0.3]}, {"clase": "tapabocas", "confianza": 0.85, "caja": [0.4, 0.3, 0.6, 0.45]}], "esperado": {"personas": [{"id": 1, "estable": true, "cumple": true}]}},
+        {"detecciones": [], "esperado": {"personas": []}},
+        {"detecciones": [], "esperado": {"personas": []}},
+        {"detecciones": [], "esperado": {"personas": []}},
+        {"detecciones": [], "esperado": {"personas": []}},
+        {"detecciones": [], "esperado": {"personas": []}},
+        {"detecciones": [], "esperado": {"personas": []}},
+        {"detecciones": [{"clase": "persona", "confianza": 0.9, "caja": [0.25, 0.0, 0.75, 1.0]}, {"clase": "cofia", "confianza": 0.9, "caja": [0.4, 0.05, 0.6, 0.2]}, {"clase": "gafas", "confianza": 0.8, "caja": [0.4, 0.2, 0.6, 0.3]}, {"clase": "tapabocas", "confianza": 0.85, "caja": [0.4, 0.3, 0.6, 0.45]}], "esperado": {"personas": [{"id": 2, "estable": false, "cumple": true}]}}
+      ]
+    },
+    {
+      "id": "S07_reaparicion_intermitente",
+      "descripcion": "Persona presente un cuadro de cada dos. La ventana solo avanza en los cuadros con observacion: estable en la quinta posicion (tercera observacion); el id se conserva porque cuadros_sin_ver vuelve a 0.",
+      "pasos": [
+        {"detecciones": [{"clase": "persona", "confianza": 0.9, "caja": [0.25, 0.0, 0.75, 1.0]}, {"clase": "cofia", "confianza": 0.9, "caja": [0.4, 0.05, 0.6, 0.2]}, {"clase": "gafas", "confianza": 0.8, "caja": [0.4, 0.2, 0.6, 0.3]}, {"clase": "tapabocas", "confianza": 0.85, "caja": [0.4, 0.3, 0.6, 0.45]}], "esperado": {"personas": [{"id": 1, "estable": false}]}},
+        {"detecciones": [], "esperado": {"personas": []}},
+        {"detecciones": [{"clase": "persona", "confianza": 0.9, "caja": [0.25, 0.0, 0.75, 1.0]}, {"clase": "cofia", "confianza": 0.9, "caja": [0.4, 0.05, 0.6, 0.2]}, {"clase": "gafas", "confianza": 0.8, "caja": [0.4, 0.2, 0.6, 0.3]}, {"clase": "tapabocas", "confianza": 0.85, "caja": [0.4, 0.3, 0.6, 0.45]}], "esperado": {"personas": [{"id": 1, "estable": false}]}},
+        {"detecciones": [], "esperado": {"personas": []}},
+        {"detecciones": [{"clase": "persona", "confianza": 0.9, "caja": [0.25, 0.0, 0.75, 1.0]}, {"clase": "cofia", "confianza": 0.9, "caja": [0.4, 0.05, 0.6, 0.2]}, {"clase": "gafas", "confianza": 0.8, "caja": [0.4, 0.2, 0.6, 0.3]}, {"clase": "tapabocas", "confianza": 0.85, "caja": [0.4, 0.3, 0.6, 0.45]}], "esperado": {"personas": [{"id": 1, "estable": true, "cumple": true}]}}
+      ]
+    },
+    {
+      "id": "S08_creacion_simultanea_y_ausencia_parcial",
+      "descripcion": "Dos personas aparecen a la vez (la derecha primero en la entrada): ids por orden geometrico. En el cuadro 3 solo queda la derecha (id 2); en el 4 vuelve la izquierda con su id 1.",
+      "pasos": [
+        {"detecciones": [
+          {"clase": "persona", "confianza": 0.8, "caja": [0.5, 0.0, 1.0, 1.0]}, {"clase": "cofia", "confianza": 0.9, "caja": [0.7, 0.05, 0.8, 0.2]}, {"clase": "gafas", "confianza": 0.8, "caja": [0.7, 0.2, 0.8, 0.3]}, {"clase": "tapabocas", "confianza": 0.9, "caja": [0.7, 0.3, 0.8, 0.45]},
+          {"clase": "persona", "confianza": 0.9, "caja": [0.0, 0.0, 0.5, 1.0]}, {"clase": "cofia", "confianza": 0.9, "caja": [0.2, 0.05, 0.3, 0.2]}, {"clase": "gafas", "confianza": 0.8, "caja": [0.2, 0.2, 0.3, 0.3]}, {"clase": "tapabocas", "confianza": 0.85, "caja": [0.2, 0.3, 0.3, 0.45]}],
+         "esperado": {"personas": [{"id": 1, "caja": [0.0, 0.0, 0.5, 1.0]}, {"id": 2, "caja": [0.5, 0.0, 1.0, 1.0]}], "resumen": {"personas": 2, "cumplen": 2, "no_cumplen": 0, "cumple_global": true}}},
+        {"detecciones": [
+          {"clase": "persona", "confianza": 0.8, "caja": [0.5, 0.0, 1.0, 1.0]}, {"clase": "cofia", "confianza": 0.9, "caja": [0.7, 0.05, 0.8, 0.2]}, {"clase": "gafas", "confianza": 0.8, "caja": [0.7, 0.2, 0.8, 0.3]}, {"clase": "tapabocas", "confianza": 0.9, "caja": [0.7, 0.3, 0.8, 0.45]},
+          {"clase": "persona", "confianza": 0.9, "caja": [0.0, 0.0, 0.5, 1.0]}, {"clase": "cofia", "confianza": 0.9, "caja": [0.2, 0.05, 0.3, 0.2]}, {"clase": "gafas", "confianza": 0.8, "caja": [0.2, 0.2, 0.3, 0.3]}, {"clase": "tapabocas", "confianza": 0.85, "caja": [0.2, 0.3, 0.3, 0.45]}],
+         "esperado": {"personas": [{"id": 1, "caja": [0.0, 0.0, 0.5, 1.0]}, {"id": 2, "caja": [0.5, 0.0, 1.0, 1.0]}]}},
+        {"detecciones": [
+          {"clase": "persona", "confianza": 0.8, "caja": [0.5, 0.0, 1.0, 1.0]}, {"clase": "cofia", "confianza": 0.9, "caja": [0.7, 0.05, 0.8, 0.2]}, {"clase": "gafas", "confianza": 0.8, "caja": [0.7, 0.2, 0.8, 0.3]}, {"clase": "tapabocas", "confianza": 0.9, "caja": [0.7, 0.3, 0.8, 0.45]}],
+         "esperado": {"personas": [{"id": 2, "caja": [0.5, 0.0, 1.0, 1.0], "estable": true}], "resumen": {"personas": 1, "cumplen": 1, "no_cumplen": 0, "cumple_global": true}}},
+        {"detecciones": [
+          {"clase": "persona", "confianza": 0.8, "caja": [0.5, 0.0, 1.0, 1.0]}, {"clase": "cofia", "confianza": 0.9, "caja": [0.7, 0.05, 0.8, 0.2]}, {"clase": "gafas", "confianza": 0.8, "caja": [0.7, 0.2, 0.8, 0.3]}, {"clase": "tapabocas", "confianza": 0.9, "caja": [0.7, 0.3, 0.8, 0.45]},
+          {"clase": "persona", "confianza": 0.9, "caja": [0.0, 0.0, 0.5, 1.0]}, {"clase": "cofia", "confianza": 0.9, "caja": [0.2, 0.05, 0.3, 0.2]}, {"clase": "gafas", "confianza": 0.8, "caja": [0.2, 0.2, 0.3, 0.3]}, {"clase": "tapabocas", "confianza": 0.85, "caja": [0.2, 0.3, 0.3, 0.45]}],
+         "esperado": {"personas": [{"id": 1, "caja": [0.0, 0.0, 0.5, 1.0], "estable": true}, {"id": 2, "caja": [0.5, 0.0, 1.0, 1.0], "estable": true}]}}
+      ]
+    },
+    {
+      "id": "S09_cruce_intercambio_de_ids_documentado",
+      "descripcion": "LIMITACION DOCUMENTADA. Izquierda (id 1) completa y derecha (id 2) sin deteccion de gafas durante 3 cuadros. En el cuadro 4 las personas intercambian posicion de golpe: el emparejamiento por IoU mantiene los ids por posicion, asi que id 1 hereda positivos de gafas y sigue 'cumple' hasta que la mayoria cae (cuadro 7), mientras id 2 tarda en subir. El dano queda acotado por la ventana.",
+      "pasos": [
+        {"detecciones": [
+          {"clase": "persona", "confianza": 0.9, "caja": [0.0, 0.0, 0.4, 1.0]}, {"clase": "cofia", "confianza": 0.9, "caja": [0.15, 0.05, 0.25, 0.2]}, {"clase": "gafas", "confianza": 0.8, "caja": [0.15, 0.2, 0.25, 0.3]}, {"clase": "tapabocas", "confianza": 0.85, "caja": [0.15, 0.3, 0.25, 0.45]},
+          {"clase": "persona", "confianza": 0.9, "caja": [0.6, 0.0, 1.0, 1.0]}, {"clase": "cofia", "confianza": 0.9, "caja": [0.75, 0.05, 0.85, 0.2]}, {"clase": "tapabocas", "confianza": 0.85, "caja": [0.75, 0.3, 0.85, 0.45]}],
+         "esperado": {"personas": [{"id": 1, "cumple": true}, {"id": 2, "cumple": false}]}},
+        {"detecciones": [
+          {"clase": "persona", "confianza": 0.9, "caja": [0.0, 0.0, 0.4, 1.0]}, {"clase": "cofia", "confianza": 0.9, "caja": [0.15, 0.05, 0.25, 0.2]}, {"clase": "gafas", "confianza": 0.8, "caja": [0.15, 0.2, 0.25, 0.3]}, {"clase": "tapabocas", "confianza": 0.85, "caja": [0.15, 0.3, 0.25, 0.45]},
+          {"clase": "persona", "confianza": 0.9, "caja": [0.6, 0.0, 1.0, 1.0]}, {"clase": "cofia", "confianza": 0.9, "caja": [0.75, 0.05, 0.85, 0.2]}, {"clase": "tapabocas", "confianza": 0.85, "caja": [0.75, 0.3, 0.85, 0.45]}],
+         "esperado": {"personas": [{"id": 1, "cumple": true}, {"id": 2, "cumple": false}]}},
+        {"detecciones": [
+          {"clase": "persona", "confianza": 0.9, "caja": [0.0, 0.0, 0.4, 1.0]}, {"clase": "cofia", "confianza": 0.9, "caja": [0.15, 0.05, 0.25, 0.2]}, {"clase": "gafas", "confianza": 0.8, "caja": [0.15, 0.2, 0.25, 0.3]}, {"clase": "tapabocas", "confianza": 0.85, "caja": [0.15, 0.3, 0.25, 0.45]},
+          {"clase": "persona", "confianza": 0.9, "caja": [0.6, 0.0, 1.0, 1.0]}, {"clase": "cofia", "confianza": 0.9, "caja": [0.75, 0.05, 0.85, 0.2]}, {"clase": "tapabocas", "confianza": 0.85, "caja": [0.75, 0.3, 0.85, 0.45]}],
+         "esperado": {"personas": [{"id": 1, "estable": true, "cumple": true}, {"id": 2, "estable": true, "cumple": false}]}},
+        {"detecciones": [
+          {"clase": "persona", "confianza": 0.9, "caja": [0.0, 0.0, 0.4, 1.0]}, {"clase": "cofia", "confianza": 0.9, "caja": [0.15, 0.05, 0.25, 0.2]}, {"clase": "tapabocas", "confianza": 0.85, "caja": [0.15, 0.3, 0.25, 0.45]},
+          {"clase": "persona", "confianza": 0.9, "caja": [0.6, 0.0, 1.0, 1.0]}, {"clase": "cofia", "confianza": 0.9, "caja": [0.75, 0.05, 0.85, 0.2]}, {"clase": "gafas", "confianza": 0.8, "caja": [0.75, 0.2, 0.85, 0.3]}, {"clase": "tapabocas", "confianza": 0.85, "caja": [0.75, 0.3, 0.85, 0.45]}],
+         "esperado": {"personas": [{"id": 1, "caja": [0.0, 0.0, 0.4, 1.0], "elementos": {"cofia": true, "gafas": true, "tapabocas": true}, "cumple": true}, {"id": 2, "caja": [0.6, 0.0, 1.0, 1.0], "elementos": {"cofia": true, "gafas": false, "tapabocas": true}, "cumple": false}]}},
+        {"detecciones": [
+          {"clase": "persona", "confianza": 0.9, "caja": [0.0, 0.0, 0.4, 1.0]}, {"clase": "cofia", "confianza": 0.9, "caja": [0.15, 0.05, 0.25, 0.2]}, {"clase": "tapabocas", "confianza": 0.85, "caja": [0.15, 0.3, 0.25, 0.45]},
+          {"clase": "persona", "confianza": 0.9, "caja": [0.6, 0.0, 1.0, 1.0]}, {"clase": "cofia", "confianza": 0.9, "caja": [0.75, 0.05, 0.85, 0.2]}, {"clase": "gafas", "confianza": 0.8, "caja": [0.75, 0.2, 0.85, 0.3]}, {"clase": "tapabocas", "confianza": 0.85, "caja": [0.75, 0.3, 0.85, 0.45]}],
+         "esperado": {"personas": [{"id": 1, "cumple": true}, {"id": 2, "cumple": false}]}},
+        {"detecciones": [
+          {"clase": "persona", "confianza": 0.9, "caja": [0.0, 0.0, 0.4, 1.0]}, {"clase": "cofia", "confianza": 0.9, "caja": [0.15, 0.05, 0.25, 0.2]}, {"clase": "tapabocas", "confianza": 0.85, "caja": [0.15, 0.3, 0.25, 0.45]},
+          {"clase": "persona", "confianza": 0.9, "caja": [0.6, 0.0, 1.0, 1.0]}, {"clase": "cofia", "confianza": 0.9, "caja": [0.75, 0.05, 0.85, 0.2]}, {"clase": "gafas", "confianza": 0.8, "caja": [0.75, 0.2, 0.85, 0.3]}, {"clase": "tapabocas", "confianza": 0.85, "caja": [0.75, 0.3, 0.85, 0.45]}],
+         "esperado": {"personas": [{"id": 1, "cumple": true}, {"id": 2, "cumple": true}]}},
+        {"detecciones": [
+          {"clase": "persona", "confianza": 0.9, "caja": [0.0, 0.0, 0.4, 1.0]}, {"clase": "cofia", "confianza": 0.9, "caja": [0.15, 0.05, 0.25, 0.2]}, {"clase": "tapabocas", "confianza": 0.85, "caja": [0.15, 0.3, 0.25, 0.45]},
+          {"clase": "persona", "confianza": 0.9, "caja": [0.6, 0.0, 1.0, 1.0]}, {"clase": "cofia", "confianza": 0.9, "caja": [0.75, 0.05, 0.85, 0.2]}, {"clase": "gafas", "confianza": 0.8, "caja": [0.75, 0.2, 0.85, 0.3]}, {"clase": "tapabocas", "confianza": 0.85, "caja": [0.75, 0.3, 0.85, 0.45]}],
+         "esperado": {"personas": [{"id": 1, "elementos": {"cofia": true, "gafas": false, "tapabocas": true}, "cumple": false}, {"id": 2, "elementos": {"cofia": true, "gafas": true, "tapabocas": true}, "cumple": true}], "resumen": {"personas": 2, "cumplen": 1, "no_cumplen": 1, "cumple_global": false}}}
+      ]
+    },
+    {
+      "id": "S10_reinicio_de_sesion",
+      "descripcion": "Track estable con id 1; 'reiniciar' (reconexion del WebSocket) borra los tracks y el contador: la misma persona vuelve a recibir id 1 y estable=false.",
+      "pasos": [
+        {"detecciones": [{"clase": "persona", "confianza": 0.9, "caja": [0.25, 0.0, 0.75, 1.0]}, {"clase": "cofia", "confianza": 0.9, "caja": [0.4, 0.05, 0.6, 0.2]}, {"clase": "gafas", "confianza": 0.8, "caja": [0.4, 0.2, 0.6, 0.3]}, {"clase": "tapabocas", "confianza": 0.85, "caja": [0.4, 0.3, 0.6, 0.45]}], "esperado": {"personas": [{"id": 1, "estable": false}]}},
+        {"detecciones": [{"clase": "persona", "confianza": 0.9, "caja": [0.25, 0.0, 0.75, 1.0]}, {"clase": "cofia", "confianza": 0.9, "caja": [0.4, 0.05, 0.6, 0.2]}, {"clase": "gafas", "confianza": 0.8, "caja": [0.4, 0.2, 0.6, 0.3]}, {"clase": "tapabocas", "confianza": 0.85, "caja": [0.4, 0.3, 0.6, 0.45]}], "esperado": {"personas": [{"id": 1, "estable": false}]}},
+        {"detecciones": [{"clase": "persona", "confianza": 0.9, "caja": [0.25, 0.0, 0.75, 1.0]}, {"clase": "cofia", "confianza": 0.9, "caja": [0.4, 0.05, 0.6, 0.2]}, {"clase": "gafas", "confianza": 0.8, "caja": [0.4, 0.2, 0.6, 0.3]}, {"clase": "tapabocas", "confianza": 0.85, "caja": [0.4, 0.3, 0.6, 0.45]}], "esperado": {"personas": [{"id": 1, "estable": true}]}},
+        {"reiniciar": true,
+         "detecciones": [{"clase": "persona", "confianza": 0.9, "caja": [0.25, 0.0, 0.75, 1.0]}, {"clase": "cofia", "confianza": 0.9, "caja": [0.4, 0.05, 0.6, 0.2]}, {"clase": "gafas", "confianza": 0.8, "caja": [0.4, 0.2, 0.6, 0.3]}, {"clase": "tapabocas", "confianza": 0.85, "caja": [0.4, 0.3, 0.6, 0.45]}], "esperado": {"personas": [{"id": 1, "estable": false, "cumple": true}]}}
+      ]
+    },
+    {
+      "id": "S11_primer_plano_inferido_con_negativa",
+      "descripcion": "Sin persona detectada (modo auto): la persona inferida [0,0,1,1] tambien se sigue como track. Tres cuadros completos y luego sin_tapabocas bloquea.",
+      "pasos": [
+        {"detecciones": [{"clase": "cofia", "confianza": 0.8, "caja": [0.3, 0.0, 0.7, 0.2]}, {"clase": "gafas", "confianza": 0.7, "caja": [0.3, 0.3, 0.7, 0.4]}, {"clase": "tapabocas", "confianza": 0.9, "caja": [0.3, 0.5, 0.7, 0.7]}], "esperado": {"personas": [{"id": 1, "inferida": true, "estable": false, "cumple": true}]}},
+        {"detecciones": [{"clase": "cofia", "confianza": 0.8, "caja": [0.3, 0.0, 0.7, 0.2]}, {"clase": "gafas", "confianza": 0.7, "caja": [0.3, 0.3, 0.7, 0.4]}, {"clase": "tapabocas", "confianza": 0.9, "caja": [0.3, 0.5, 0.7, 0.7]}], "esperado": {"personas": [{"id": 1, "inferida": true, "estable": false, "cumple": true}]}},
+        {"detecciones": [{"clase": "cofia", "confianza": 0.8, "caja": [0.3, 0.0, 0.7, 0.2]}, {"clase": "gafas", "confianza": 0.7, "caja": [0.3, 0.3, 0.7, 0.4]}, {"clase": "tapabocas", "confianza": 0.9, "caja": [0.3, 0.5, 0.7, 0.7]}], "esperado": {"personas": [{"id": 1, "inferida": true, "estable": true, "cumple": true}]}},
+        {"detecciones": [{"clase": "cofia", "confianza": 0.8, "caja": [0.3, 0.0, 0.7, 0.2]}, {"clase": "gafas", "confianza": 0.7, "caja": [0.3, 0.3, 0.7, 0.4]}, {"clase": "sin_tapabocas", "confianza": 0.9, "caja": [0.3, 0.5, 0.7, 0.7]}], "esperado": {"personas": [{"id": 1, "inferida": true, "estable": true, "elementos": {"cofia": true, "gafas": true, "tapabocas": false}, "faltantes": ["tapabocas"], "cumple": false}], "resumen": {"personas": 1, "cumplen": 0, "no_cumplen": 1, "cumple_global": false}}}
+      ]
+    }
+  ]
+}

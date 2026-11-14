@@ -1,0 +1,76 @@
+# Perfiles de verificación de EPP. Es la configuración POR DEFECTO del módulo:
+# la configuración remota (plataforma) sobrescribe perfil_activo y elementos_requeridos.
+#
+# Por perfil:
+#   nombre                 Nombre visible en el panel y en la plataforma.
+#   modelo                 Archivo de pesos dentro de modulos/epp/modelos/.
+#   elementos_requeridos   Elementos exigidos por defecto.
+#   umbral_persona         Confianza mínima de la clase persona.
+#   elementos              Ajustes por elemento. Los elementos que el modelo sabe detectar
+#                          salen de las clases del modelo cargado; aquí solo se afinan:
+#       nombre             Nombre visible.
+#       umbral             Confianza mínima de la clase del elemento.
+#       zona               Zona vertical de asociación [inicio, fin], en fracciones de la
+#                          altura de la persona (0 = arriba, 1 = abajo). El centro del
+#                          elemento debe caer ahí para contarse como puesto.
+#       negativa           Clase que indica ausencia explícita (p. ej. sin_casco).
+#                          Si se omite y el modelo tiene sin_<elemento>, se usa esa.
+#                          Con `negativa: null` se ignora la clase negativa.
+#       umbral_negativa    Confianza mínima de la clase negativa. Una negativa gana
+#                          sobre una positiva, así que conviene un umbral alto.
+#
+# Un elemento del modelo que no aparezca aquí usa `elemento_por_defecto`.
+
+version: 1
+perfil_por_defecto: industria
+clase_persona: persona
+
+elemento_por_defecto:
+  umbral: 0.5
+  zona: [0.0, 1.0]
+  umbral_negativa: 0.6
+
+# Si la cámara no ve a la persona completa pero sí elementos, se evalúa una persona
+# «inferida» que ocupa toda la imagen (visitante muy cerca de la cámara).
+primer_plano:
+  modo: auto              # auto | siempre | nunca
+  minimo_evidencias: 1
+  caja_virtual: [0.0, 0.0, 1.0, 1.0]
+  zona: [0.0, 1.0]
+
+suavizado:
+  ventana_cuadros: 7
+  iou_minimo: 0.3
+  mayoria: 0.5
+  minimo_observaciones: 3
+  confirmacion_positiva: 3
+  cuadros_sin_ver_max: 5
+
+detector:
+  umbral_previo: 0.25     # confianza mínima que se le pide al modelo antes de las reglas
+  max_det: 50
+  imgsz: 640
+
+perfiles:
+  alimentos:
+    nombre: Planta de alimentos
+    modelo: epp-alimentos-v1.pt
+    elementos_requeridos: [cofia, gafas, tapabocas]
+    umbral_persona: 0.375
+    elementos:
+      # Mismos valores que el proyecto original (contrato/reglas_epp.json v1.0).
+      cofia:     {nombre: Cofia,     umbral: 0.5,   zona: [0.0, 0.625], negativa: sin_cofia,     umbral_negativa: 0.5}
+      gafas:     {nombre: Gafas,     umbral: 0.375, zona: [0.0, 0.625], negativa: sin_gafas,     umbral_negativa: 0.5}
+      tapabocas: {nombre: Tapabocas, umbral: 0.5,   zona: [0.0, 0.625], negativa: sin_tapabocas, umbral_negativa: 0.5}
+
+  industria:
+    nombre: Industria
+    modelo: epp-industria-v1.pt
+    elementos_requeridos: [casco, gafas]
+    umbral_persona: 0.375
+    elementos:
+      # Las negativas del modelo v1 son débiles (mAP50 ~0,35-0,50): umbral alto para que
+      # un sin_gafas dudoso no tumbe a quien sí lleva gafas.
+      casco:   {nombre: Casco,   umbral: 0.5,  zona: [0.0, 0.5],   negativa: sin_casco, umbral_negativa: 0.65}
+      gafas:   {nombre: Gafas,   umbral: 0.35, zona: [0.0, 0.625], negativa: sin_gafas, umbral_negativa: 0.65}
+      chaleco: {nombre: Chaleco, umbral: 0.5,  zona: [0.2, 1.0]}

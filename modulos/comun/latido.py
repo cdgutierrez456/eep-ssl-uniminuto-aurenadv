@@ -5,7 +5,7 @@ import threading
 
 import httpx
 
-from .config import obtener_config
+from .config import leer_entorno
 from .eventos import construir_evento
 
 log = logging.getLogger(__name__)
@@ -52,7 +52,7 @@ class Latido:
         severidad = "alta" if self.estado == "error" else "info"
         try:
             evento = construir_evento(self.estacion, "estado_modulo", datos, severidad)
-            cliente.post(obtener_config().api_url + "/api/eventos", json=evento).raise_for_status()
+            cliente.post(leer_entorno().api_url + "/api/eventos", json=evento).raise_for_status()
         except httpx.HTTPError as error:
             if self._con_conexion:
                 log.warning("Latido de '%s' sin respuesta de la API (%s)", self.modulo, type(error).__name__)

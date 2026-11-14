@@ -30,6 +30,14 @@ dev = [
     "uvicorn>=0.29",
     "python-multipart>=0.0.9",
     "pytest>=8.0",
+    "pyyaml>=6.0",  # perfiles del módulo EPP (sus pruebas no necesitan cámara ni modelos)
+]
+# Módulo EPP. PyTorch se instala aparte, con el índice que corresponda a la GPU
+# (ver modulos/epp/README.md); sin eso, pip trae la versión solo-CPU.
+epp = [
+    "ultralytics>=8.4",
+    "pyyaml>=6.0",
+    "imagehash>=4.3",  # solo para preparar el dataset
 ]
 
 [tool.setuptools.packages.find]

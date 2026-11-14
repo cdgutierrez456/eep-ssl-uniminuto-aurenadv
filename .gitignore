@@ -28,3 +28,9 @@ media/
 .idea/
 .DS_Store
 Thumbs.db
+
+# Datasets, entrenamientos y pesos de modelos
+datasets/
+runs/
+*.pt
+*.tflite

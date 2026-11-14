@@ -21,6 +21,10 @@ python -m modulos.comun
 | `iniciar_latido(estacion, modulo)` | Hilo que publica `estado_modulo` cada 30 s. Devuelve un objeto con `estado`, `mensaje` y `detener()`. |
 | `subir_medio(ruta_archivo)` | POST multipart (campo `archivo`) a `{API_URL}/api/medios`. Devuelve la `ruta` para `adjuntos`. Si falla, copia el archivo a `CARPETA_COLA/medios_pendientes/` y devuelve esa ruta local. |
 | `difuminar_rostros(frame)` | Recibe un frame BGR de OpenCV y devuelve una copia con los rostros difuminados. |
+| `registrar_capacidades(modulo, capacidades)` | PUT a `{API_URL}/api/modulos/{modulo}/capacidades`: el módulo declara qué sabe hacer. Si la plataforma no responde, queda pendiente y se reintenta. |
+| `obtener_config(modulo, por_defecto, validar=None, al_cambiar=None)` | Arranca un hilo que consulta `GET {API_URL}/api/modulos/{modulo}/config` cada `CONFIG_INTERVALO_S` y devuelve un objeto con `valor`, `fuente`, `al_cambiar()` y `detener()`. Nunca bloquea: sin plataforma usa la última configuración válida (`CARPETA_COLA/config/<modulo>.json`) y, si no hay, `por_defecto`. `validar` normaliza o rechaza (con `ValueError`) cada configuración. |
+| `actualizar_config(modulo, config)` | El módulo cambia su propia configuración: se aplica de inmediato y se sube con PUT (si la plataforma no responde, cuando vuelva). |
+| `abrir_camara(indice, ancho=1280, alto=720)` | Abre la cámara igual en todos los módulos de visión (MJPG, DirectShow en Windows). Devuelve `None` si no hay. `python -m modulos.comun.camaras` lista las conectadas. |
 | `esperar_envios(tiempo_limite_s=5)` | Espera a que la cola se vacíe; útil antes de cerrar un script corto. |
 | `eventos_pendientes(estacion=None)` | Cuántos eventos siguen sin entregar. |
 
@@ -51,4 +55,5 @@ Si el modelo falta, se usa la cascada Haar incluida en OpenCV, que es menos prec
 | `API_URL` | `http://localhost:8000` | API local de la plataforma |
 | `DISPOSITIVO` | nombre del equipo | Va en `origen.dispositivo` |
 | `CARPETA_COLA` | `cola` | Carpeta de la cola y de los medios de respaldo |
+| `CONFIG_INTERVALO_S` | `3` | Cada cuántos segundos se consulta la configuración remota |
 | `LOG_NIVEL` | `INFO` | Nivel de los logs |

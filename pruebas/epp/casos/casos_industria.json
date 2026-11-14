@@ -1,0 +1,1891 @@
+{
+ "version": 1,
+ "descripcion": "Casos dorados del perfil industria (zona vertical por elemento). Usan el bloque 'reglas' de este archivo, que debe coincidir con lo que modulos/epp/config/perfiles.yaml produce para industria; 'reglas_override' reemplaza claves de primer nivel. Mismo formato que casos_alimentos.json.",
+ "convenciones": {
+  "persona_A": "caja [0.25, 0.0, 0.75, 1.0]; zona de casco hasta y 0.5, de gafas hasta 0.625, de chaleco entre 0.2 y 1.0",
+  "elementos_A": "casco [0.4,0.02,0.6,0.16] (centro 0.5,0.09); gafas [0.42,0.2,0.58,0.26] (0.5,0.23)"
+ },
+ "reglas": {
+  "perfil": "industria",
+  "clase_persona": "persona",
+  "elementos_requeridos": [
+   "casco",
+   "gafas"
+  ],
+  "clases_negativas": {
+   "casco": "sin_casco",
+   "gafas": "sin_gafas"
+  },
+  "umbral_confianza": {
+   "persona": 0.375,
+   "casco": 0.5,
+   "gafas": 0.35,
+   "chaleco": 0.5,
+   "sin_casco": 0.65,
+   "sin_gafas": 0.65
+  },
+  "zonas": {
+   "casco": [
+    0.0,
+    0.5
+   ],
+   "gafas": [
+    0.0,
+    0.625
+   ],
+   "chaleco": [
+    0.2,
+    1.0
+   ]
+  },
+  "primer_plano": {
+   "modo": "auto",
+   "minimo_evidencias": 1,
+   "caja_virtual": [
+    0.0,
+    0.0,
+    1.0,
+    1.0
+   ],
+   "zona": [
+    0.0,
+    1.0
+   ]
+  },
+  "suavizado": {
+   "ventana_cuadros": 7,
+   "iou_minimo": 0.3,
+   "mayoria": 0.5,
+   "minimo_observaciones": 3,
+   "confirmacion_positiva": 3,
+   "cuadros_sin_ver_max": 5
+  }
+ },
+ "casos_imagen": [
+  {
+   "id": "I01_casco_y_gafas",
+   "descripcion": "Persona con casco y gafas en su zona: cumple.",
+   "detecciones": [
+    {
+     "clase": "persona",
+     "confianza": 0.9,
+     "caja": [
+      0.25,
+      0.0,
+      0.75,
+      1.0
+     ]
+    },
+    {
+     "clase": "casco",
+     "confianza": 0.9,
+     "caja": [
+      0.4,
+      0.02,
+      0.6,
+      0.16
+     ]
+    },
+    {
+     "clase": "gafas",
+     "confianza": 0.8,
+     "caja": [
+      0.42,
+      0.2,
+      0.58,
+      0.26
+     ]
+    }
+   ],
+   "esperado": {
+    "personas": [
+     {
+      "id": 1,
+      "caja": [
+       0.25,
+       0.0,
+       0.75,
+       1.0
+      ],
+      "inferida": false,
+      "elementos": {
+       "casco": true,
+       "gafas": true
+      },
+      "evidencia": {
+       "casco": "positivo",
+       "gafas": "positivo"
+      },
+      "faltantes": [],
+      "cumple": true
+     }
+    ],
+    "resumen": {
+     "personas": 1,
+     "cumplen": 1,
+     "no_cumplen": 0,
+     "cumple_global": true
+    }
+   }
+  },
+  {
+   "id": "I02_falta_casco",
+   "descripcion": "Sin deteccion de casco: falta casco (desconocido).",
+   "detecciones": [
+    {
+     "clase": "persona",
+     "confianza": 0.9,
+     "caja": [
+      0.25,
+      0.0,
+      0.75,
+      1.0
+     ]
+    },
+    {
+     "clase": "gafas",
+     "confianza": 0.8,
+     "caja": [
+      0.42,
+      0.2,
+      0.58,
+      0.26
+     ]
+    }
+   ],
+   "esperado": {
+    "personas": [
+     {
+      "id": 1,
+      "caja": [
+       0.25,
+       0.0,
+       0.75,
+       1.0
+      ],
+      "inferida": false,
+      "elementos": {
+       "casco": false,
+       "gafas": true
+      },
+      "evidencia": {
+       "casco": "desconocido",
+       "gafas": "positivo"
+      },
+      "faltantes": [
+       "casco"
+      ],
+      "cumple": false
+     }
+    ],
+    "resumen": {
+     "personas": 1,
+     "cumplen": 0,
+     "no_cumplen": 1,
+     "cumple_global": false
+    }
+   }
+  },
+  {
+   "id": "I03_falta_gafas",
+   "descripcion": "Sin deteccion de gafas: falta gafas (desconocido).",
+   "detecciones": [
+    {
+     "clase": "persona",
+     "confianza": 0.9,
+     "caja": [
+      0.25,
+      0.0,
+      0.75,
+      1.0
+     ]
+    },
+    {
+     "clase": "casco",
+     "confianza": 0.9,
+     "caja": [
+      0.4,
+      0.02,
+      0.6,
+      0.16
+     ]
+    }
+   ],
+   "esperado": {
+    "personas": [
+     {
+      "id": 1,
+      "caja": [
+       0.25,
+       0.0,
+       0.75,
+       1.0
+      ],
+      "inferida": false,
+      "elementos": {
+       "casco": true,
+       "gafas": false
+      },
+      "evidencia": {
+       "casco": "positivo",
+       "gafas": "desconocido"
+      },
+      "faltantes": [
+       "gafas"
+      ],
+      "cumple": false
+     }
+    ],
+    "resumen": {
+     "personas": 1,
+     "cumplen": 0,
+     "no_cumplen": 1,
+     "cumple_global": false
+    }
+   }
+  },
+  {
+   "id": "I04_casco_fuera_de_la_persona",
+   "descripcion": "Casco con centro x 0.875, fuera de la caja de la persona (x hasta 0.75): no se asocia.",
+   "detecciones": [
+    {
+     "clase": "persona",
+     "confianza": 0.9,
+     "caja": [
+      0.25,
+      0.0,
+      0.75,
+      1.0
+     ]
+    },
+    {
+     "clase": "casco",
+     "confianza": 0.9,
+     "caja": [
+      0.8,
+      0.02,
+      0.95,
+      0.16
+     ]
+    },
+    {
+     "clase": "gafas",
+     "confianza": 0.8,
+     "caja": [
+      0.42,
+      0.2,
+      0.58,
+      0.26
+     ]
+    }
+   ],
+   "esperado": {
+    "personas": [
+     {
+      "id": 1,
+      "caja": [
+       0.25,
+       0.0,
+       0.75,
+       1.0
+      ],
+      "inferida": false,
+      "elementos": {
+       "casco": false,
+       "gafas": true
+      },
+      "evidencia": {
+       "casco": "desconocido",
+       "gafas": "positivo"
+      },
+      "faltantes": [
+       "casco"
+      ],
+      "cumple": false
+     }
+    ],
+    "resumen": {
+     "personas": 1,
+     "cumplen": 0,
+     "no_cumplen": 1,
+     "cumple_global": false
+    }
+   }
+  },
+  {
+   "id": "I05_casco_en_la_mano",
+   "descripcion": "Casco dentro de la persona pero con centro y 0.7, bajo su zona [0, 0.5]: no cuenta como puesto.",
+   "detecciones": [
+    {
+     "clase": "persona",
+     "confianza": 0.9,
+     "caja": [
+      0.25,
+      0.0,
+      0.75,
+      1.0
+     ]
+    },
+    {
+     "clase": "casco",
+     "confianza": 0.9,
+     "caja": [
+      0.4,
+      0.62,
+      0.6,
+      0.78
+     ]
+    },
+    {
+     "clase": "gafas",
+     "confianza": 0.8,
+     "caja": [
+      0.42,
+      0.2,
+      0.58,
+      0.26
+     ]
+    }
+   ],
+   "esperado": {
+    "personas": [
+     {
+      "id": 1,
+      "caja": [
+       0.25,
+       0.0,
+       0.75,
+       1.0
+      ],
+      "inferida": false,
+      "elementos": {
+       "casco": false,
+       "gafas": true
+      },
+      "evidencia": {
+       "casco": "desconocido",
+       "gafas": "positivo"
+      },
+      "faltantes": [
+       "casco"
+      ],
+      "cumple": false
+     }
+    ],
+    "resumen": {
+     "personas": 1,
+     "cumplen": 0,
+     "no_cumplen": 1,
+     "cumple_global": false
+    }
+   }
+  },
+  {
+   "id": "I06_casco_en_el_limite_de_zona",
+   "descripcion": "Centro y del casco exactamente 0.5 (limite inclusivo de la zona): cuenta.",
+   "detecciones": [
+    {
+     "clase": "persona",
+     "confianza": 0.9,
+     "caja": [
+      0.25,
+      0.0,
+      0.75,
+      1.0
+     ]
+    },
+    {
+     "clase": "casco",
+     "confianza": 0.9,
+     "caja": [
+      0.4,
+      0.375,
+      0.6,
+      0.625
+     ]
+    },
+    {
+     "clase": "gafas",
+     "confianza": 0.8,
+     "caja": [
+      0.42,
+      0.2,
+      0.58,
+      0.26
+     ]
+    }
+   ],
+   "esperado": {
+    "personas": [
+     {
+      "id": 1,
+      "caja": [
+       0.25,
+       0.0,
+       0.75,
+       1.0
+      ],
+      "inferida": false,
+      "elementos": {
+       "casco": true,
+       "gafas": true
+      },
+      "evidencia": {
+       "casco": "positivo",
+       "gafas": "positivo"
+      },
+      "faltantes": [],
+      "cumple": true
+     }
+    ],
+    "resumen": {
+     "personas": 1,
+     "cumplen": 1,
+     "no_cumplen": 0,
+     "cumple_global": true
+    }
+   }
+  },
+  {
+   "id": "I07_negativa_gana",
+   "descripcion": "Casco y sin_casco (0.7 >= 0.65) a la vez: la negativa gana.",
+   "detecciones": [
+    {
+     "clase": "persona",
+     "confianza": 0.9,
+     "caja": [
+      0.25,
+      0.0,
+      0.75,
+      1.0
+     ]
+    },
+    {
+     "clase": "casco",
+     "confianza": 0.9,
+     "caja": [
+      0.4,
+      0.02,
+      0.6,
+      0.16
+     ]
+    },
+    {
+     "clase": "sin_casco",
+     "confianza": 0.7,
+     "caja": [
+      0.4,
+      0.02,
+      0.6,
+      0.16
+     ]
+    },
+    {
+     "clase": "gafas",
+     "confianza": 0.8,
+     "caja": [
+      0.42,
+      0.2,
+      0.58,
+      0.26
+     ]
+    }
+   ],
+   "esperado": {
+    "personas": [
+     {
+      "id": 1,
+      "caja": [
+       0.25,
+       0.0,
+       0.75,
+       1.0
+      ],
+      "inferida": false,
+      "elementos": {
+       "casco": false,
+       "gafas": true
+      },
+      "evidencia": {
+       "casco": "negativo",
+       "gafas": "positivo"
+      },
+      "faltantes": [
+       "casco"
+      ],
+      "cumple": false
+     }
+    ],
+    "resumen": {
+     "personas": 1,
+     "cumplen": 0,
+     "no_cumplen": 1,
+     "cumple_global": false
+    }
+   }
+  },
+  {
+   "id": "I08_negativa_bajo_umbral",
+   "descripcion": "sin_gafas con 0.6, bajo su umbral 0.65: se descarta y las gafas cuentan.",
+   "detecciones": [
+    {
+     "clase": "persona",
+     "confianza": 0.9,
+     "caja": [
+      0.25,
+      0.0,
+      0.75,
+      1.0
+     ]
+    },
+    {
+     "clase": "casco",
+     "confianza": 0.9,
+     "caja": [
+      0.4,
+      0.02,
+      0.6,
+      0.16
+     ]
+    },
+    {
+     "clase": "gafas",
+     "confianza": 0.8,
+     "caja": [
+      0.42,
+      0.2,
+      0.58,
+      0.26
+     ]
+    },
+    {
+     "clase": "sin_gafas",
+     "confianza": 0.6,
+     "caja": [
+      0.42,
+      0.2,
+      0.58,
+      0.26
+     ]
+    }
+   ],
+   "esperado": {
+    "personas": [
+     {
+      "id": 1,
+      "caja": [
+       0.25,
+       0.0,
+       0.75,
+       1.0
+      ],
+      "inferida": false,
+      "elementos": {
+       "casco": true,
+       "gafas": true
+      },
+      "evidencia": {
+       "casco": "positivo",
+       "gafas": "positivo"
+      },
+      "faltantes": [],
+      "cumple": true
+     }
+    ],
+    "resumen": {
+     "personas": 1,
+     "cumplen": 1,
+     "no_cumplen": 0,
+     "cumple_global": true
+    }
+   }
+  },
+  {
+   "id": "I09_gafas_bajo_umbral",
+   "descripcion": "Gafas con 0.3, bajo su umbral 0.35: falta gafas.",
+   "detecciones": [
+    {
+     "clase": "persona",
+     "confianza": 0.9,
+     "caja": [
+      0.25,
+      0.0,
+      0.75,
+      1.0
+     ]
+    },
+    {
+     "clase": "casco",
+     "confianza": 0.9,
+     "caja": [
+      0.4,
+      0.02,
+      0.6,
+      0.16
+     ]
+    },
+    {
+     "clase": "gafas",
+     "confianza": 0.3,
+     "caja": [
+      0.42,
+      0.2,
+      0.58,
+      0.26
+     ]
+    }
+   ],
+   "esperado": {
+    "personas": [
+     {
+      "id": 1,
+      "caja": [
+       0.25,
+       0.0,
+       0.75,
+       1.0
+      ],
+      "inferida": false,
+      "elementos": {
+       "casco": true,
+       "gafas": false
+      },
+      "evidencia": {
+       "casco": "positivo",
+       "gafas": "desconocido"
+      },
+      "faltantes": [
+       "gafas"
+      ],
+      "cumple": false
+     }
+    ],
+    "resumen": {
+     "personas": 1,
+     "cumplen": 0,
+     "no_cumplen": 1,
+     "cumple_global": false
+    }
+   }
+  },
+  {
+   "id": "I10_chaleco_requerido_en_el_torso",
+   "descripcion": "Con chaleco requerido: centro y 0.7 dentro de su zona [0.2, 1.0] (una franja unica 0.625 lo habria dejado fuera).",
+   "reglas_override": {
+    "elementos_requeridos": [
+     "casco",
+     "gafas",
+     "chaleco"
+    ]
+   },
+   "detecciones": [
+    {
+     "clase": "persona",
+     "confianza": 0.9,
+     "caja": [
+      0.25,
+      0.0,
+      0.75,
+      1.0
+     ]
+    },
+    {
+     "clase": "casco",
+     "confianza": 0.9,
+     "caja": [
+      0.4,
+      0.02,
+      0.6,
+      0.16
+     ]
+    },
+    {
+     "clase": "gafas",
+     "confianza": 0.8,
+     "caja": [
+      0.42,
+      0.2,
+      0.58,
+      0.26
+     ]
+    },
+    {
+     "clase": "chaleco",
+     "confianza": 0.8,
+     "caja": [
+      0.3,
+      0.5,
+      0.7,
+      0.9
+     ]
+    }
+   ],
+   "esperado": {
+    "personas": [
+     {
+      "id": 1,
+      "caja": [
+       0.25,
+       0.0,
+       0.75,
+       1.0
+      ],
+      "inferida": false,
+      "elementos": {
+       "casco": true,
+       "gafas": true,
+       "chaleco": true
+      },
+      "evidencia": {
+       "casco": "positivo",
+       "gafas": "positivo",
+       "chaleco": "positivo"
+      },
+      "faltantes": [],
+      "cumple": true
+     }
+    ],
+    "resumen": {
+     "personas": 1,
+     "cumplen": 1,
+     "no_cumplen": 0,
+     "cumple_global": true
+    }
+   }
+  },
+  {
+   "id": "I11_chaleco_sobre_la_cabeza",
+   "descripcion": "Chaleco requerido con centro y 0.1, sobre su zona [0.2, 1.0]: no cuenta.",
+   "reglas_override": {
+    "elementos_requeridos": [
+     "casco",
+     "gafas",
+     "chaleco"
+    ]
+   },
+   "detecciones": [
+    {
+     "clase": "persona",
+     "confianza": 0.9,
+     "caja": [
+      0.25,
+      0.0,
+      0.75,
+      1.0
+     ]
+    },
+    {
+     "clase": "casco",
+     "confianza": 0.9,
+     "caja": [
+      0.4,
+      0.02,
+      0.6,
+      0.16
+     ]
+    },
+    {
+     "clase": "gafas",
+     "confianza": 0.8,
+     "caja": [
+      0.42,
+      0.2,
+      0.58,
+      0.26
+     ]
+    },
+    {
+     "clase": "chaleco",
+     "confianza": 0.8,
+     "caja": [
+      0.3,
+      0.0,
+      0.7,
+      0.2
+     ]
+    }
+   ],
+   "esperado": {
+    "personas": [
+     {
+      "id": 1,
+      "caja": [
+       0.25,
+       0.0,
+       0.75,
+       1.0
+      ],
+      "inferida": false,
+      "elementos": {
+       "casco": true,
+       "gafas": true,
+       "chaleco": false
+      },
+      "evidencia": {
+       "casco": "positivo",
+       "gafas": "positivo",
+       "chaleco": "desconocido"
+      },
+      "faltantes": [
+       "chaleco"
+      ],
+      "cumple": false
+     }
+    ],
+    "resumen": {
+     "personas": 1,
+     "cumplen": 0,
+     "no_cumplen": 1,
+     "cumple_global": false
+    }
+   }
+  },
+  {
+   "id": "I12_chaleco_no_requerido",
+   "descripcion": "Chaleco detectado pero no requerido: no aparece en el veredicto.",
+   "detecciones": [
+    {
+     "clase": "persona",
+     "confianza": 0.9,
+     "caja": [
+      0.25,
+      0.0,
+      0.75,
+      1.0
+     ]
+    },
+    {
+     "clase": "casco",
+     "confianza": 0.9,
+     "caja": [
+      0.4,
+      0.02,
+      0.6,
+      0.16
+     ]
+    },
+    {
+     "clase": "gafas",
+     "confianza": 0.8,
+     "caja": [
+      0.42,
+      0.2,
+      0.58,
+      0.26
+     ]
+    },
+    {
+     "clase": "chaleco",
+     "confianza": 0.8,
+     "caja": [
+      0.3,
+      0.5,
+      0.7,
+      0.9
+     ]
+    }
+   ],
+   "esperado": {
+    "personas": [
+     {
+      "id": 1,
+      "caja": [
+       0.25,
+       0.0,
+       0.75,
+       1.0
+      ],
+      "inferida": false,
+      "elementos": {
+       "casco": true,
+       "gafas": true
+      },
+      "evidencia": {
+       "casco": "positivo",
+       "gafas": "positivo"
+      },
+      "faltantes": [],
+      "cumple": true
+     }
+    ],
+    "resumen": {
+     "personas": 1,
+     "cumplen": 1,
+     "no_cumplen": 0,
+     "cumple_global": true
+    }
+   }
+  },
+  {
+   "id": "I13_solo_casco_requerido",
+   "descripcion": "Configuracion remota que exige solo casco: sin gafas igual cumple.",
+   "reglas_override": {
+    "elementos_requeridos": [
+     "casco"
+    ]
+   },
+   "detecciones": [
+    {
+     "clase": "persona",
+     "confianza": 0.9,
+     "caja": [
+      0.25,
+      0.0,
+      0.75,
+      1.0
+     ]
+    },
+    {
+     "clase": "casco",
+     "confianza": 0.9,
+     "caja": [
+      0.4,
+      0.02,
+      0.6,
+      0.16
+     ]
+    }
+   ],
+   "esperado": {
+    "personas": [
+     {
+      "id": 1,
+      "caja": [
+       0.25,
+       0.0,
+       0.75,
+       1.0
+      ],
+      "inferida": false,
+      "elementos": {
+       "casco": true
+      },
+      "evidencia": {
+       "casco": "positivo"
+      },
+      "faltantes": [],
+      "cumple": true
+     }
+    ],
+    "resumen": {
+     "personas": 1,
+     "cumplen": 1,
+     "no_cumplen": 0,
+     "cumple_global": true
+    }
+   }
+  },
+  {
+   "id": "I14_dos_personas",
+   "descripcion": "Dos personas: la izquierda completa, la derecha sin casco.",
+   "detecciones": [
+    {
+     "clase": "persona",
+     "confianza": 0.9,
+     "caja": [
+      0.55,
+      0.0,
+      0.95,
+      1.0
+     ]
+    },
+    {
+     "clase": "persona",
+     "confianza": 0.9,
+     "caja": [
+      0.05,
+      0.0,
+      0.45,
+      1.0
+     ]
+    },
+    {
+     "clase": "casco",
+     "confianza": 0.9,
+     "caja": [
+      0.2,
+      0.02,
+      0.3,
+      0.16
+     ]
+    },
+    {
+     "clase": "gafas",
+     "confianza": 0.8,
+     "caja": [
+      0.2,
+      0.2,
+      0.3,
+      0.26
+     ]
+    },
+    {
+     "clase": "gafas",
+     "confianza": 0.8,
+     "caja": [
+      0.7,
+      0.2,
+      0.8,
+      0.26
+     ]
+    }
+   ],
+   "esperado": {
+    "personas": [
+     {
+      "id": 1,
+      "caja": [
+       0.05,
+       0.0,
+       0.45,
+       1.0
+      ],
+      "inferida": false,
+      "elementos": {
+       "casco": true,
+       "gafas": true
+      },
+      "evidencia": {
+       "casco": "positivo",
+       "gafas": "positivo"
+      },
+      "faltantes": [],
+      "cumple": true
+     },
+     {
+      "id": 2,
+      "caja": [
+       0.55,
+       0.0,
+       0.95,
+       1.0
+      ],
+      "inferida": false,
+      "elementos": {
+       "casco": false,
+       "gafas": true
+      },
+      "evidencia": {
+       "casco": "desconocido",
+       "gafas": "positivo"
+      },
+      "faltantes": [
+       "casco"
+      ],
+      "cumple": false
+     }
+    ],
+    "resumen": {
+     "personas": 2,
+     "cumplen": 1,
+     "no_cumplen": 1,
+     "cumple_global": false
+    }
+   }
+  },
+  {
+   "id": "I15_primer_plano",
+   "descripcion": "Sin caja de persona pero con casco y gafas: persona inferida a pantalla completa, cumple.",
+   "detecciones": [
+    {
+     "clase": "casco",
+     "confianza": 0.9,
+     "caja": [
+      0.4,
+      0.02,
+      0.6,
+      0.16
+     ]
+    },
+    {
+     "clase": "gafas",
+     "confianza": 0.8,
+     "caja": [
+      0.42,
+      0.2,
+      0.58,
+      0.26
+     ]
+    }
+   ],
+   "esperado": {
+    "personas": [
+     {
+      "id": 1,
+      "caja": [
+       0.0,
+       0.0,
+       1.0,
+       1.0
+      ],
+      "inferida": true,
+      "elementos": {
+       "casco": true,
+       "gafas": true
+      },
+      "evidencia": {
+       "casco": "positivo",
+       "gafas": "positivo"
+      },
+      "faltantes": [],
+      "cumple": true
+     }
+    ],
+    "resumen": {
+     "personas": 1,
+     "cumplen": 1,
+     "no_cumplen": 0,
+     "cumple_global": true
+    }
+   }
+  },
+  {
+   "id": "I16_nadie",
+   "descripcion": "Sin detecciones: no hay personas ni cumplimiento global.",
+   "detecciones": [],
+   "esperado": {
+    "personas": [],
+    "resumen": {
+     "personas": 0,
+     "cumplen": 0,
+     "no_cumplen": 0,
+     "cumple_global": false
+    }
+   }
+  }
+ ],
+ "secuencias": [
+  {
+   "id": "SI01_parpadeo_del_casco",
+   "descripcion": "Tres cuadros completos y uno sin casco: la mayoria (3 de 4) sostiene el cumple.",
+   "pasos": [
+    {
+     "detecciones": [
+      {
+       "clase": "persona",
+       "confianza": 0.9,
+       "caja": [
+        0.25,
+        0.0,
+        0.75,
+        1.0
+       ]
+      },
+      {
+       "clase": "casco",
+       "confianza": 0.9,
+       "caja": [
+        0.4,
+        0.02,
+        0.6,
+        0.16
+       ]
+      },
+      {
+       "clase": "gafas",
+       "confianza": 0.8,
+       "caja": [
+        0.42,
+        0.2,
+        0.58,
+        0.26
+       ]
+      }
+     ],
+     "esperado": {
+      "personas": [
+       {
+        "id": 1,
+        "estable": false,
+        "elementos": {
+         "casco": true,
+         "gafas": true
+        },
+        "faltantes": [],
+        "cumple": true
+       }
+      ]
+     }
+    },
+    {
+     "detecciones": [
+      {
+       "clase": "persona",
+       "confianza": 0.9,
+       "caja": [
+        0.25,
+        0.0,
+        0.75,
+        1.0
+       ]
+      },
+      {
+       "clase": "casco",
+       "confianza": 0.9,
+       "caja": [
+        0.4,
+        0.02,
+        0.6,
+        0.16
+       ]
+      },
+      {
+       "clase": "gafas",
+       "confianza": 0.8,
+       "caja": [
+        0.42,
+        0.2,
+        0.58,
+        0.26
+       ]
+      }
+     ],
+     "esperado": {
+      "personas": [
+       {
+        "id": 1,
+        "estable": false,
+        "elementos": {
+         "casco": true,
+         "gafas": true
+        },
+        "faltantes": [],
+        "cumple": true
+       }
+      ]
+     }
+    },
+    {
+     "detecciones": [
+      {
+       "clase": "persona",
+       "confianza": 0.9,
+       "caja": [
+        0.25,
+        0.0,
+        0.75,
+        1.0
+       ]
+      },
+      {
+       "clase": "casco",
+       "confianza": 0.9,
+       "caja": [
+        0.4,
+        0.02,
+        0.6,
+        0.16
+       ]
+      },
+      {
+       "clase": "gafas",
+       "confianza": 0.8,
+       "caja": [
+        0.42,
+        0.2,
+        0.58,
+        0.26
+       ]
+      }
+     ],
+     "esperado": {
+      "personas": [
+       {
+        "id": 1,
+        "estable": true,
+        "elementos": {
+         "casco": true,
+         "gafas": true
+        },
+        "faltantes": [],
+        "cumple": true
+       }
+      ]
+     }
+    },
+    {
+     "detecciones": [
+      {
+       "clase": "persona",
+       "confianza": 0.9,
+       "caja": [
+        0.25,
+        0.0,
+        0.75,
+        1.0
+       ]
+      },
+      {
+       "clase": "gafas",
+       "confianza": 0.8,
+       "caja": [
+        0.42,
+        0.2,
+        0.58,
+        0.26
+       ]
+      }
+     ],
+     "esperado": {
+      "personas": [
+       {
+        "id": 1,
+        "estable": true,
+        "elementos": {
+         "casco": true,
+         "gafas": true
+        },
+        "faltantes": [],
+        "cumple": true
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "SI02_se_quita_el_casco",
+   "descripcion": "Estable con casco; luego 4 cuadros sin casco: con 3 positivas de 7 (menos de la mitad) pasa a faltar.",
+   "pasos": [
+    {
+     "detecciones": [
+      {
+       "clase": "persona",
+       "confianza": 0.9,
+       "caja": [
+        0.25,
+        0.0,
+        0.75,
+        1.0
+       ]
+      },
+      {
+       "clase": "casco",
+       "confianza": 0.9,
+       "caja": [
+        0.4,
+        0.02,
+        0.6,
+        0.16
+       ]
+      },
+      {
+       "clase": "gafas",
+       "confianza": 0.8,
+       "caja": [
+        0.42,
+        0.2,
+        0.58,
+        0.26
+       ]
+      }
+     ],
+     "esperado": {
+      "personas": [
+       {
+        "id": 1,
+        "elementos": {
+         "casco": true,
+         "gafas": true
+        },
+        "faltantes": [],
+        "cumple": true
+       }
+      ]
+     }
+    },
+    {
+     "detecciones": [
+      {
+       "clase": "persona",
+       "confianza": 0.9,
+       "caja": [
+        0.25,
+        0.0,
+        0.75,
+        1.0
+       ]
+      },
+      {
+       "clase": "casco",
+       "confianza": 0.9,
+       "caja": [
+        0.4,
+        0.02,
+        0.6,
+        0.16
+       ]
+      },
+      {
+       "clase": "gafas",
+       "confianza": 0.8,
+       "caja": [
+        0.42,
+        0.2,
+        0.58,
+        0.26
+       ]
+      }
+     ],
+     "esperado": {
+      "personas": [
+       {
+        "id": 1,
+        "elementos": {
+         "casco": true,
+         "gafas": true
+        },
+        "faltantes": [],
+        "cumple": true
+       }
+      ]
+     }
+    },
+    {
+     "detecciones": [
+      {
+       "clase": "persona",
+       "confianza": 0.9,
+       "caja": [
+        0.25,
+        0.0,
+        0.75,
+        1.0
+       ]
+      },
+      {
+       "clase": "casco",
+       "confianza": 0.9,
+       "caja": [
+        0.4,
+        0.02,
+        0.6,
+        0.16
+       ]
+      },
+      {
+       "clase": "gafas",
+       "confianza": 0.8,
+       "caja": [
+        0.42,
+        0.2,
+        0.58,
+        0.26
+       ]
+      }
+     ],
+     "esperado": {
+      "personas": [
+       {
+        "id": 1,
+        "elementos": {
+         "casco": true,
+         "gafas": true
+        },
+        "faltantes": [],
+        "cumple": true
+       }
+      ]
+     }
+    },
+    {
+     "detecciones": [
+      {
+       "clase": "persona",
+       "confianza": 0.9,
+       "caja": [
+        0.25,
+        0.0,
+        0.75,
+        1.0
+       ]
+      },
+      {
+       "clase": "gafas",
+       "confianza": 0.8,
+       "caja": [
+        0.42,
+        0.2,
+        0.58,
+        0.26
+       ]
+      }
+     ],
+     "esperado": {
+      "personas": [
+       {
+        "id": 1,
+        "elementos": {
+         "casco": true,
+         "gafas": true
+        },
+        "faltantes": [],
+        "cumple": true
+       }
+      ]
+     }
+    },
+    {
+     "detecciones": [
+      {
+       "clase": "persona",
+       "confianza": 0.9,
+       "caja": [
+        0.25,
+        0.0,
+        0.75,
+        1.0
+       ]
+      },
+      {
+       "clase": "gafas",
+       "confianza": 0.8,
+       "caja": [
+        0.42,
+        0.2,
+        0.58,
+        0.26
+       ]
+      }
+     ],
+     "esperado": {
+      "personas": [
+       {
+        "id": 1,
+        "elementos": {
+         "casco": true,
+         "gafas": true
+        },
+        "faltantes": [],
+        "cumple": true
+       }
+      ]
+     }
+    },
+    {
+     "detecciones": [
+      {
+       "clase": "persona",
+       "confianza": 0.9,
+       "caja": [
+        0.25,
+        0.0,
+        0.75,
+        1.0
+       ]
+      },
+      {
+       "clase": "gafas",
+       "confianza": 0.8,
+       "caja": [
+        0.42,
+        0.2,
+        0.58,
+        0.26
+       ]
+      }
+     ],
+     "esperado": {
+      "personas": [
+       {
+        "id": 1,
+        "elementos": {
+         "casco": true,
+         "gafas": true
+        },
+        "faltantes": [],
+        "cumple": true
+       }
+      ]
+     }
+    },
+    {
+     "detecciones": [
+      {
+       "clase": "persona",
+       "confianza": 0.9,
+       "caja": [
+        0.25,
+        0.0,
+        0.75,
+        1.0
+       ]
+      },
+      {
+       "clase": "gafas",
+       "confianza": 0.8,
+       "caja": [
+        0.42,
+        0.2,
+        0.58,
+        0.26
+       ]
+      }
+     ],
+     "esperado": {
+      "personas": [
+       {
+        "id": 1,
+        "elementos": {
+         "casco": false,
+         "gafas": true
+        },
+        "faltantes": [
+         "casco"
+        ],
+        "cumple": false
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "SI03_sin_casco_bloquea_y_recupera",
+   "descripcion": "sin_casco bloquea de inmediato; recuperar exige 3 positivas consecutivas.",
+   "pasos": [
+    {
+     "detecciones": [
+      {
+       "clase": "persona",
+       "confianza": 0.9,
+       "caja": [
+        0.25,
+        0.0,
+        0.75,
+        1.0
+       ]
+      },
+      {
+       "clase": "casco",
+       "confianza": 0.9,
+       "caja": [
+        0.4,
+        0.02,
+        0.6,
+        0.16
+       ]
+      },
+      {
+       "clase": "gafas",
+       "confianza": 0.8,
+       "caja": [
+        0.42,
+        0.2,
+        0.58,
+        0.26
+       ]
+      }
+     ],
+     "esperado": {
+      "personas": [
+       {
+        "id": 1,
+        "elementos": {
+         "casco": true,
+         "gafas": true
+        },
+        "faltantes": [],
+        "cumple": true
+       }
+      ]
+     }
+    },
+    {
+     "detecciones": [
+      {
+       "clase": "persona",
+       "confianza": 0.9,
+       "caja": [
+        0.25,
+        0.0,
+        0.75,
+        1.0
+       ]
+      },
+      {
+       "clase": "sin_casco",
+       "confianza": 0.8,
+       "caja": [
+        0.4,
+        0.02,
+        0.6,
+        0.16
+       ]
+      },
+      {
+       "clase": "gafas",
+       "confianza": 0.8,
+       "caja": [
+        0.42,
+        0.2,
+        0.58,
+        0.26
+       ]
+      }
+     ],
+     "esperado": {
+      "personas": [
+       {
+        "id": 1,
+        "elementos": {
+         "casco": false,
+         "gafas": true
+        },
+        "faltantes": [
+         "casco"
+        ],
+        "cumple": false
+       }
+      ]
+     }
+    },
+    {
+     "detecciones": [
+      {
+       "clase": "persona",
+       "confianza": 0.9,
+       "caja": [
+        0.25,
+        0.0,
+        0.75,
+        1.0
+       ]
+      },
+      {
+       "clase": "casco",
+       "confianza": 0.9,
+       "caja": [
+        0.4,
+        0.02,
+        0.6,
+        0.16
+       ]
+      },
+      {
+       "clase": "gafas",
+       "confianza": 0.8,
+       "caja": [
+        0.42,
+        0.2,
+        0.58,
+        0.26
+       ]
+      }
+     ],
+     "esperado": {
+      "personas": [
+       {
+        "id": 1,
+        "elementos": {
+         "casco": false,
+         "gafas": true
+        },
+        "faltantes": [
+         "casco"
+        ],
+        "cumple": false
+       }
+      ]
+     }
+    },
+    {
+     "detecciones": [
+      {
+       "clase": "persona",
+       "confianza": 0.9,
+       "caja": [
+        0.25,
+        0.0,
+        0.75,
+        1.0
+       ]
+      },
+      {
+       "clase": "casco",
+       "confianza": 0.9,
+       "caja": [
+        0.4,
+        0.02,
+        0.6,
+        0.16
+       ]
+      },
+      {
+       "clase": "gafas",
+       "confianza": 0.8,
+       "caja": [
+        0.42,
+        0.2,
+        0.58,
+        0.26
+       ]
+      }
+     ],
+     "esperado": {
+      "personas": [
+       {
+        "id": 1,
+        "elementos": {
+         "casco": false,
+         "gafas": true
+        },
+        "faltantes": [
+         "casco"
+        ],
+        "cumple": false
+       }
+      ]
+     }
+    },
+    {
+     "detecciones": [
+      {
+       "clase": "persona",
+       "confianza": 0.9,
+       "caja": [
+        0.25,
+        0.0,
+        0.75,
+        1.0
+       ]
+      },
+      {
+       "clase": "casco",
+       "confianza": 0.9,
+       "caja": [
+        0.4,
+        0.02,
+        0.6,
+        0.16
+       ]
+      },
+      {
+       "clase": "gafas",
+       "confianza": 0.8,
+       "caja": [
+        0.42,
+        0.2,
+        0.58,
+        0.26
+       ]
+      }
+     ],
+     "esperado": {
+      "personas": [
+       {
+        "id": 1,
+        "elementos": {
+         "casco": true,
+         "gafas": true
+        },
+        "faltantes": [],
+        "cumple": true
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

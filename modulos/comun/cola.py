@@ -19,7 +19,7 @@ from pathlib import Path
 
 import httpx
 
-from .config import obtener_config
+from .config import leer_entorno
 
 log = logging.getLogger(__name__)
 
@@ -111,7 +111,7 @@ class ColaEventos:
                     continue
 
                 evento = pendientes[0]
-                url = obtener_config().api_url + "/api/eventos"
+                url = leer_entorno().api_url + "/api/eventos"
                 try:
                     respuesta = cliente.post(url, json=evento)
                 except httpx.HTTPError as error:
@@ -149,7 +149,7 @@ _candado_colas = threading.Lock()
 
 def obtener_cola(estacion: str) -> ColaEventos:
     """Devuelve la cola de la estación (una por archivo), creándola si hace falta."""
-    ruta = (obtener_config().carpeta_cola / f"{estacion}.jsonl").resolve()
+    ruta = (leer_entorno().carpeta_cola / f"{estacion}.jsonl").resolve()
     with _candado_colas:
         if ruta not in _colas:
             _colas[ruta] = ColaEventos(ruta)

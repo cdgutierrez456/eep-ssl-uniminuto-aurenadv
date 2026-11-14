@@ -10,18 +10,21 @@ real. El contexto completo está en [docs/plataforma-sst-en-vivo-brief.md](docs/
 auren-sst/
 ├── contrato/                  # Fuente de verdad compartida
 │   ├── evento.schema.json     # JSON Schema del sobre y de cada tipo de evento
+│   ├── config_epp.schema.json # Configuración remota del módulo EPP
 │   └── ejemplos/              # Un evento válido por tipo (sirven de mocks)
 ├── modulos/                   # Juan — Python
-│   └── comun/                 # Cliente compartido: publicar, latido, subir_medio, difuminar_rostros
+│   ├── comun/                 # Cliente compartido: publicar, latido, medios, rostros, config remota, cámaras
+│   └── epp/                   # Verificación de EPP por perfil en vivo (python -m modulos.epp)
 ├── herramientas/
 │   └── receptor_prueba/       # Imita la API local para probar módulos (no es la plataforma)
 ├── pruebas/                   # pytest
-├── docs/                      # Brief técnico
+├── docs/                      # Brief técnico y cambios de contrato
 └── plataforma/                # Cristian — Next.js (todavía no existe)
 ```
 
-Los módulos `ergonomia`, `epp`, `zona`, `inspector` e `incidente` se irán agregando en
-`modulos/<nombre>/`. Las convenciones están en [CLAUDE.md](CLAUDE.md).
+Ya está `epp` ([modulos/epp/README.md](modulos/epp/README.md)). Los módulos `ergonomia`, `zona`,
+`inspector` e `incidente` se irán agregando en `modulos/<nombre>/`. Lo que cambió en el
+contrato para el módulo EPP está en [docs/cambios-contrato.md](docs/cambios-contrato.md). Las convenciones están en [CLAUDE.md](CLAUDE.md).
 
 ## Cómo arrancar
 

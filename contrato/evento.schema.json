@@ -32,7 +32,8 @@
         "inspeccion_foto",
         "informe_incidente",
         "lead_registrado",
-        "estado_modulo"
+        "estado_modulo",
+        "config_actualizada"
       ]
     },
     "timestamp": {
@@ -107,6 +108,10 @@
       "$comment": "estado_modulo es el latido: lo emite cualquier estación (la del módulo que late), por eso no fija 'estacion'.",
       "if": { "required": ["tipo"], "properties": { "tipo": { "const": "estado_modulo" } } },
       "then": { "properties": { "datos": { "$ref": "#/$defs/datos_estado_modulo" } } }
+    },
+    {
+      "if": { "required": ["tipo"], "properties": { "tipo": { "const": "config_actualizada" } } },
+      "then": { "properties": { "estacion": { "const": "epp" }, "severidad": { "const": "info" }, "datos": { "$ref": "#/$defs/datos_config_actualizada" } } }
     }
   ],
   "$defs": {
@@ -244,6 +249,15 @@
         "modulo": { "type": "string", "minLength": 1 },
         "estado": { "enum": ["activo", "error", "sin_conexion"] },
         "mensaje": { "type": "string" }
+      }
+    },
+    "datos_config_actualizada": {
+      "description": "El módulo EPP aplicó una configuración nueva (remota o por teclado).",
+      "type": "object",
+      "required": ["perfil_activo", "elementos_requeridos"],
+      "properties": {
+        "perfil_activo": { "type": "string", "minLength": 1 },
+        "elementos_requeridos": { "description": "Elementos exigidos en el perfil activo.", "type": "array", "items": { "type": "string" } }
       }
     }
   }

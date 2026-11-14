@@ -17,11 +17,28 @@ from zoneinfo import ZoneInfo
 from fastapi import Body, FastAPI, File, HTTPException, UploadFile
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
+from jsonschema import Draft202012Validator
 
 from modulos.comun.esquema import errores_de
 
 ZONA_HORARIA = ZoneInfo("America/Bogota")
 RUTA_PAGINA = Path(__file__).parent / "pagina.html"
+CARPETA_CONTRATO = Path(__file__).resolve().parents[2] / "contrato"
+
+
+def _errores_de_config(modulo: str, config: Any) -> list[str]:
+    """Valida la configuración contra contrato/config_<modulo>.schema.json, si ese esquema existe."""
+    if not isinstance(config, dict):
+        return ["la configuración debe ser un objeto JSON"]
+    ruta = CARPETA_CONTRATO / f"config_{modulo}.schema.json"
+    if not ruta.is_file():
+        return []
+    validador = Draft202012Validator(json.loads(ruta.read_text(encoding="utf-8")))
+    errores = []
+    for error in validador.iter_errors(config):
+        campo = "/".join(str(parte) for parte in error.absolute_path) or "(raíz)"
+        errores.append(f"{campo}: {error.message}")
+    return errores
 
 
 def _imprimir_evento(evento: dict) -> None:
@@ -65,6 +82,30 @@ def crear_app(carpeta_datos: str | Path = ".") -> FastAPI:
                    cuerpo TEXT NOT NULL         -- el evento completo en JSON
                )"""
         )
+        conexion.execute(
+            """CREATE TABLE IF NOT EXISTS modulos (
+                   modulo TEXT PRIMARY KEY,
+                   capacidades TEXT,            -- lo que el módulo dice que sabe hacer (JSON)
+                   config TEXT,                 -- su configuración vigente (JSON)
+                   actualizado TEXT
+               )"""
+        )
+
+    def guardar_de_modulo(modulo: str, columna: str, valor: Any) -> None:
+        ahora = datetime.now(ZONA_HORARIA).isoformat(timespec="seconds")
+        with closing(conectar()) as conexion, conexion:
+            conexion.execute("INSERT OR IGNORE INTO modulos (modulo) VALUES (?)", (modulo,))
+            conexion.execute(
+                f"UPDATE modulos SET {columna} = ?, actualizado = ? WHERE modulo = ?",
+                (json.dumps(valor, ensure_ascii=False), ahora, modulo),
+            )
+
+    def leer_de_modulo(modulo: str, columna: str) -> Any:
+        with closing(conectar()) as conexion:
+            fila = conexion.execute(f"SELECT {columna} FROM modulos WHERE modulo = ?", (modulo,)).fetchone()
+        if fila is None or fila[columna] is None:
+            raise HTTPException(404, f"El módulo '{modulo}' no tiene {columna} registrada")
+        return json.loads(fila[columna])
 
     app = FastAPI(title="Receptor de prueba SST en vivo", docs_url="/docs")
     app.mount("/media", StaticFiles(directory=carpeta_media), name="media")
@@ -132,6 +173,46 @@ def crear_app(carpeta_datos: str | Path = ".") -> FastAPI:
         ruta = f"media/{fecha}/{nombre}"
         print(f"[MEDIO] {archivo.filename} -> {ruta}", flush=True)
         return {"ruta": ruta}
+
+    @app.put("/api/modulos/{modulo}/capacidades")
+    def registrar_capacidades(modulo: str, capacidades: Any = Body(...)):
+        """El módulo declara qué sabe hacer (para EPP: perfiles y elementos detectables)."""
+        guardar_de_modulo(modulo, "capacidades", capacidades)
+        print(f"[CAPACIDADES] {modulo}: {json.dumps(capacidades, ensure_ascii=False)[:200]}", flush=True)
+        return {"modulo": modulo}
+
+    @app.get("/api/modulos/{modulo}/capacidades")
+    def consultar_capacidades(modulo: str):
+        return leer_de_modulo(modulo, "capacidades")
+
+    @app.get("/api/modulos/{modulo}/config")
+    def consultar_config(modulo: str):
+        """Configuración vigente del módulo. 404 si todavía no hay ninguna."""
+        return leer_de_modulo(modulo, "config")
+
+    @app.put("/api/modulos/{modulo}/config")
+    def guardar_config(modulo: str, config: Any = Body(...)):
+        """Guarda la configuración; la escriben la página (operador) y el propio módulo (teclado)."""
+        errores = _errores_de_config(modulo, config)
+        if errores:
+            return JSONResponse(status_code=422, content={"error": "Configuración inválida", "detalle": errores})
+        guardar_de_modulo(modulo, "config", config)
+        print(f"[CONFIG] {modulo}: {json.dumps(config, ensure_ascii=False)[:200]}", flush=True)
+        return config
+
+    @app.get("/api/modulos")
+    def consultar_modulos():
+        """Capacidades y configuración de todos los módulos registrados (para la página)."""
+        with closing(conectar()) as conexion:
+            filas = conexion.execute("SELECT * FROM modulos ORDER BY modulo").fetchall()
+        return {
+            fila["modulo"]: {
+                "capacidades": json.loads(fila["capacidades"]) if fila["capacidades"] else None,
+                "config": json.loads(fila["config"]) if fila["config"] else None,
+                "actualizado": fila["actualizado"],
+            }
+            for fila in filas
+        }
 
     @app.get("/api/salud")
     def salud():

@@ -1,0 +1,127 @@
+# Fuentes del dataset de EPP industrial y mapeo EXPLÍCITO de clases de origen -> canónicas.
+#
+# Lo usa: python -m modulos.epp.datos.preparar_dataset
+#
+# Reglas del mapeo:
+# - Los nombres de origen se comparan sin distinguir mayúsculas, espacios, guiones ni "_".
+# - `descartar` elimina esa clase de las etiquetas.
+# - Una clase de origen que NO aparezca aquí detiene el script: hay que decidir a mano
+#   si se mapea o se descarta (nada se pierde en silencio).
+# - Una imagen que queda sin etiquetas tras el mapeo no se usa.
+
+# El orden define el índice de clase del modelo.
+clases_canonicas: [persona, casco, gafas, chaleco, proteccion_auditiva, sin_casco, sin_gafas]
+
+# Clases que se quitan solas (con aviso) si en train tienen menos instancias que el mínimo.
+# persona, casco y gafas son obligatorias: si faltan, el script falla.
+clases_opcionales: [chaleco, proteccion_auditiva, sin_casco, sin_gafas]
+minimo_instancias_train: 400
+
+semilla: 20261113
+fracciones: {train: 0.8, valid: 0.1, test: 0.1}
+formato_descarga: yolov11        # formato YOLO con data.yaml (compatible con Ultralytics 8.4)
+distancia_phash: 4               # distancia de Hamming máxima para considerar duplicadas dos imágenes
+
+# Varias fuentes no anotan `persona` (o solo a veces). Se completa con el YOLO26 oficial
+# preentrenado en COCO: solo detecciones de alta confianza que no solapen una persona ya anotada.
+completar_persona:
+  modelo: yolo26n.pt
+  confianza: 0.5
+  iou_ya_anotada: 0.5
+  imgsz: 640
+
+# Una imagen de validación/prueba es "primer plano" (como en el stand, a 1-2 m) si la persona
+# más alta ocupa al menos esta fracción del alto, o si un casco/gafas ocupa al menos este ancho.
+primer_plano:
+  alto_persona_min: 0.6
+  ancho_elemento_min: 0.15
+
+fuentes:
+  - slug: machine-iimx4/ppe-detection-vvyxs
+    version: 2
+    licencia: CC BY 4.0
+    completar_persona: false
+    mapeo:
+      Person: persona
+      Helmet: casco
+      Glasses: gafas
+      Shades: gafas                 # gafas oscuras: el modelo no distingue el tipo de lente
+      Protective Vest: chaleco
+      Ear Protectors: proteccion_auditiva
+      EarProtection: proteccion_auditiva
+      No-Helmet: sin_casco
+      No-Specs: sin_gafas
+      Boots: descartar
+      Gloves: descartar
+      Mask: descartar
+      No-Boots: descartar
+      No-Gloves: descartar
+      No-Vest: descartar
+      Without Ear Protectors: descartar
+      Without Glove: descartar
+      Without Mask: descartar
+      Without Safety Shoes: descartar
+      Without Vest: descartar
+
+  - slug: a13/ppe-1-5g9zq
+    version: 8
+    licencia: CC BY 4.0
+    completar_persona: true         # anota Person solo en parte de las imágenes
+    mapeo:
+      Person: persona
+      Helmet: casco
+      Goggles: gafas
+      vest: chaleco
+      No_Helmet: sin_casco
+      No_Goggles: sin_gafas
+      mask: descartar
+      Gloves: descartar
+      No_saftey shoes: descartar
+      no_gloves: descartar
+      no_mask: descartar
+      no_vest: descartar
+      safety-shoes: descartar
+
+  - slug: chandimas-workspace/construction-safety-monitor-mlpd4
+    version: 2
+    licencia: CC BY 4.0
+    completar_persona: true         # no anota persona
+    mapeo:
+      person: persona
+      helmet: casco
+      goggles: gafas
+      vest: chaleco
+      no-helmet: sin_casco
+      no-goggles: sin_gafas
+      boots: descartar
+      gloves: descartar
+      no-boots: descartar
+      no-gloves: descartar
+      no-vest: descartar
+      "0": descartar
+      "1": descartar
+      "8": descartar
+
+  - slug: object-detection-mygq1/ppe-x5hms
+    version: 26
+    licencia: CC BY 4.0
+    completar_persona: false
+    mapeo:
+      person: persona
+      Hardhat: casco
+      Glasses: gafas
+      Safety Vest: chaleco
+      No-Hardhat: sin_casco
+      No-Glasses: sin_gafas
+      Gloves: descartar
+      Mask: descartar
+      No-Gloves: descartar
+      No-Mask: descartar
+      No-Safety-Vest: descartar
+      No-Shoes: descartar
+      Shoes: descartar
+      other: descartar
+
+# Fotos propias: se suman con  --local <carpeta>  (se puede repetir). Estructura:
+#   <carpeta>/images/*.jpg   <carpeta>/labels/*.txt (formato YOLO)   <carpeta>/classes.txt
+# classes.txt lista, una por línea y en orden de índice, los nombres canónicos usados al anotar.

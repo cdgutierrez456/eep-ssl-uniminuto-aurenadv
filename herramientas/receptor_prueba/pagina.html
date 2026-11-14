@@ -46,6 +46,23 @@
     border: 1px solid var(--borde); border-radius: 999px; padding: 1px 10px; color: var(--tenue);
   }
   .sesion { margin-left: auto; color: var(--tenue); font-size: 13px; }
+  h2 { font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--tenue); margin: 4px 0 10px; }
+  #config { margin-bottom: 28px; }
+  .modulo { background: var(--deep); border: 1px solid var(--borde); border-radius: 6px; padding: 14px 16px; margin-bottom: 10px; }
+  .modulo .fila { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; }
+  .modulo .nombre { font-weight: 600; text-transform: uppercase; letter-spacing: .06em; font-size: 13px; min-width: 70px; }
+  .modulo label { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+  .modulo select {
+    background: var(--negro); color: var(--marfil); border: 1px solid var(--borde); border-radius: 4px;
+    padding: 5px 8px; font: inherit;
+  }
+  .interruptor { appearance: none; width: 34px; height: 18px; border-radius: 999px; background: var(--negro);
+    border: 1px solid var(--tenue); position: relative; cursor: pointer; margin: 0; }
+  .interruptor::after { content: ""; position: absolute; top: 2px; left: 2px; width: 12px; height: 12px;
+    border-radius: 50%; background: var(--tenue); transition: left .12s; }
+  .interruptor:checked { border-color: var(--lima); }
+  .interruptor:checked::after { left: 18px; background: var(--lima); }
+  .nota { color: var(--tenue); font-size: 13px; }
   pre {
     margin: 8px 0 0; white-space: pre-wrap; word-break: break-word; color: var(--tenue);
     font: 13px/1.45 Consolas, "Cascadia Mono", Menlo, monospace;
@@ -58,7 +75,14 @@
   <span class="aviso">Herramienta de desarrollo. No es la plataforma final.</span>
   <span class="estado"><span class="punto" id="punto"></span><span id="conteo">Conectando…</span></span>
 </header>
-<main id="lista"><p class="vacio">Esperando eventos…</p></main>
+<main>
+  <section id="config" hidden>
+    <h2>Configuración de módulos</h2>
+    <div id="modulos"></div>
+  </section>
+  <h2>Eventos</h2>
+  <div id="lista"><p class="vacio">Esperando eventos…</p></div>
+</main>
 <script>
   const lista = document.getElementById("lista");
   const conteo = document.getElementById("conteo");
@@ -104,8 +128,82 @@
       conteo.textContent = "Receptor sin respuesta";
     }
   }
+  // ---- Configuración de módulos: se arma desde las capacidades que cada módulo registró ----
+  const seccionConfig = document.getElementById("config");
+  const contenedorModulos = document.getElementById("modulos");
+
+  async function guardarConfig(modulo, config) {
+    await fetch("/api/modulos/" + encodeURIComponent(modulo) + "/config", {
+      method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(config)
+    });
+    firmaModulos = "";
+    actualizarModulos();
+  }
+
+  function tarjetaModulo(modulo, estado) {
+    const caja = elemento("div", "modulo");
+    const fila = elemento("div", "fila");
+    fila.append(elemento("span", "nombre", modulo));
+    const perfiles = estado.capacidades && estado.capacidades.perfiles;
+    if (!perfiles) {
+      fila.append(elemento("span", "nota", "Este módulo no declaró perfiles configurables."));
+    } else if (!estado.config) {
+      fila.append(elemento("span", "nota", "Esperando la configuración del módulo…"));
+    } else {
+      const config = estado.config;
+      const selector = document.createElement("select");
+      for (const [id, perfil] of Object.entries(perfiles)) {
+        const opcion = elemento("option", "", perfil.nombre || id);
+        opcion.value = id;
+        opcion.selected = id === config.perfil_activo;
+        selector.append(opcion);
+      }
+      selector.addEventListener("change", () => guardarConfig(modulo, { ...config, perfil_activo: selector.value }));
+      const etiquetaPerfil = elemento("label", "", "Perfil activo ");
+      etiquetaPerfil.append(selector);
+      fila.append(etiquetaPerfil);
+
+      const activo = perfiles[config.perfil_activo];
+      const requeridos = ((config.perfiles || {})[config.perfil_activo] || {}).elementos_requeridos || [];
+      for (const item of (activo ? activo.elementos : [])) {
+        const interruptor = document.createElement("input");
+        interruptor.type = "checkbox";
+        interruptor.className = "interruptor";
+        interruptor.checked = requeridos.includes(item.id);
+        interruptor.addEventListener("change", () => {
+          const nuevos = activo.elementos.map(e => e.id).filter(id =>
+            id === item.id ? interruptor.checked : requeridos.includes(id));
+          guardarConfig(modulo, {
+            ...config,
+            perfiles: { ...(config.perfiles || {}), [config.perfil_activo]: { elementos_requeridos: nuevos } }
+          });
+        });
+        const etiqueta = elemento("label");
+        etiqueta.append(interruptor, elemento("span", "", item.nombre || item.id));
+        fila.append(etiqueta);
+      }
+    }
+    caja.append(fila);
+    return caja;
+  }
+
+  let firmaModulos = "";
+  async function actualizarModulos() {
+    try {
+      const modulos = await (await fetch("/api/modulos", { cache: "no-store" })).json();
+      const firma = JSON.stringify(modulos);
+      if (firma === firmaModulos) return;
+      firmaModulos = firma;
+      const nombres = Object.keys(modulos);
+      seccionConfig.hidden = nombres.length === 0;
+      contenedorModulos.replaceChildren(...nombres.map(nombre => tarjetaModulo(nombre, modulos[nombre])));
+    } catch (error) { /* el indicador de estado ya avisa que el receptor no responde */ }
+  }
+
   actualizar();
+  actualizarModulos();
   setInterval(actualizar, 2000);
+  setInterval(actualizarModulos, 2000);
 </script>
 </body>
 </html>

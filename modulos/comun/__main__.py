@@ -7,13 +7,13 @@ Sirve para comprobar que el cliente y el receptor de prueba se entienden.
 import logging
 
 from . import esperar_envios, eventos_pendientes, publicar
-from .config import obtener_config
+from .config import leer_entorno
 
 log = logging.getLogger("modulos.comun.demo")
 
 
 def main() -> None:
-    log.info("Publicando 3 eventos de ejemplo en %s", obtener_config().api_url)
+    log.info("Publicando 3 eventos de ejemplo en %s", leer_entorno().api_url)
     publicar(
         "ergonomia", "evaluacion_reba",
         {
