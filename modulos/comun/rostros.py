@@ -54,6 +54,30 @@ def detectar_rostros(frame: np.ndarray) -> list[tuple[int, int, int, int]]:
         return [tuple(int(v) for v in cara) for cara in _haar.detectMultiScale(gris, 1.1, 5)]
 
 
+def detectar_rostros_con_ojos(frame: np.ndarray) -> list[dict]:
+    """Rostros del frame BGR con la posición de los ojos (solo YuNet).
+
+    Cada rostro es ``{"caja": (x, y, ancho, alto), "ojos": ((x, y), (x, y)), "confianza": float}``
+    en píxeles. Devuelve una lista vacía si YuNet no está disponible: la cascada Haar no
+    ubica los ojos.
+    """
+    alto, ancho = frame.shape[:2]
+    with _candado:
+        _preparar()
+        if _yunet is None:
+            return []
+        _yunet.setInputSize((ancho, alto))
+        _, caras = _yunet.detect(frame)
+    if caras is None:
+        return []
+    return [
+        {"caja": tuple(int(v) for v in cara[:4]),
+         "ojos": ((float(cara[4]), float(cara[5])), (float(cara[6]), float(cara[7]))),
+         "confianza": float(cara[14])}
+        for cara in caras
+    ]
+
+
 def difuminar_rostros(frame: np.ndarray) -> np.ndarray:
     """Devuelve una copia del frame de OpenCV (BGR) con los rostros difuminados.
 

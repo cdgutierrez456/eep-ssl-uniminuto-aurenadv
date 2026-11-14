@@ -34,6 +34,12 @@ Léelo antes de un cambio grande.
   muestra en pantalla en el momento es un espejo y **no** se difumina, porque no se guarda
   ni se envía. En cuanto un fotograma sale de esa vista (archivo, subida, adjunto, captura
   para un reporte), aplica la regla anterior sin excepciones.
+- **Excepción, fotos de entrenamiento**: para enseñar a un modelo elementos que van en la
+  cara (gafas, tapabocas) se pueden guardar fotos **sin difuminar**, solo con estas
+  condiciones: quien aparece aceptó posar; se guardan en `datasets/` (fuera de git) en el
+  equipo donde se tomaron; nunca se suben, se adjuntan a eventos ni se envían a ningún
+  servicio; y cualquier otro rostro que salga en la imagen se difumina. Hoy solo aplica a
+  `modulos/epp/datos/capturar.py`.
 - **Configuración por `.env`** (con `.env.example` versionado). Nunca claves en el código.
 - Debe funcionar en **Windows y Linux**: rutas con `pathlib`, archivos con `encoding="utf-8"`.
 - **Marca Auren** en cualquier interfaz visual: Auren Deep `#12343B`, Auren Black `#111414`,
