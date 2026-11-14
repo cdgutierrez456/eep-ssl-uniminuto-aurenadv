@@ -16,6 +16,7 @@ from .registro import configurar_logs
 
 configurar_logs()
 
+from .camara_stand import Camara, ConfigCamara, conectar_camara  # noqa: E402
 from .camaras import abrir_camara, listar_camaras  # noqa: E402
 from .cola import esperar_envios, eventos_pendientes  # noqa: E402
 from .config_remota import (  # noqa: E402
@@ -41,6 +42,9 @@ __all__ = [
     "difuminar_rostros",
     "abrir_camara",
     "listar_camaras",
+    "conectar_camara",
+    "ConfigCamara",
+    "Camara",
     "registrar_capacidades",
     "obtener_config",
     "actualizar_config",

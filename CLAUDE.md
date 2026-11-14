@@ -40,6 +40,14 @@ Léelo antes de un cambio grande.
   equipo donde se tomaron; nunca se suben, se adjuntan a eventos ni se envían a ningún
   servicio; y cualquier otro rostro que salga en la imagen se difumina. Hoy solo aplica a
   `modulos/epp/datos/capturar.py`.
+- **Excepción, videos de prueba para desarrollo**: para desarrollar y ajustar un módulo sin
+  estar frente a la cámara se pueden grabar videos cortos **sin difuminar** con
+  `herramientas/grabar_video.py`, con las mismas condiciones: quien aparece aceptó ser
+  grabado; se guardan en `datasets/videos/` (fuera de git) en el equipo donde se grabaron;
+  y nunca se suben, se adjuntan a eventos ni se envían a ningún servicio. Es material de
+  desarrollo, no de la demo: durante el evento no se graba video de los visitantes. Todo
+  fotograma que salga de uno de estos videos hacia un archivo, un evento o un reporte se
+  difumina como cualquier otro.
 - **Configuración por `.env`** (con `.env.example` versionado). Nunca claves en el código.
 - Debe funcionar en **Windows y Linux**: rutas con `pathlib`, archivos con `encoding="utf-8"`.
 - **Marca Auren** en cualquier interfaz visual: Auren Deep `#12343B`, Auren Black `#111414`,
@@ -83,3 +91,26 @@ Correr las pruebas:
 ```
 .venv\Scripts\python -m pytest
 ```
+
+## Cámaras
+
+Las demos corren en webcams USB Logitech externas, no en la cámara del portátil. Reglas
+para todos los módulos de visión:
+
+- Abrir la cámara con `modulos.comun.conectar_camara(ConfigCamara.desde_entorno("<MODULO>"))`,
+  no con `cv2.VideoCapture` directo. (`abrir_camara(indice)` es la utilidad anterior; EPP
+  todavía la usa.)
+- La cámara se elige **por índice**, desde el `.env` (`<MODULO>_CAMARA`) o la configuración
+  del módulo; la integrada del portátil suele ser la 0. El nombre de dispositivo es solo un
+  respaldo: dos Logitech del mismo modelo se llaman igual.
+- **Cada cámara se conecta siempre al mismo puerto USB**: el índice puede cambiar al
+  cambiarla de puerto. Tras mover un cable, confirmar con la vista previa de
+  `python -m herramientas.listar_camaras`.
+- Backend DirectShow en Windows y V4L2 en Linux.
+- Por defecto MJPG, 1280x720 a 30 fps (configurable), para que dos cámaras convivan en el
+  mismo USB.
+- Autofoco apagado y enfoque fijo; la exposición se puede fijar desde configuración. Si la
+  cámara no soporta una propiedad, se informa en el log y se sigue.
+- Se informan la resolución y los fps reales obtenidos.
+- Si la cámara se desconecta, el módulo no se cierra: muestra "Cámara desconectada,
+  reconectando…" y reintenta hasta que vuelva.
