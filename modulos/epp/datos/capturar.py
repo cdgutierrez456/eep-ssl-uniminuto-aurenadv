@@ -25,7 +25,6 @@ rostro más grande; cualquier otro rostro que salga se difumina antes de guardar
 from __future__ import annotations
 
 import argparse
-import os
 import sys
 import time
 from datetime import datetime
@@ -34,7 +33,7 @@ from pathlib import Path
 import cv2
 import numpy as np
 
-from modulos.comun.camaras import abrir_camara
+from modulos.comun.camara_stand import ConfigCamara, conectar_camara
 from modulos.comun.rostros import MARGEN, detectar_rostros_con_ojos
 
 RAIZ = Path(__file__).resolve().parents[3]
@@ -147,7 +146,7 @@ def main() -> int:
                             help="Las de 'evaluar' no se usan para entrenar: miden si el modelo mejoró")
     analizador.add_argument("--segundos", type=float, default=90)
     analizador.add_argument("--cada", type=float, default=0.5, help="Segundos entre fotos")
-    analizador.add_argument("--camara", type=int, default=int(os.getenv("EPP_CAMARA", "0") or 0))
+    analizador.add_argument("--camara", type=int, help="Índice de la cámara (por defecto EPP_CAMARA)")
     opciones = analizador.parse_args()
 
     from ultralytics import YOLO
@@ -157,9 +156,10 @@ def main() -> int:
             print(f"Falta {archivo} en {DIR_MODELOS}", file=sys.stderr)
             return 1
     coco, industria = YOLO(str(DIR_MODELOS / "yolo26n.pt")), YOLO(str(DIR_MODELOS / "epp-industria-v1.pt"))
-    camara = abrir_camara(opciones.camara)
-    if camara is None:
-        print(f"No se encontró la cámara {opciones.camara}. Ver: python -m modulos.comun.camaras", file=sys.stderr)
+    # La misma cámara y los mismos ajustes (enfoque, exposición) que usa la estación
+    camara = conectar_camara(ConfigCamara.desde_entorno("EPP").con_camara(opciones.camara))
+    if not camara.conectada:
+        print("No se encontró la cámara. Ver: python -m herramientas.listar_camaras", file=sys.stderr)
         return 1
 
     sesion = f"{datetime.now():%Y%m%d-%H%M%S}_gafas-{opciones.gafas}_casco-{opciones.casco}_chaleco-{opciones.chaleco}"
@@ -175,10 +175,12 @@ def main() -> int:
     resumen = f"gafas: {opciones.gafas}   casco: {opciones.casco}   chaleco: {opciones.chaleco}"
     try:
         while True:
-            correcto, frame = camara.read()
-            if not correcto:
-                print("La cámara dejó de entregar imagen.", file=sys.stderr)
-                break
+            frame = camara.leer()
+            if frame is None:
+                if not camara.conectada:
+                    print("La cámara se desconectó; la captura termina aquí.", file=sys.stderr)
+                    break
+                continue
             ahora = time.monotonic()
             restante = opciones.segundos - (ahora - inicio)
             if restante <= 0:
@@ -207,7 +209,7 @@ def main() -> int:
             if cv2.waitKey(1) & 0xFF in (ord("q"), ord("Q"), 27):
                 break
     finally:
-        camara.release()
+        camara.cerrar()
         cv2.destroyAllWindows()
 
     if guardadas == 0:

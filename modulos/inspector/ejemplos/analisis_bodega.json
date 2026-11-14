@@ -1,0 +1,132 @@
+{
+  "descripcion_general": "Bodega de almacenamiento con estantería metálica, donde una persona ubica cajas en el nivel superior desde una escalera de tijera.",
+  "advertencias": ["No se ve la parte alta de la estantería", "Iluminación desigual hacia el fondo"],
+  "peligros": [
+    {
+      "descripcion": "Trabajador sobre escalera de tijera manipulando cajas sobre el nivel de los hombros",
+      "evidencia_visible": "La persona está en los peldaños superiores de la escalera, sin apoyo de manos y con una caja levantada sobre la cabeza.",
+      "ubicacion_px": { "x1": 640, "y1": 100, "x2": 920, "y2": 950 },
+      "confianza": "alta",
+      "categoria": "condiciones_de_seguridad",
+      "subcategoria": "trabajo en alturas",
+      "efectos_posibles": "Fracturas, traumas y contusiones por caída a distinto nivel",
+      "peor_consecuencia": "Trauma craneoencefálico por caída",
+      "explicacion_deficiencia": "No se ve punto de anclaje, plataforma ni ayudante que sostenga la escalera.",
+      "nivel_deficiencia_propuesto": "alto",
+      "explicacion_consecuencia": "Una caída desde esa altura puede causar lesiones con incapacidad permanente.",
+      "consecuencia_propuesta": "muy_grave",
+      "controles_propuestos": {
+        "eliminacion": ["Ubicar la mercancía de alta rotación en niveles alcanzables desde el piso"],
+        "sustitucion": ["Cambiar la escalera de tijera por una escalera tipo avión con plataforma y baranda"],
+        "ingenieria": ["Instalar topes y superficie antideslizante en la zona de apoyo de la escalera"],
+        "administrativos": ["Definir un procedimiento de trabajo seguro para tareas en altura", "Asignar un ayudante que sostenga la escalera y reciba la carga"],
+        "epp": ["Casco con barbuquejo", "Calzado de seguridad antideslizante"]
+      }
+    },
+    {
+      "descripcion": "Cables eléctricos tendidos sobre el piso atravesando el pasillo de circulación",
+      "evidencia_visible": "Dos cables sueltos cruzan el pasillo entre la estantería y la pared, sin canaleta ni señalización.",
+      "ubicacion_px": { "x1": 410, "y1": 960, "x2": 1170, "y2": 1110 },
+      "confianza": "alta",
+      "categoria": "condiciones_de_seguridad",
+      "subcategoria": "locativo",
+      "efectos_posibles": "Esguinces, golpes y contusiones por caída al mismo nivel",
+      "peor_consecuencia": "Fractura por caída al mismo nivel",
+      "explicacion_deficiencia": "Los cables están sueltos en una zona de paso y no se ve ninguna protección.",
+      "nivel_deficiencia_propuesto": "medio",
+      "explicacion_consecuencia": "Un tropiezo en el pasillo puede causar lesiones con incapacidad temporal.",
+      "consecuencia_propuesta": "grave",
+      "controles_propuestos": {
+        "eliminacion": ["Retirar los cables del pasillo y conectar los equipos a tomas cercanas"],
+        "sustitucion": [],
+        "ingenieria": ["Canalizar el cableado por canaleta de piso o por vía aérea"],
+        "administrativos": ["Incluir el orden del cableado en la inspección locativa", "Señalizar el cruce mientras se corrige"],
+        "epp": []
+      }
+    },
+    {
+      "descripcion": "Extintor obstruido por cajas apiladas frente a él",
+      "evidencia_visible": "Hay cajas apiladas delante del extintor de pared, que queda parcialmente tapado y sin acceso libre.",
+      "ubicacion_px": { "x1": 1215, "y1": 500, "x2": 1515, "y2": 915 },
+      "confianza": "media",
+      "categoria": "condiciones_de_seguridad",
+      "subcategoria": "tecnológico (incendio)",
+      "efectos_posibles": "Quemaduras e inhalación de humo por demora en la atención de un conato de incendio",
+      "peor_consecuencia": "Quemaduras graves por incendio no controlado",
+      "explicacion_deficiencia": "El equipo existe y está señalizado, pero el acceso está bloqueado.",
+      "nivel_deficiencia_propuesto": "medio",
+      "explicacion_consecuencia": "Sin acceso al extintor, un conato puede crecer y causar lesiones graves.",
+      "consecuencia_propuesta": "muy_grave",
+      "controles_propuestos": {
+        "eliminacion": ["Retirar las cajas y dejar libre el acceso al extintor"],
+        "sustitucion": [],
+        "ingenieria": ["Demarcar en el piso la zona libre frente al extintor"],
+        "administrativos": ["Incluir el acceso a los equipos de emergencia en la inspección periódica"],
+        "epp": []
+      }
+    },
+    {
+      "descripcion": "Cajas apiladas sin asegurar en el nivel superior de la estantería",
+      "evidencia_visible": "Las cajas del nivel superior sobresalen del borde y no se ven topes ni malla de retención.",
+      "ubicacion_px": { "x1": 90, "y1": 70, "x2": 500, "y2": 210 },
+      "confianza": "media",
+      "categoria": "condiciones_de_seguridad",
+      "subcategoria": "locativo (almacenamiento)",
+      "efectos_posibles": "Golpes y contusiones por caída de objetos",
+      "peor_consecuencia": "Trauma por caída de una caja",
+      "explicacion_deficiencia": "El arrume sobresale del entrepaño y no se ve sistema de retención.",
+      "nivel_deficiencia_propuesto": "medio",
+      "explicacion_consecuencia": "Una caja que cae desde el nivel superior puede causar lesiones con incapacidad temporal.",
+      "consecuencia_propuesta": "grave",
+      "controles_propuestos": {
+        "eliminacion": [],
+        "sustitucion": [],
+        "ingenieria": ["Instalar topes y malla de retención en el nivel superior"],
+        "administrativos": ["Definir altura y forma de arrume por tipo de caja", "Inspeccionar la estantería de forma periódica"],
+        "epp": ["Casco de seguridad"]
+      }
+    },
+    {
+      "descripcion": "Manipulación manual de cajas por encima de los hombros",
+      "evidencia_visible": "La persona sostiene una caja con los brazos extendidos sobre la cabeza.",
+      "ubicacion_px": { "x1": 690, "y1": 100, "x2": 900, "y2": 420 },
+      "confianza": "media",
+      "categoria": "biomecanico",
+      "subcategoria": "manipulación manual de cargas",
+      "efectos_posibles": "Lesiones osteomusculares de hombro y espalda",
+      "peor_consecuencia": "Lesión de hombro",
+      "explicacion_deficiencia": "La carga se manipula por encima de los hombros y sin ayuda mecánica.",
+      "nivel_deficiencia_propuesto": "medio",
+      "explicacion_consecuencia": "La postura forzada con carga puede causar lesiones con incapacidad temporal.",
+      "consecuencia_propuesta": "grave",
+      "controles_propuestos": {
+        "eliminacion": [],
+        "sustitucion": [],
+        "ingenieria": ["Usar ayudas mecánicas para subir y bajar cajas"],
+        "administrativos": ["Limitar el peso de las cajas ubicadas en niveles altos", "Capacitar en manipulación manual de cargas"],
+        "epp": []
+      }
+    },
+    {
+      "descripcion": "Posible derrame de líquido en el piso del pasillo",
+      "evidencia_visible": "Se ve una mancha brillante en el piso que podría ser un líquido o un reflejo.",
+      "ubicacion_px": { "x1": 960, "y1": 870, "x2": 1215, "y2": 970 },
+      "confianza": "baja",
+      "categoria": "condiciones_de_seguridad",
+      "subcategoria": "locativo",
+      "efectos_posibles": "Golpes y contusiones por resbalón",
+      "peor_consecuencia": "Esguince por resbalón",
+      "explicacion_deficiencia": "No es claro si es un derrame; de serlo, no se ve señalización.",
+      "nivel_deficiencia_propuesto": "medio",
+      "explicacion_consecuencia": "Un resbalón en el pasillo puede causar lesiones leves.",
+      "consecuencia_propuesta": "leve",
+      "controles_propuestos": {
+        "eliminacion": ["Limpiar y secar el piso"],
+        "sustitucion": [],
+        "ingenieria": [],
+        "administrativos": ["Verificar en campo si hay derrame y su origen"],
+        "epp": []
+      }
+    }
+  ]
+}

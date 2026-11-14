@@ -32,6 +32,9 @@ dev = [
     "pytest>=8.0",
     "pyyaml>=6.0",  # perfiles del módulo EPP (sus pruebas no necesitan cámara ni modelos)
     "pillow>=10.0",  # texto con tildes de la ventana de zona (sus pruebas no necesitan cámara ni modelos)
+    "openpyxl>=3.1",  # Excel del módulo inspector (sus pruebas no llaman a la API de Claude)
+    "pillow>=10.0",  # lectura de fotos y miniatura del Excel del módulo inspector
+    "anthropic>=2.8",  # cliente del módulo inspector; sus pruebas usan un cliente simulado
 ]
 # Módulo EPP. PyTorch se instala aparte, con el índice que corresponda a la GPU
 # (ver modulos/epp/README.md); sin eso, pip trae la versión solo-CPU.
@@ -47,6 +50,15 @@ zona = [
     "lap>=0.5.12",  # asignación del tracking de Ultralytics; sin él, lo intenta instalar solo al arrancar
     "pillow>=10.0",  # texto con tildes en la ventana de la estación
 ]
+# Módulo inspector por foto: servicio HTTP, Excel de la matriz IPEVR y cliente de Claude
+inspector = [
+    "anthropic>=2.8",
+    "openpyxl>=3.1",
+    "pillow>=10.0",
+    "fastapi>=0.110",
+    "uvicorn>=0.29",
+    "python-multipart>=0.0.9",
+]
 
 [tool.setuptools.packages.find]
 include = ["modulos*", "herramientas*"]
@@ -59,6 +71,8 @@ include = ["modulos*", "herramientas*"]
 "modulos.ergonomia.config" = ["*.json"]
 # Configuración por defecto del módulo de zona
 "modulos.zona.config" = ["*.json"]
+# Esquema de salida del modelo, parámetros de valoración, precios, prompts y datos de ejemplo del módulo inspector
+"modulos.inspector" = ["esquemas/*.json", "config/*.json", "ejemplos/*.json", "prompts/*.md"]
 
 [tool.pytest.ini_options]
 testpaths = ["pruebas"]

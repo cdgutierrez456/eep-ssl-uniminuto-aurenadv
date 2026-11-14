@@ -30,7 +30,7 @@ from modulos.comun import (
     registrar_capacidades,
     subir_medio,
 )
-from modulos.comun.camaras import abrir_camara
+from modulos.comun.camara_stand import Camara, ConfigCamara, conectar_camara
 from modulos.comun.config import leer_entorno
 
 from . import interfaz
@@ -104,7 +104,8 @@ class Estacion:
 
     def __init__(self, camara: int | None = None, pantalla_completa: bool | None = None,
                  max_cuadros: int | None = None) -> None:
-        self.indice_camara = int(_numero("EPP_CAMARA", 0)) if camara is None else camara
+        # EPP_CAMARA y EPP_CAMARA_* del .env; --camara solo cambia cuál se abre
+        self.config_camara = ConfigCamara.desde_entorno("EPP").con_camara(camara)
         self.pantalla_completa = (
             bool(_numero("EPP_PANTALLA_COMPLETA", 1)) if pantalla_completa is None else pantalla_completa
         )
@@ -130,13 +131,17 @@ class Estacion:
         for nombre, error in errores.items():
             print(f"Aviso: el perfil '{nombre}' no está disponible ({error}). Los demás siguen funcionando.", flush=True)
 
-        camara = abrir_camara(self.indice_camara)
-        if camara is None:
+        camara = conectar_camara(self.config_camara)
+        if not camara.conectada:
+            # Al arrancar sin cámara se avisa y se sale; si se cae en marcha, se reintenta sola
+            camara.cerrar()
+            cual = self.config_camara.nombre or self.config_camara.indice
             raise ErrorEstacion(
-                f"No se encontró la cámara {self.indice_camara}. Revisa que esté conectada y que ningún otro "
+                f"No se encontró la cámara {cual}. Revisa que esté conectada y que ningún otro "
                 "programa la esté usando, o elige otra con EPP_CAMARA en el .env.\n"
-                "Para ver las cámaras conectadas: python -m modulos.comun.camaras"
+                "Para ver las cámaras conectadas: python -m herramientas.listar_camaras"
             )
+        print(f"Cámara {camara.indice}: {camara.resolucion[0]}x{camara.resolucion[1]}", flush=True)
 
         self.verificador = Verificador(
             self.perfiles, {nombre: d.clases for nombre, d in self.detectores.items()},
@@ -158,8 +163,7 @@ class Estacion:
         try:
             self._bucle(camara)
         finally:
-            if getattr(self, "_camara", None) is not None:
-                self._camara.release()
+            camara.cerrar()
             cv2.destroyAllWindows()
             self.config_remota.detener()
             self.latido.detener()
@@ -180,30 +184,23 @@ class Estacion:
     def avisar(self, texto: str) -> None:
         self._aviso = (texto, time.monotonic() + SEGUNDOS_AVISO)
 
-    def _bucle(self, camara: cv2.VideoCapture) -> None:
-        self._camara = camara
+    def _bucle(self, camara: Camara) -> None:
         cuadros = 0
-        proximo_intento = 0.0
         while True:
             ahora = time.monotonic()
             self._aplicar_configs_pendientes()
 
-            frame = None
-            if self._camara is not None:
-                correcto, frame = self._camara.read()
-                if not correcto or frame is None:
-                    log.error("La cámara dejó de entregar imagen")
-                    self._camara.release()
-                    self._camara, frame = None, None
-                    self.latido.estado, self.latido.mensaje = "error", "Cámara sin señal"
-            elif ahora >= proximo_intento:
-                proximo_intento = ahora + 2.0
-                self._camara = abrir_camara(self.indice_camara)
-                if self._camara is not None:
-                    log.info("Cámara recuperada")
-                    self.latido.estado, self.latido.mensaje = "activo", None
+            # leer() reintenta sola la conexión; None = en este momento no hay imagen
+            frame = camara.leer()
+            if camara.conectada and self.latido.estado != "activo":
+                log.info("Cámara recuperada: %dx%d", *camara.resolucion)
+                self.latido.estado, self.latido.mensaje = "activo", None
+            elif not camara.conectada and self.latido.estado == "activo":
+                self.latido.estado, self.latido.mensaje = "error", "Cámara desconectada"
 
-            if frame is not None:
+            if frame is None and camara.conectada:
+                pass  # lectura fallida suelta: se conserva la imagen anterior
+            elif frame is not None:
                 if self.espejo:
                     frame = cv2.flip(frame, 1)
                 cuadro = self.verificador.procesar(self.detectores[self.verificador.perfil_activo].detectar(frame), ahora)
@@ -213,11 +210,13 @@ class Estacion:
             else:
                 lienzo = interfaz.componer(
                     None, self.panel.imagen(self._estado_panel(None)),
-                    ("Cámara sin señal", "Revisa la conexión; se reintenta sola cada 2 segundos."),
+                    (camara.mensaje or "Cámara desconectada, reconectando…",
+                     "Revisa el cable USB. La estación sigue abierta y reintenta sola."),
                 )
-            cv2.imshow(VENTANA, lienzo)
+            if frame is not None or not camara.conectada:
+                cv2.imshow(VENTANA, lienzo)
 
-            tecla = cv2.waitKey(1 if frame is not None else 100) & 0xFF
+            tecla = cv2.waitKey(1 if frame is not None else 50) & 0xFF
             if tecla != 0xFF and not self._tecla(tecla):
                 return
             if cv2.getWindowProperty(VENTANA, cv2.WND_PROP_VISIBLE) < 1:  # cerraron la ventana

@@ -113,8 +113,8 @@ Las demos corren en webcams USB Logitech externas, no en la cámara del portáti
 para todos los módulos de visión:
 
 - Abrir la cámara con `modulos.comun.conectar_camara(ConfigCamara.desde_entorno("<MODULO>"))`,
-  no con `cv2.VideoCapture` directo. (`abrir_camara(indice)` es la utilidad anterior; EPP
-  todavía la usa.)
+  no con `cv2.VideoCapture` directo. (`abrir_camara(indice)` es la utilidad anterior; ya
+  no la usa ningún módulo.)
 - La cámara se elige **por índice**, desde el `.env` (`<MODULO>_CAMARA`) o la configuración
   del módulo; la integrada del portátil suele ser la 0. El nombre de dispositivo es solo un
   respaldo: dos Logitech del mismo modelo se llaman igual.

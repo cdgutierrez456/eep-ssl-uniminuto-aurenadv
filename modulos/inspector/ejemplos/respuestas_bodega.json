@@ -1,0 +1,17 @@
+{
+  "contexto": {
+    "proceso": "Almacenamiento",
+    "zona": "Bodega de producto terminado",
+    "actividad": "Almacenamiento y despacho",
+    "tarea": "Ubicar cajas en la estantería",
+    "rutinaria": true
+  },
+  "peligros": [
+    { "n": 1, "frecuencia": "frecuente", "expuestos": 2, "controles_existentes": ["epp"] },
+    { "n": 2, "frecuencia": "continua", "expuestos": 6, "controles_existentes": ["ninguno"] },
+    { "n": 3, "frecuencia": "ocasional", "expuestos": 6, "controles_existentes": ["senalizacion"] },
+    { "n": 4, "frecuencia": "esporadica", "expuestos": 4, "otros_controles": "Inspección mensual de estanterías" },
+    { "n": 5, "frecuencia": "ocasional", "expuestos": 2, "controles_existentes": ["procedimiento"], "nivel_deficiencia": "bajo" },
+    { "n": 6, "descartado": true }
+  ]
+}

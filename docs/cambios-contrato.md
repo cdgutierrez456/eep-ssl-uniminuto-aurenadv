@@ -163,12 +163,12 @@ ese evento**: el tablero no recibe confirmación de que el cambio llegó a la es
 quiere esa confirmación para ergonomía hay que abrir el esquema (permitir otras estaciones
 y una forma de `datos` por módulo). Queda como decisión conjunta; no se cambió nada.
 
-## 3. Cámaras: EPP debería adoptar `conectar_camara`
+## 3. Cámaras: todos los módulos usan `conectar_camara`
 
 `modulos/comun/camara_stand.py` trae `conectar_camara(ConfigCamara)`: selección por índice
 o nombre, MJPG 1280x720 a 30 fps, enfoque fijo, exposición opcional y reconexión
-automática. Ergonomía ya la usa. **EPP sigue con `abrir_camara(indice)`** y su propia
-reconexión; conviene migrarlo después (no se tocó `modulos/epp/`). No afecta a la plataforma.
+automática. Ergonomía y EPP ya la usan (EPP con las variables `EPP_CAMARA_*`). No afecta a
+la plataforma.
 
 ## 4. `evaluacion_reba`: campos opcionales nuevos
 

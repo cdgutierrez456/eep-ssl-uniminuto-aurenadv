@@ -45,7 +45,7 @@ Opciones: `--ventana` (no abrir a pantalla completa), `--camara N`.
 Para saber qué índice tiene cada cámara conectada:
 
 ```
-.venv\Scripts\python -m modulos.comun.camaras
+.venv\Scripts\python -m herramientas.listar_camaras
 ```
 
 ### Teclas
@@ -65,6 +65,10 @@ Para saber qué índice tiene cada cámara conectada:
 - `config_actualizada` cada vez que aplica una configuración nueva (remota o por teclado).
 - `estado_modulo` (latido) cada 30 s; pasa a `error` si la cámara se queda sin señal.
 
+La cámara se abre con `modulos.comun.conectar_camara`, igual que en las demás estaciones.
+Si se desconecta en marcha, la estación no se cierra: muestra «Cámara desconectada,
+reconectando…», reintenta sola y el latido pasa a `error` hasta que vuelva.
+
 Una visita empieza cuando aparece una persona y termina tras 3 s sin nadie. Solo se
 verifica a la **persona principal** (la más grande en la imagen); las demás se dibujan en
 gris y no cuentan.
@@ -81,7 +85,11 @@ Variables del `.env`:
 
 | Variable | Por defecto | Para qué |
 |---|---|---|
-| `EPP_CAMARA` | `0` | Índice de la cámara |
+| `EPP_CAMARA` | `0` | Índice de la cámara (o nombre del dispositivo) |
+| `EPP_CAMARA_ANCHO`, `_ALTO`, `_FPS` | `1280`, `720`, `30` | Formato pedido a la cámara (MJPG) |
+| `EPP_CAMARA_AUTOFOCO` | `0` | `0` = autofoco apagado y enfoque fijo; `1` = autofoco |
+| `EPP_CAMARA_ENFOQUE` | `0` | Enfoque fijo con el autofoco apagado (0 = infinito) |
+| `EPP_CAMARA_EXPOSICION` | vacío | Exposición fija; vacío = automática |
 | `EPP_PANTALLA_COMPLETA` | `1` | `0` para abrir en ventana |
 | `EPP_ESPEJO` | `1` | Mostrar la imagen como espejo |
 | `EPP_SEGUNDOS_ESTABLE` | `2` | Tiempo con el mismo veredicto antes de publicar |

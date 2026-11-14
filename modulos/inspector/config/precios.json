@@ -1,0 +1,5 @@
+{
+  "_nota": "Precios de la API de Claude en USD por millón de tokens, según la documentación de Anthropic (noviembre de 2026). Si cambian, se editan aquí. El razonamiento del modelo se cobra como tokens de salida.",
+  "claude-sonnet-5-5": { "entrada": 2.0, "salida": 10.0, "lectura_cache": 0.10, "escritura_cache": 2.50 },
+  "claude-opus-5-5": { "entrada": 4.0, "salida": 20.0, "lectura_cache": 0.20, "escritura_cache": 5.0 }
+}

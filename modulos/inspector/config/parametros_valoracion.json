@@ -1,0 +1,76 @@
+{
+  "_nota": "Parámetros de valoración del riesgo del módulo inspector. Se pueden editar sin tocar código. La escala numérica es la habitual de las matrices IPEVR en Colombia; los textos son propios. NP = ND x NE y NR = NP x NC. Los tramos de probabilidad y de riesgo se leen por umbral inferior ('desde'): un valor cae en el tramo de mayor 'desde' que alcance, así ningún valor queda sin nivel.",
+
+  "nivel_deficiencia": {
+    "muy_alto": { "valor": 10, "etiqueta": "Muy alto" },
+    "alto": { "valor": 6, "etiqueta": "Alto" },
+    "medio": { "valor": 2, "etiqueta": "Medio" },
+    "bajo": { "valor": null, "etiqueta": "Bajo" }
+  },
+
+  "sin_valor_de_deficiencia": {
+    "nivel_riesgo": "IV",
+    "nota": "ND bajo: la metodología no asigna valor numérico; el peligro se considera aceptable (nivel IV)"
+  },
+
+  "nivel_exposicion": {
+    "continua": { "valor": 4, "etiqueta": "Continua" },
+    "frecuente": { "valor": 3, "etiqueta": "Frecuente" },
+    "ocasional": { "valor": 2, "etiqueta": "Ocasional" },
+    "esporadica": { "valor": 1, "etiqueta": "Esporádica" }
+  },
+
+  "nivel_probabilidad": [
+    { "id": "muy_alto", "etiqueta": "Muy alto", "desde": 24, "rango": "24 a 40" },
+    { "id": "alto", "etiqueta": "Alto", "desde": 10, "rango": "10 a 20" },
+    { "id": "medio", "etiqueta": "Medio", "desde": 6, "rango": "6 a 8" },
+    { "id": "bajo", "etiqueta": "Bajo", "desde": 2, "rango": "2 a 4" }
+  ],
+
+  "nivel_consecuencia": {
+    "mortal": { "valor": 100, "etiqueta": "Mortal o catastrófico" },
+    "muy_grave": { "valor": 60, "etiqueta": "Muy grave" },
+    "grave": { "valor": 25, "etiqueta": "Grave" },
+    "leve": { "valor": 10, "etiqueta": "Leve" }
+  },
+
+  "nivel_riesgo": [
+    {
+      "id": "I", "desde": 600, "rango": "600 a 4000",
+      "aceptabilidad": "No aceptable",
+      "significado": "Situación crítica: detener la tarea hasta controlar el riesgo e intervenir de inmediato.",
+      "nivel_preliminar": "muy_alto", "severidad": "critica",
+      "color": "#B23B3B", "color_texto": "#F2F1EA"
+    },
+    {
+      "id": "II", "desde": 150, "rango": "150 a 500",
+      "aceptabilidad": "No aceptable o aceptable con control específico",
+      "significado": "Corregir y aplicar medidas de control cuanto antes.",
+      "nivel_preliminar": "alto", "severidad": "alta",
+      "color": "#D9822B", "color_texto": "#111414"
+    },
+    {
+      "id": "III", "desde": 40, "rango": "40 a 120",
+      "aceptabilidad": "Mejorable",
+      "significado": "Mejorar si es posible; conviene evaluar si la intervención se justifica.",
+      "nivel_preliminar": "medio", "severidad": "media",
+      "color": "#E3C34A", "color_texto": "#111414"
+    },
+    {
+      "id": "IV", "desde": 0, "rango": "20",
+      "aceptabilidad": "Aceptable",
+      "significado": "Mantener los controles actuales y revisarlos periódicamente.",
+      "nivel_preliminar": "bajo", "severidad": "baja",
+      "color": "#5E9C6B", "color_texto": "#F2F1EA"
+    }
+  ],
+
+  "controles_existentes": {
+    "ninguno": { "etiqueta": "Ninguno", "columna": null },
+    "senalizacion": { "etiqueta": "Señalización", "columna": "medio" },
+    "procedimiento": { "etiqueta": "Procedimiento", "columna": "individuo" },
+    "epp": { "etiqueta": "EPP", "columna": "individuo" },
+    "proteccion_maquina": { "etiqueta": "Protección en la máquina", "columna": "fuente" }
+  },
+  "columna_de_otros_controles": "medio"
+}

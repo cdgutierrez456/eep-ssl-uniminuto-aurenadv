@@ -1,0 +1,140 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aurenadv.com/sst/inspector/analisis.schema.json",
+  "title": "Análisis de una foto del inspector",
+  "description": "Salida del modelo de visión: peligros visibles en la foto, con su ubicación, clasificación y controles propuestos. Es un acuerdo interno entre el módulo y el modelo; lo que consume la plataforma está en contrato/. El orden de las propiedades es el orden en que el modelo las escribe.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["descripcion_general", "advertencias", "peligros"],
+  "properties": {
+    "descripcion_general": {
+      "description": "Una o dos frases sobre la escena: qué tipo de lugar es y qué actividad se ve.",
+      "type": "string",
+      "minLength": 1
+    },
+    "advertencias": {
+      "description": "Limitaciones de la imagen que afectan el análisis, por ejemplo 'imagen oscura' o 'no se ve el piso'. Lista vacía si no hay.",
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "peligros": {
+      "description": "Peligros visibles en la imagen, del más grave al menos grave. Lista vacía si no se ve ninguno.",
+      "type": "array",
+      "items": { "$ref": "#/$defs/peligro" }
+    }
+  },
+  "$defs": {
+    "peligro": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "descripcion",
+        "evidencia_visible",
+        "ubicacion_px",
+        "confianza",
+        "categoria",
+        "subcategoria",
+        "efectos_posibles",
+        "peor_consecuencia",
+        "explicacion_deficiencia",
+        "nivel_deficiencia_propuesto",
+        "explicacion_consecuencia",
+        "consecuencia_propuesta",
+        "controles_propuestos"
+      ],
+      "properties": {
+        "descripcion": {
+          "description": "El peligro, descrito de forma concreta: quién o qué, dónde y haciendo qué.",
+          "type": "string",
+          "minLength": 1
+        },
+        "evidencia_visible": {
+          "description": "Lo que se ve en la foto que sustenta el peligro.",
+          "type": "string",
+          "minLength": 1
+        },
+        "ubicacion_px": { "$ref": "#/$defs/caja" },
+        "confianza": {
+          "description": "Qué tan claro se ve el peligro en la imagen. 'baja' si es dudoso.",
+          "type": "string",
+          "enum": ["alta", "media", "baja"]
+        },
+        "categoria": {
+          "description": "Clase de peligro.",
+          "type": "string",
+          "enum": [
+            "biologico",
+            "fisico",
+            "quimico",
+            "psicosocial",
+            "biomecanico",
+            "condiciones_de_seguridad",
+            "fenomenos_naturales"
+          ]
+        },
+        "subcategoria": {
+          "description": "Subcategoría en pocas palabras, por ejemplo 'trabajo en alturas', 'locativo', 'mecánico', 'eléctrico', 'manipulación manual de cargas'.",
+          "type": "string",
+          "minLength": 1
+        },
+        "efectos_posibles": {
+          "description": "Lesiones o daños a la salud que puede causar.",
+          "type": "string",
+          "minLength": 1
+        },
+        "peor_consecuencia": {
+          "description": "La peor consecuencia creíble, en pocas palabras, por ejemplo 'fractura por caída'.",
+          "type": "string",
+          "minLength": 1
+        },
+        "explicacion_deficiencia": {
+          "description": "Una frase que sustenta el nivel de deficiencia con lo que se ve.",
+          "type": "string",
+          "minLength": 1
+        },
+        "nivel_deficiencia_propuesto": {
+          "description": "Qué tan deficientes se ven las condiciones y los controles frente a este peligro.",
+          "type": "string",
+          "enum": ["muy_alto", "alto", "medio", "bajo"]
+        },
+        "explicacion_consecuencia": {
+          "description": "Una frase que sustenta la consecuencia propuesta.",
+          "type": "string",
+          "minLength": 1
+        },
+        "consecuencia_propuesta": {
+          "description": "Gravedad de la peor consecuencia creíble.",
+          "type": "string",
+          "enum": ["mortal", "muy_grave", "grave", "leve"]
+        },
+        "controles_propuestos": { "$ref": "#/$defs/controles" }
+      }
+    },
+    "caja": {
+      "description": "Caja aproximada que encierra el peligro, en píxeles de la imagen recibida. El origen (0, 0) es la esquina superior izquierda; x crece a la derecha e y hacia abajo. (x1, y1) es la esquina superior izquierda y (x2, y2) la inferior derecha.",
+      "$comment": "Sin mínimos ni máximos: una caja que se sale de la imagen no es motivo para reintentar; normalizar_analisis la recorta. Lo mismo con el número de peligros: se conservan los primeros hasta el máximo configurado.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["x1", "y1", "x2", "y2"],
+      "properties": {
+        "x1": { "type": "integer" },
+        "y1": { "type": "integer" },
+        "x2": { "type": "integer" },
+        "y2": { "type": "integer" }
+      }
+    },
+    "controles": {
+      "description": "Controles propuestos según la jerarquía. Lista vacía en el nivel que no aplique.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["eliminacion", "sustitucion", "ingenieria", "administrativos", "epp"],
+      "properties": {
+        "eliminacion": { "type": "array", "items": { "type": "string" } },
+        "sustitucion": { "type": "array", "items": { "type": "string" } },
+        "ingenieria": { "type": "array", "items": { "type": "string" } },
+        "administrativos": { "type": "array", "items": { "type": "string" } },
+        "epp": { "type": "array", "items": { "type": "string" } }
+      }
+    }
+  }
+}
