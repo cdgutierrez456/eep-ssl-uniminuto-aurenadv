@@ -18,7 +18,10 @@ def main() -> None:
     opciones = analizador.parse_args()
 
     print(f"Receptor de prueba (NO es la plataforma final) en http://{opciones.host}:{opciones.puerto}")
-    uvicorn.run(crear_app(opciones.datos), host=opciones.host, port=opciones.puerto, log_level="warning")
+    # Una pestaña con /alarma abierta mantiene viva su conexión SSE: sin este límite, Ctrl+C se
+    # quedaría esperando a que el navegador la cierre
+    uvicorn.run(crear_app(opciones.datos), host=opciones.host, port=opciones.puerto, log_level="warning",
+                timeout_graceful_shutdown=2)
 
 
 if __name__ == "__main__":

@@ -1,0 +1,350 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Alarma de zona · SST en vivo</title>
+<style>
+  :root {
+    --deep: #12343B;
+    --deep-claro: #1D4750;
+    --negro: #111414;
+    --marfil: #F2F1EA;
+    --lima: #C8F169;
+    /* Colores de seguridad (NTC 1461): la alarma no usa la lima de marca */
+    --rojo: #E02B20;
+    --rojo-oscuro: #9E1810;
+    --amarillo: #F9C80E;
+    --tenue: rgba(242, 241, 234, .66);
+    --borde: rgba(242, 241, 234, .16);
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0; overflow: hidden; background: var(--deep); color: var(--marfil);
+    font: 16px/1.4 "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
+  }
+  button, input { font: inherit; color: inherit; }
+
+  /* El marco ocupa toda la pantalla; su borde y su fondo son la alarma visual */
+  #marco {
+    position: fixed; inset: 0; display: grid; grid-template-rows: auto 1fr auto;
+    border: 2.4vmin solid transparent; background: var(--deep);
+    transition: background-color .2s, border-color .2s;
+  }
+  body.advertencia #marco { border-color: var(--amarillo); animation: pulso-amarillo 1.2s ease-in-out infinite; }
+  body.peligro #marco { background: var(--rojo); border-color: var(--rojo-oscuro); animation: pulso-rojo .6s ease-in-out infinite; }
+  @keyframes pulso-amarillo {
+    0%, 100% { border-color: var(--amarillo); }
+    50% { border-color: rgba(249, 200, 14, .22); }
+  }
+  @keyframes pulso-rojo {
+    0%, 100% { background-color: var(--rojo); border-color: #FF8A80; }
+    50% { background-color: var(--rojo-oscuro); border-color: var(--rojo); }
+  }
+
+  header { display: flex; align-items: center; gap: 2vmin 3vmin; flex-wrap: wrap; padding: 2.2vmin 3vmin 0; }
+  .marca { font-size: clamp(14px, 2.1vmin, 26px); font-weight: 600; letter-spacing: .02em; }
+  .marca::after { content: ""; display: block; width: 6vmin; height: .5vmin; min-height: 3px; margin-top: .8vmin; background: var(--lima); }
+  body.peligro .marca::after { background: #fff; }
+  .controles { margin-left: auto; display: flex; align-items: center; gap: 1.6vmin; font-size: clamp(12px, 1.7vmin, 20px); }
+  .conexion { display: flex; align-items: center; gap: .9vmin; color: var(--tenue); }
+  body.peligro .conexion, body.peligro .pie .rotulo { color: rgba(255, 255, 255, .85); }
+  .punto { width: 1.3vmin; height: 1.3vmin; min-width: 9px; min-height: 9px; border-radius: 50%; background: var(--marfil); }
+  .punto.caido { background: transparent; border: 2px solid var(--marfil); }
+  .boton {
+    background: transparent; border: 1px solid var(--borde); border-radius: 999px; padding: .7vmin 1.8vmin; cursor: pointer;
+  }
+  .boton:hover, .boton:focus-visible { border-color: var(--marfil); outline: none; }
+  body.peligro .boton { border-color: rgba(255, 255, 255, .6); }
+  input[type=range] { width: clamp(80px, 14vmin, 180px); accent-color: var(--marfil); }
+
+  main { display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 0 5vw; min-height: 0; }
+  #mensaje { margin: 0; font-weight: 700; line-height: 1.04; letter-spacing: -.01em; font-size: clamp(34px, 8.2vw, 170px); text-wrap: balance; }
+  body.advertencia #mensaje { font-size: clamp(30px, 6.4vw, 132px); }
+  body.advertencia #mensaje .senal { color: var(--amarillo); }
+  body.peligro #mensaje { color: #fff; text-transform: uppercase; font-size: clamp(34px, 8.6vw, 180px); }
+  #detalle { margin: 2.6vmin 0 0; font-size: clamp(16px, 2.6vw, 46px); color: var(--tenue); min-height: 1.4em; }
+  body.peligro #detalle { color: #fff; }
+
+  .pie { display: grid; grid-template-columns: auto auto 1fr; gap: 1vmin 5vmin; align-items: end; padding: 0 3vmin 2.4vmin; }
+  .pie .rotulo { font-size: clamp(11px, 1.5vmin, 18px); text-transform: uppercase; letter-spacing: .09em; color: var(--tenue); }
+  .pie .cifra { font-size: clamp(30px, 6vmin, 84px); font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; }
+  .pie .ultimo { font-size: clamp(14px, 2.2vmin, 30px); line-height: 1.25; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+
+  /* Los navegadores no dejan sonar nada hasta que alguien interactúa: este aviso lo pide */
+  #activar {
+    position: fixed; inset: 0; z-index: 10; display: flex; flex-direction: column; justify-content: center; align-items: center;
+    gap: 3vmin; padding: 6vmin; text-align: center; background: rgba(17, 20, 20, .82);
+  }
+  #activar[hidden] { display: none; }
+  #activar p { margin: 0; max-width: 46ch; font-size: clamp(15px, 2.3vmin, 28px); color: var(--tenue); }
+  #boton-activar {
+    border: 0; border-radius: 1.6vmin; padding: 3.2vmin 7vmin; cursor: pointer; background: var(--marfil); color: var(--negro);
+    font-size: clamp(24px, 5.4vmin, 76px); font-weight: 700;
+  }
+  #boton-activar:hover, #boton-activar:focus-visible { outline: .6vmin solid var(--lima); outline-offset: .6vmin; }
+  #sin-sonido { background: transparent; border: 0; cursor: pointer; text-decoration: underline; color: var(--tenue); font-size: clamp(13px, 1.9vmin, 22px); }
+
+  @media (prefers-reduced-motion: reduce) {
+    body.advertencia #marco, body.peligro #marco { animation-duration: 2.4s; }
+  }
+</style>
+</head>
+<body class="libre">
+<div id="marco">
+  <header>
+    <div class="marca">SST en vivo · Zona de peligro</div>
+    <div class="controles">
+      <span class="conexion"><span class="punto caido" id="punto"></span><span id="conexion">Conectando…</span></span>
+      <label class="conexion" for="volumen">Volumen</label>
+      <input type="range" id="volumen" min="0" max="100" step="5" value="60" aria-label="Volumen de la alarma">
+      <button class="boton" id="silencio" type="button" aria-pressed="false">Silenciar</button>
+      <button class="boton" id="completa" type="button">Pantalla completa</button>
+    </div>
+  </header>
+
+  <main>
+    <h1 id="mensaje" aria-live="assertive">Zona despejada</h1>
+    <p id="detalle"></p>
+  </main>
+
+  <div class="pie">
+    <div><div class="rotulo">Ingresos hoy</div><div class="cifra" id="ingresos">0</div></div>
+    <div><div class="rotulo">Casi-accidentes hoy</div><div class="cifra" id="casi">0</div></div>
+    <div><div class="rotulo">Último evento</div><div class="ultimo" id="ultimo">Sin eventos todavía</div></div>
+  </div>
+</div>
+
+<div id="activar">
+  <button id="boton-activar" type="button">Activar sonido</button>
+  <p>El navegador no deja sonar la alarma hasta que alguien hace clic en la página. La alarma visual funciona igual.</p>
+  <button id="sin-sonido" type="button">Seguir sin sonido</button>
+</div>
+
+<script>
+  // ---------------------------------------------------------------- reglas
+  // Un estado_zona con más de 5 s de antigüedad no enciende ni cambia la alarma (salió tarde de la
+  // cola de la estación). Y si pasan 5 s sin ningún estado_zona de una zona que no está libre, su
+  // alarma se apaga sola: la estación manda un refresco cada 2 s mientras haya alguien.
+  const VIGENCIA_MS = 5000;
+  const GRAVEDAD = { libre: 0, advertencia: 1, peligro: 2 };
+  const MENSAJES = {
+    libre: "Zona despejada",
+    advertencia: "Precaución: persona cerca de la zona de peligro",
+    peligro: "PERSONA EN ZONA DE PELIGRO"
+  };
+  // Pitido de cada estado: frecuencia (Hz), duración (s) y cada cuánto se repite (ms)
+  const PITIDOS = {
+    advertencia: { frecuencia: 880, duracion: 0.22, cada: 1200 },
+    peligro: { frecuencia: 1320, duracion: 0.14, cada: 300 }
+  };
+
+  const $ = id => document.getElementById(id);
+  const zonas = new Map();        // zona_id -> { estado, peligro, advertencia, visto }
+  const vistos = new Set();       // ids de eventos ya procesados (el historial y el flujo se pueden solapar)
+  let desfase = 0;                // hora del servidor menos hora del navegador, en ms
+  let dia = "";                   // fecha del servidor (AAAA-MM-DD) a la que corresponden los conteos
+  let conteos = { ingreso_zona: 0, casi_accidente: 0 };
+  let ultimo = null;              // último ingreso_zona o casi_accidente
+  let sinSenal = false;           // la alarma se apagó sola por falta de eventos
+  let estadoVisible = "libre";
+  let faltaHistorial = true;      // hay que (volver a) leer los eventos del día: al abrir y tras cada reconexión
+
+  const ahoraServidor = () => Date.now() + desfase;
+
+  function ponerReloj(ahoraIso) {
+    desfase = Date.parse(ahoraIso) - Date.now();
+    if (ahoraIso.slice(0, 10) !== dia) faltaHistorial = true;   // primer mensaje, o cambió el día: conteos de cero
+    if (faltaHistorial) {
+      faltaHistorial = false;
+      cargarHistorial(ahoraIso).catch(() => { faltaHistorial = true; });
+    }
+  }
+
+  // --------------------------------------------------------------- eventos
+  function procesar(evento) {
+    if (!evento || evento.estacion !== "zona" || vistos.has(evento.id)) return;
+    vistos.add(evento.id);
+    const datos = evento.datos || {};
+    if (evento.tipo === "estado_zona") {
+      const edad = ahoraServidor() - Date.parse(evento.timestamp);
+      if (edad > VIGENCIA_MS) return;                    // viejo: no cuenta como alarma
+      zonas.set(datos.zona_id, {
+        estado: datos.estado, peligro: datos.personas_peligro || 0, advertencia: datos.personas_advertencia || 0,
+        visto: performance.now()
+      });
+      sinSenal = false;
+    } else if (evento.tipo === "ingreso_zona" || evento.tipo === "casi_accidente") {
+      if (evento.timestamp.slice(0, 10) === dia) conteos[evento.tipo] += 1;
+      if (!ultimo || evento.timestamp >= ultimo.timestamp) ultimo = evento;
+    }
+  }
+
+  function alRecibir(evento) {
+    procesar(evento);
+    pintar();
+  }
+
+  function caducar() {
+    let cambio = false;
+    for (const zona of zonas.values()) {
+      if (zona.estado !== "libre" && performance.now() - zona.visto > VIGENCIA_MS) {
+        zona.estado = "libre"; zona.peligro = 0; zona.advertencia = 0;
+        sinSenal = true; cambio = true;
+      }
+    }
+    if (cambio) pintar();
+  }
+
+  function estadoGeneral() {
+    let peor = "libre", peligro = 0, advertencia = 0;
+    for (const zona of zonas.values()) {
+      if (GRAVEDAD[zona.estado] > GRAVEDAD[peor]) peor = zona.estado;
+      peligro += zona.peligro; advertencia += zona.advertencia;
+    }
+    return { estado: peor, peligro, advertencia };
+  }
+
+  // ----------------------------------------------------------------- vista
+  const personas = n => n + (n === 1 ? " persona" : " personas");
+
+  function textoDelUltimo(evento) {
+    const hora = evento.timestamp.slice(11, 19), d = evento.datos || {};
+    if (evento.tipo === "ingreso_zona") {
+      const segundos = String(d.duracion_s).replace(".", ",");
+      return hora + " · Ingreso a la zona (" + d.zona_id + "): " + segundos + " s dentro" + (d.alarma_activada ? "" : ", sin alarma");
+    }
+    return hora + " · Casi-accidente (" + d.zona_id + "): " + (d.descripcion || "");
+  }
+
+  function pintar() {
+    const general = estadoGeneral();
+    estadoVisible = general.estado;
+    document.body.className = general.estado;
+    const mensaje = $("mensaje");
+    if (general.estado === "advertencia") {            // la primera palabra va en el amarillo de advertencia
+      const [senal, resto] = MENSAJES.advertencia.split(": ");
+      const destacado = document.createElement("span");
+      destacado.className = "senal"; destacado.textContent = senal + ":";
+      mensaje.replaceChildren(destacado, " " + resto);
+    } else {
+      mensaje.textContent = MENSAJES[general.estado];
+    }
+    let detalle = "";
+    if (general.estado === "peligro") {
+      detalle = personas(general.peligro) + " dentro" + (general.advertencia ? " · " + personas(general.advertencia) + " cerca" : "");
+    } else if (general.estado === "advertencia") {
+      detalle = personas(general.advertencia) + " en la franja de advertencia";
+    } else if (sinSenal) {
+      detalle = "Sin señal de la estación: la alarma se apagó sola";
+    }
+    $("detalle").textContent = detalle;
+    $("ingresos").textContent = conteos.ingreso_zona;
+    $("casi").textContent = conteos.casi_accidente;
+    $("ultimo").textContent = ultimo ? textoDelUltimo(ultimo) : "Sin eventos todavía";
+    sonar(general.estado);
+  }
+
+  // ---------------------------------------------------------------- sonido
+  // Tonos generados con Web Audio, sin archivos. El contexto solo se puede crear tras un clic.
+  const sonido = { contexto: null, salida: null, silenciado: false, volumen: 0.6, patron: "libre", reloj: null };
+
+  function aplicarVolumen() {
+    if (sonido.salida) sonido.salida.gain.value = sonido.silenciado ? 0 : sonido.volumen;
+    $("silencio").textContent = sonido.silenciado ? "Quitar silencio" : "Silenciar";
+    $("silencio").setAttribute("aria-pressed", String(sonido.silenciado));
+    try { localStorage.setItem("alarma-volumen", String(sonido.volumen)); } catch (e) {}
+  }
+
+  function pitar(frecuencia, duracion) {
+    if (!sonido.contexto || sonido.contexto.state !== "running") return;
+    const t = sonido.contexto.currentTime;
+    const oscilador = sonido.contexto.createOscillator(), envolvente = sonido.contexto.createGain();
+    oscilador.type = "square"; oscilador.frequency.value = frecuencia;
+    envolvente.gain.setValueAtTime(0, t);                               // rampas cortas: sin chasquidos
+    envolvente.gain.linearRampToValueAtTime(0.5, t + 0.012);
+    envolvente.gain.setValueAtTime(0.5, t + duracion - 0.02);
+    envolvente.gain.linearRampToValueAtTime(0, t + duracion);
+    oscilador.connect(envolvente).connect(sonido.salida);
+    oscilador.start(t); oscilador.stop(t + duracion + 0.02);
+  }
+
+  function sonar(estado) {
+    if (estado === sonido.patron) return;
+    sonido.patron = estado;
+    clearInterval(sonido.reloj);
+    const pitido = PITIDOS[estado];
+    if (!pitido) return;
+    pitar(pitido.frecuencia, pitido.duracion);
+    sonido.reloj = setInterval(() => pitar(pitido.frecuencia, pitido.duracion), pitido.cada);
+  }
+
+  function activarSonido() {
+    if (!sonido.contexto) {
+      const Contexto = window.AudioContext || window.webkitAudioContext;
+      if (!Contexto) { $("activar").hidden = true; return; }
+      sonido.contexto = new Contexto();
+      sonido.salida = sonido.contexto.createGain();
+      sonido.salida.connect(sonido.contexto.destination);
+    }
+    sonido.contexto.resume().then(() => {
+      aplicarVolumen();
+      pitar(660, 0.12);                                // confirma que se oye
+      sonido.patron = "";                              // y retoma el pitido del estado vigente
+      sonar(estadoVisible);
+    });
+    $("activar").hidden = true;
+  }
+
+  $("boton-activar").addEventListener("click", activarSonido);
+  $("sin-sonido").addEventListener("click", () => { $("activar").hidden = true; });
+  $("silencio").addEventListener("click", () => {
+    if (!sonido.contexto) { activarSonido(); return; }   // primer clic: de paso activa el sonido
+    sonido.silenciado = !sonido.silenciado; aplicarVolumen();
+  });
+  $("volumen").addEventListener("input", evento => { sonido.volumen = evento.target.value / 100; aplicarVolumen(); });
+  $("completa").addEventListener("click", () => {
+    if (document.fullscreenElement) document.exitFullscreen(); else document.documentElement.requestFullscreen();
+  });
+  try {
+    // Se recuerda el volumen, pero no el silencio ni un volumen en cero: una alarma no debe abrir callada
+    const guardado = parseFloat(localStorage.getItem("alarma-volumen"));
+    if (guardado >= 0.05 && guardado <= 1) { sonido.volumen = guardado; $("volumen").value = Math.round(guardado * 100); }
+  } catch (e) {}
+  aplicarVolumen();
+
+  // -------------------------------------------------------------- conexión
+  function conectado(si) {
+    $("punto").classList.toggle("caido", !si);
+    $("conexion").textContent = si ? "En línea" : "Sin conexión con la plataforma";
+  }
+
+  async function cargarHistorial(ahoraIso) {
+    // Conteos del día y último evento. Los estado_zona del historial solo cuentan si siguen vigentes.
+    // Lo que llegue por el flujo mientras tanto no se cuenta dos veces: cada evento se procesa una vez por id.
+    const desde = ahoraIso.slice(0, 10) + "T00:00:00" + ahoraIso.slice(-6);
+    conteos = { ingreso_zona: 0, casi_accidente: 0 }; ultimo = null; vistos.clear();
+    dia = ahoraIso.slice(0, 10);
+    const respuesta = await fetch("/api/eventos?estacion=zona&limite=5000&desde=" + encodeURIComponent(desde), { cache: "no-store" });
+    if (!respuesta.ok) throw new Error("historial no disponible");
+    for (const evento of await respuesta.json()) procesar(evento);
+    pintar();
+  }
+
+  function iniciar() {
+    // Primero el flujo en vivo; su primer mensaje trae la hora del servidor y dispara la lectura del historial
+    const flujo = new EventSource("/api/stream");     // si se corta, el navegador lo reconecta solo
+    flujo.addEventListener("reloj", evento => { conectado(true); ponerReloj(JSON.parse(evento.data).ahora); });
+    flujo.onmessage = evento => alRecibir(JSON.parse(evento.data));
+    flujo.onerror = () => { conectado(false); faltaHistorial = true; };
+    setInterval(caducar, 250);
+  }
+
+  // Para depurar desde la consola del navegador
+  window.alarma = { zonas, sonido, estado: () => estadoGeneral(), conteos: () => ({ ...conteos }), desfase: () => desfase };
+  pintar();
+  iniciar();
+</script>
+</body>
+</html>

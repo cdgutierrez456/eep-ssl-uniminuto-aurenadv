@@ -298,9 +298,13 @@ y ningún evento anterior cambia de forma.
 **Cambio respecto al brief: no hay ESP32 ni torre de luz.** La alarma, visual y sonora, vive
 en la plataforma. La estación solo publica eventos y tiene un respaldo visual en su ventana.
 
-Esta sección crece con el módulo. Por ahora cubre los eventos. La configuración de la zona,
-`GET /api/stream`, la vista de alarma, el editor de zona y las fotos adjuntas se documentan
-aquí cuando estén implementados en el receptor de prueba.
+Cubre los eventos (con sus fotos), la configuración de la zona, la calibración y, en la
+sección 5, **lo que la plataforma debe implementar**: el flujo en tiempo real, la vista de
+alarma y el editor de zona. Todo está funcionando en el receptor de prueba, que sirve de
+referencia ejecutable.
+
+La zona de mano que mencionaba el plan (un segundo polígono sobre la mesa de la máquina) **no
+se implementó**: hay una sola zona, la de piso, con `zona_id: "piso"`.
 
 ## 1. Evento nuevo: `estado_zona`
 
@@ -311,7 +315,7 @@ depende la alarma.
 | Campo | Valor |
 |---|---|
 | `tipo`, `estacion` | `estado_zona`, siempre `zona` |
-| `datos.zona_id` | `piso` (la zona marcada con cinta) o `mano` (zona opcional sobre la máquina) |
+| `datos.zona_id` | Siempre `piso`: la zona marcada con cinta |
 | `datos.estado` | `libre`, `advertencia` o `peligro`: el peor nivel entre las personas a la vista |
 | `datos.personas_peligro` | Personas con un pie dentro de la zona |
 | `datos.personas_advertencia` | Personas en la franja de advertencia, sin pisar la zona |
@@ -334,7 +338,8 @@ tarde y con su `timestamp` original.
 Lo que el tablero debe hacer:
 
 1. **Alarma por zona.** El estado de cada zona es su último `estado_zona`; la alarma del stand
-   es el peor estado entre las zonas (`piso` y `mano`).
+   es el peor estado entre las zonas. Hoy solo existe `piso`, pero conviene llevar el estado
+   por `zona_id` y no suponer que es una sola.
 2. **Ignorar los viejos.** Un `estado_zona` con más de 5 s de antigüedad (su `timestamp`
    frente a la hora actual) no enciende ni cambia la alarma: salió tarde de una cola.
 3. **Apagado automático.** Si pasan 5 s sin recibir ningún `estado_zona` de una zona que no
@@ -362,3 +367,214 @@ Ya existían. Lo que cambia y cómo llegan:
   - El [ejemplo](../contrato/ejemplos/casi_accidente.json) se corrigió: antes describía a
     alguien dentro del perímetro con severidad `critica`, que es un `ingreso_zona`.
 - Ninguno de los dos trae `sesion_id`: la cámara de la zona no identifica al visitante.
+- **Los dos traen una imagen adjunta** (`adjuntos: [{ "tipo": "imagen", "ruta": ... }]`), subida
+  antes por `POST /api/medios`, con los rostros difuminados y, dibujados encima, la zona en
+  rojo, la franja de advertencia en amarillo y los puntos de apoyo de la persona:
+  - `ingreso_zona`: el momento en que se confirmó que la persona entró.
+  - `casi_accidente`: el momento en que estuvo más cerca de la zona.
+  - Si la plataforma no respondió al subirla, la `ruta` es una ruta local de la estación
+    (`cola/medios_pendientes/...`), igual que en los demás módulos.
+- **`alarma_activada`** es `true` si, en algún momento del ingreso, la plataforma estaba
+  recibiendo los eventos de la estación (o la estación tenía su sonido local encendido). Es
+  `false` cuando la persona entró y salió con la plataforma caída: la alarma no pudo sonar.
+- **Un evento por persona, aunque el tracker le cambie el id.** Si la cámara pierde a alguien
+  un instante y lo vuelve a ver, sigue siendo la misma persona: no llegan dos `ingreso_zona`
+  ni un `casi_accidente` de más.
+- `estado_zona` sale en el acto. Si la estación estaba reintentando tras una caída de la
+  plataforma, un `estado_zona` nuevo corta esa espera: llega apenas la plataforma responde.
+
+## 3. Configuración del módulo de zona
+
+Usa los endpoints genéricos (`/api/modulos/zona/capacidades` y `/api/modulos/zona/config`).
+Esquema: [`contrato/config_zona.schema.json`](../contrato/config_zona.schema.json).
+
+```json
+{
+  "zona_peligro": [[0.31, 0.42], [0.68, 0.40], [0.74, 0.81], [0.27, 0.84]],
+  "rectangulo_real": { "ancho_m": 1.5, "largo_m": 1.0 },
+  "margen_advertencia_m": 0.5,
+  "margen_advertencia_px": 80,
+  "imagen_referencia": "media/2026-11-14/ab12cd34.jpg",
+  "solicitud_deteccion": null,
+  "zona_propuesta": null,
+  "deteccion": {
+    "confianza_persona": 0.4, "confianza_punto": 0.5, "antirrebote_s": 0.3,
+    "histeresis": 0.2, "segundos_perdida": 1.0, "segundos_perdida_peligro": 4.0,
+    "radio_reasociacion_m": 0.5, "radio_reasociacion_px": 80
+  },
+  "cinta_hsv": { "h_min": 18, "h_max": 38, "s_min": 80, "v_min": 80 },
+  "sonido_local": false
+}
+```
+
+| Campo | Quién lo escribe | Qué es |
+|---|---|---|
+| `zona_peligro` | Quien guarda la zona | Polígono activo. `null`: no hay zona y el módulo no vigila nada |
+| `rectangulo_real` | Quien guarda la zona | Medidas reales del rectángulo de cinta. `null`: todo va en píxeles |
+| `margen_advertencia_m`, `margen_advertencia_px` | Operador | Ancho de la franja de advertencia, en metros o en píxeles |
+| `imagen_referencia` | Quien guarda la zona | Ruta de la imagen sobre la que se marcó `zona_peligro` |
+| `solicitud_deteccion` | Plataforma | Pedido de detección automática de la cinta (ver sección 4) |
+| `zona_propuesta` | **Módulo** | Su respuesta al pedido. Solo una propuesta |
+| `deteccion`, `cinta_hsv`, `sonido_local` | Operador | Ajustes finos; normalmente no se tocan |
+
+Reglas:
+
+- **Los polígonos van normalizados**: cada vértice es `[x, y]` de 0 a 1 sobre la imagen de
+  referencia, con `(0, 0)` arriba a la izquierda. Así no dependen de la resolución.
+- **Metros o píxeles.** Si `zona_peligro` tiene cuatro vértices y hay `rectangulo_real`, el
+  módulo mide en metros: usa `margen_advertencia_m` y los eventos traen `distancia_min_m`.
+  Si no, mide en píxeles con `margen_advertencia_px` y los mensajes no mencionan metros.
+- **Cuál lado es cuál.** `ancho_m` es el lado del primer vértice al segundo; `largo_m`, el
+  del segundo al tercero. El editor debe rotular esos dos lados para que la persona escriba
+  cada medida donde va.
+- **El `PUT` reemplaza el documento entero.** Quien escribe debe leer la configuración,
+  cambiar sus campos y mandarla completa. Mandar solo `{"solicitud_deteccion": ...}` es
+  válido para el esquema, pero deja todo lo demás en su valor por defecto y **borra la zona**.
+- **Esperar a que el módulo suba su configuración.** Mientras el `GET` devuelva 404 el
+  módulo todavía no arrancó: el editor no debe escribir nada hasta que haya configuración.
+- Una configuración con algo inválido (un polígono de dos vértices, una medida negativa) el
+  módulo la rechaza entera y conserva la anterior. El receptor de prueba responde 422.
+
+### Capacidades
+
+```json
+{
+  "zonas": [ { "id": "piso", "nombre": "Zona de piso" } ],
+  "margen_advertencia_m": { "minimo": 0, "maximo": 3 },
+  "imagen_referencia": { "ruta": "media/2026-11-14/ab12cd34.jpg", "ancho": 1280, "alto": 720,
+                         "timestamp": "2026-11-14T10:02:13-05:00" }
+}
+```
+
+`imagen_referencia` es la foto más reciente de la cámara (rostros difuminados), subida por
+`POST /api/medios`: es el fondo sobre el que el editor dibuja la zona. El módulo la toma al
+arrancar y en cada detección, y vuelve a registrar sus capacidades. Es `null` si no pudo
+subirla.
+
+## 4. Calibración: cómo se entienden el editor y el módulo
+
+1. **Al arrancar**, el módulo sube la imagen de referencia y registra sus capacidades. No
+   escribe la configuración (salvo la primera vez, si la plataforma no tiene ninguna).
+2. **"Detectar zona"**: el editor escribe en `solicitud_deteccion` una marca de tiempo ISO
+   8601 (con el documento completo).
+3. **El módulo lo ve** en su siguiente consulta (hasta 3 s), busca la cinta amarilla en la
+   imagen de ese momento, sube una imagen de referencia nueva y escribe `zona_propuesta`:
+
+   ```json
+   {
+     "solicitud": "2026-11-14T10:02:11-05:00",
+     "poligono": [[0.33, 0.25], [0.67, 0.25], [0.71, 0.57], [0.29, 0.57]],
+     "es_cuadrilatero": true,
+     "mensaje": "Se encontró el rectángulo de cinta. Revisa las esquinas, escribe sus medidas reales y guarda la zona.",
+     "imagen_referencia": "media/2026-11-14/ef56ab78.jpg"
+   }
+   ```
+
+   - `solicitud` repite el pedido atendido: el pedido está pendiente mientras
+     `solicitud_deteccion` no sea `null` y sea distinto de `zona_propuesta.solicitud`.
+   - `poligono` es `null` si no encontró la cinta; `mensaje` dice por qué (no hay amarillo,
+     solo objetos macizos, la cinta se sale de la imagen o no cierra una figura) y sugiere
+     marcarla a mano. Mostrar ese mensaje tal cual.
+   - Los vértices salen en sentido horario empezando por el de arriba a la izquierda: el
+     lado 1-2 es el de arriba en la imagen.
+4. **La persona confirma.** El editor dibuja la propuesta sobre `zona_propuesta.imagen_referencia`,
+   deja mover, agregar y quitar vértices y pide las medidas reales. **"Guardar zona"** escribe
+   `zona_peligro`, `rectangulo_real` e `imagen_referencia`, y deja `zona_propuesta` y
+   `solicitud_deteccion` en `null`. Solo entonces el módulo empieza a vigilar esa zona.
+5. **Respaldo en la estación.** La ventana de la estación hace lo mismo con teclas y mouse,
+   y al guardar escribe la configuración igual que el editor. Gana el último que escribe.
+
+La detección conviene hacerla con la zona vacía, sin personas y antes de poner la máquina.
+
+## 5. Lo que la plataforma debe implementar para la zona
+
+Cuatro piezas. Las cuatro están hechas en el receptor de prueba
+(`python -m herramientas.receptor_prueba`) y se pueden abrir para ver cómo se comportan:
+[`app.py`](../herramientas/receptor_prueba/app.py) (el flujo),
+[`alarma.html`](../herramientas/receptor_prueba/alarma.html) (la vista de alarma, en `/alarma`) y
+[`pagina.html`](../herramientas/receptor_prueba/pagina.html) (el editor de zona, en `/`).
+
+### 5.1 Flujo en tiempo real: `GET /api/stream`
+
+Server-Sent Events (`Content-Type: text/event-stream`). La alarma no puede depender de
+consultar cada 2 s: necesita enterarse en el acto.
+
+- **Cada evento aceptado** por `POST /api/eventos` sale enseguida como un mensaje sin nombre,
+  con `id:` igual al `id` del evento y, en `data:`, el sobre completo en una línea de JSON,
+  tal como llegó. Salen todos los tipos y todas las estaciones.
+- **Un mensaje `reloj`** al conectar y cada 5 s: `event: reloj` y `data: {"ahora": "<ISO 8601>"}`
+  con la hora del servidor. Mantiene viva la conexión y le da a la vista la hora con que se
+  estamparon los eventos.
+- Un evento repetido (mismo `id`) o rechazado (422) no sale por el flujo.
+- Quien se conecta recibe solo lo nuevo; lo anterior se consulta con `GET /api/eventos`.
+
+```
+event: reloj
+data: {"ahora": "2026-11-20T10:41:00.512-05:00"}
+
+id: c3d9a2f1-6b47-4e0a-8f15-2a9d7c4b1e60
+data: {"id": "c3d9a2f1-...", "estacion": "zona", "tipo": "estado_zona", "timestamp": "2026-11-20T10:41:00-05:00", ...}
+```
+
+### 5.2 Vista de alarma, a pantalla completa
+
+| Estado | Pantalla | Texto | Sonido |
+|---|---|---|---|
+| `libre` | Fondo Auren Deep | "Zona despejada" | Ninguno |
+| `advertencia` | Borde amarillo que pulsa | "Precaución: persona cerca de la zona de peligro" | Pitido lento: 880 Hz, 0,22 s, cada 1,2 s |
+| `peligro` | Fondo y borde rojos que pulsan | "PERSONA EN ZONA DE PELIGRO" | Pitido rápido: 1320 Hz, 0,14 s, cada 0,3 s |
+
+- **Colores de seguridad, no de marca:** rojo `#E02B20` para peligro y amarillo `#F9C80E` para
+  advertencia (NTC 1461). Es la única excepción a la lima como acento.
+- **El estado que se muestra** es el peor entre las zonas (hoy solo `piso`), cada una con su
+  último `estado_zona`. Debajo del texto va cuánta gente hay: `personas_peligro` y
+  `personas_advertencia`.
+- **Debajo:** ingresos y casi-accidentes del día (cuenta de `ingreso_zona` y `casi_accidente`
+  de hoy) y el último de esos dos eventos, con su hora.
+- **Sonido con Web Audio API**, con tonos generados (un oscilador), sin archivos de audio.
+- **Botón grande "Activar sonido" al abrir.** Los navegadores bloquean el audio hasta que la
+  persona interactúa con la página: sin ese clic la alarma no suena. La vista debe pedirlo de
+  forma visible cada vez que se abre, y seguir funcionando en lo visual aunque nadie lo pulse.
+- **Control de volumen y botón de silencio**, siempre a la vista. Conviene recordar el volumen
+  pero no el silencio: la alarma no debe abrir callada porque alguien la silenció ayer.
+
+### 5.3 Filtro de eventos viejos y apagado automático
+
+Son las dos reglas que evitan que la pantalla muestre algo falso. Las dos usan 5 s.
+
+1. **Un `estado_zona` con más de 5 s de antigüedad no enciende ni cambia la alarma.** Si la
+   estación estuvo sin conexión, sus eventos salen después de su cola local con el `timestamp`
+   original: sirven para el historial, no para alarmar. La antigüedad es la hora del servidor
+   (la del mensaje `reloj`) menos el `timestamp` del evento; no la hora del navegador, que
+   puede estar corrida. La estación y la plataforma corren en la misma PC, así que comparten reloj.
+2. **Si pasan 5 s sin recibir ningún `estado_zona` de una zona que no está libre, su alarma
+   se apaga sola**, y la vista dice que no hay señal de la estación. Mientras hay alguien, la
+   estación repite el estado cada 2 s (`refresco: true`); si deja de hacerlo es que se cayó.
+3. **Los eventos con `refresco: true` no van al historial ni a los conteos** del tablero:
+   solo sostienen la alarma.
+
+Al abrir la vista: primero conectarse al flujo, y con la hora del primer `reloj` leer los
+eventos del día (`GET /api/eventos?estacion=zona&desde=...`) para los conteos. Como un evento
+puede llegar por los dos caminos, hay que procesar cada `id` una sola vez.
+
+### 5.4 Editor de zona
+
+Un editor simple sobre la imagen de referencia de la cámara (`capacidades.imagen_referencia`):
+
+- Dibuja el polígono vigente: la propuesta pendiente (`zona_propuesta.poligono`, punteada y
+  sobre `zona_propuesta.imagen_referencia`) si hay una; si no, `zona_peligro`.
+- **Vértices arrastrables**; **clic sobre la imagen agrega** uno (en el lado más cercano, para
+  que el polígono no se cruce); clic derecho lo quita.
+- Vértices numerados y, con cuatro, los lados 1-2 y 2-3 rotulados "ancho" y "largo".
+- **Botón "Detectar zona"**: escribe `solicitud_deteccion` y espera la respuesta (sección 4).
+  Si en unos 15 s no llega, avisar que la estación no respondió.
+- **Campos de medidas reales** (ancho y largo en metros) y el margen de advertencia.
+- **Botón "Guardar zona"**: escribe `zona_peligro`, `rectangulo_real` e `imagen_referencia`, y
+  deja `zona_propuesta` y `solicitud_deteccion` en `null`.
+- Mostrar el `mensaje` de la propuesta tal cual, y el detalle del 422 si la plataforma rechaza
+  lo que se guarda.
+- Mientras la persona tiene cambios sin guardar, no reemplazar lo que está editando con lo
+  que llegue de la configuración.
+
+Recordatorio de la sección 3: cada escritura lee la configuración vigente, cambia sus campos
+y la manda completa.

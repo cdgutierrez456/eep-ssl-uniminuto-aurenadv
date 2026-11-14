@@ -67,18 +67,67 @@
     margin: 8px 0 0; white-space: pre-wrap; word-break: break-word; color: var(--tenue);
     font: 13px/1.45 Consolas, "Cascadia Mono", Menlo, monospace;
   }
+  /* ---- Editor de la zona de peligro ---- */
+  header a { color: var(--marfil); font-size: 13px; }
+  #zona { margin-bottom: 28px; }
+  .lienzo-zona {
+    position: relative; width: 100%; aspect-ratio: 16 / 9; background: var(--negro); border-radius: 4px;
+    overflow: hidden; margin-bottom: 12px; touch-action: none; user-select: none;
+  }
+  .lienzo-zona img { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .lienzo-zona svg { position: absolute; inset: 0; width: 100%; height: 100%; cursor: crosshair; }
+  .lienzo-zona .sin-imagen { position: absolute; inset: 0; display: grid; place-items: center; color: var(--tenue); padding: 16px; text-align: center; }
+  #zona .fila { margin-top: 10px; }
+  #zona input[type=text] {
+    width: 78px; background: var(--negro); color: var(--marfil); border: 1px solid var(--borde); border-radius: 4px;
+    padding: 5px 8px; font: inherit;
+  }
+  #zona button {
+    background: transparent; color: var(--marfil); border: 1px solid var(--tenue); border-radius: 4px;
+    padding: 6px 14px; font: inherit; cursor: pointer;
+  }
+  #zona button:hover:not(:disabled), #zona button:focus-visible { border-color: var(--marfil); outline: none; }
+  #zona button:disabled { opacity: .45; cursor: default; }
+  #zona button.principal { background: var(--marfil); color: var(--negro); border-color: var(--marfil); font-weight: 600; }
+  #zona-estado { color: var(--marfil); margin: 0; }
+  #zona-estado.problema { color: #E8B84A; }
 </style>
 </head>
 <body>
 <header>
   <h1>Receptor de prueba · SST en vivo</h1>
   <span class="aviso">Herramienta de desarrollo. No es la plataforma final.</span>
+  <a href="/alarma">Vista de alarma de la zona</a>
   <span class="estado"><span class="punto" id="punto"></span><span id="conteo">Conectando…</span></span>
 </header>
 <main>
   <section id="config" hidden>
     <h2>Configuración de módulos</h2>
     <div id="modulos"></div>
+  </section>
+  <section id="zona" hidden>
+    <h2>Zona de peligro</h2>
+    <div class="modulo">
+      <div class="lienzo-zona" id="zona-lienzo">
+        <div class="sin-imagen" id="zona-sin-imagen">La estación todavía no subió una imagen de referencia.</div>
+        <img id="zona-imagen" alt="Imagen de referencia de la cámara de la zona" hidden>
+        <svg id="zona-svg" role="img" aria-label="Polígono de la zona de peligro"></svg>
+      </div>
+      <p id="zona-estado" aria-live="polite"></p>
+      <div class="fila">
+        <button type="button" id="zona-detectar">Detectar zona</button>
+        <label>Ancho real (m) <input type="text" inputmode="decimal" id="zona-ancho" placeholder="1,5"></label>
+        <label>Largo real (m) <input type="text" inputmode="decimal" id="zona-largo" placeholder="1,0"></label>
+        <label>Margen de advertencia (m) <input type="text" inputmode="decimal" id="zona-margen" placeholder="0,5"></label>
+      </div>
+      <div class="fila">
+        <button type="button" id="zona-guardar" class="principal">Guardar zona</button>
+        <button type="button" id="zona-descartar">Descartar cambios</button>
+        <button type="button" id="zona-borrar">Borrar vértices</button>
+        <span class="nota">Clic en la imagen: agregar un vértice. Arrastrar: moverlo. Clic derecho: quitarlo.
+          El ancho es el lado del vértice 1 al 2; el largo, del 2 al 3.</span>
+      </div>
+    </div>
   </section>
   <h2>Eventos</h2>
   <div id="lista"><p class="vacio">Esperando eventos…</p></div>
@@ -191,14 +240,285 @@
   async function actualizarModulos() {
     try {
       const modulos = await (await fetch("/api/modulos", { cache: "no-store" })).json();
+      actualizarZona(modulos.zona);                       // la zona tiene su propio editor, más abajo
       const firma = JSON.stringify(modulos);
       if (firma === firmaModulos) return;
       firmaModulos = firma;
-      const nombres = Object.keys(modulos);
+      const nombres = Object.keys(modulos).filter(nombre => nombre !== "zona");
       seccionConfig.hidden = nombres.length === 0;
       contenedorModulos.replaceChildren(...nombres.map(nombre => tarjetaModulo(nombre, modulos[nombre])));
     } catch (error) { /* el indicador de estado ya avisa que el receptor no responde */ }
   }
+
+  // ---- Editor de la zona de peligro -------------------------------------------------------
+  // Dibuja el polígono sobre la imagen de referencia que subió la estación. "Detectar zona" le
+  // pide a la estación que busque la cinta (escribe solicitud_deteccion) y ella responde con una
+  // propuesta (zona_propuesta). La zona solo se activa al pulsar "Guardar zona".
+  // Regla del contrato: el PUT reemplaza la configuración entera, así que siempre se lee la
+  // vigente, se le cambian los campos del editor y se manda completa.
+  const zona = {
+    config: null, firma: "", vertices: [], origen: "vacia", sucio: false, agarrado: null,
+    imagen: null, tamano: [1280, 720], solicitud: null, vencimiento: null, aviso: "", problema: false,
+    avisoHasta: 0, referencia: null
+  };
+  const SVG = "http://www.w3.org/2000/svg";
+  const zonaSvg = document.getElementById("zona-svg");
+  const zonaImagen = document.getElementById("zona-imagen");
+  const zonaCampos = { ancho: document.getElementById("zona-ancho"), largo: document.getElementById("zona-largo"),
+                       margen: document.getElementById("zona-margen") };
+  const RUTA_ZONA = "/api/modulos/zona/config";
+  const decimal = texto => parseFloat(String(texto).trim().replace(",", "."));
+  const conComa = numero => String(numero).replace(".", ",");
+
+  function actualizarZona(estado) {
+    document.getElementById("zona").hidden = !estado || !estado.config;
+    if (!estado || !estado.config) return;
+    const referencia = estado.capacidades && estado.capacidades.imagen_referencia;
+    const firma = JSON.stringify([estado.config, referencia]);
+    if (firma === zona.firma) return;
+    zona.firma = firma;
+    zona.config = estado.config;
+    zona.referencia = referencia || null;
+    const propuesta = estado.config.zona_propuesta;
+    if (zona.solicitud && propuesta && propuesta.solicitud === zona.solicitud) {
+      clearTimeout(zona.vencimiento);                     // llegó la respuesta al "Detectar zona" de esta página
+      zona.solicitud = null;
+      cargarZona();
+    } else if (!zona.sucio && !zona.solicitud) {
+      cargarZona();                                       // sin cambios a medias: se muestra lo que hay guardado
+    }
+    pintarZona();
+  }
+
+  function cargarZona() {
+    // Lo que se muestra: la propuesta pendiente si hay una; si no, la zona activa
+    const config = zona.config, propuesta = config.zona_propuesta;
+    zona.agarrado = null;
+    if (Date.now() > zona.avisoHasta) { zona.aviso = ""; zona.problema = false; }   // un aviso recién puesto se deja leer
+    if (propuesta && propuesta.poligono) {
+      zona.vertices = propuesta.poligono.map(v => [v[0], v[1]]);
+      zona.origen = "propuesta"; zona.sucio = true;       // una propuesta está sin confirmar hasta guardarla
+      zona.aviso = propuesta.mensaje || "";
+    } else {
+      zona.vertices = (config.zona_peligro || []).map(v => [v[0], v[1]]);
+      zona.origen = config.zona_peligro ? "activa" : "vacia"; zona.sucio = false;
+      if (propuesta && !propuesta.poligono) { zona.aviso = propuesta.mensaje || ""; zona.problema = true; }
+    }
+    const medidas = config.rectangulo_real;
+    zonaCampos.ancho.value = medidas ? conComa(medidas.ancho_m) : "";
+    zonaCampos.largo.value = medidas ? conComa(medidas.largo_m) : "";
+    zonaCampos.margen.value = conComa(config.margen_advertencia_m);
+    // Imagen de fondo: la de la propuesta, la más reciente de la estación o la de la zona guardada
+    const ruta = (zona.origen === "propuesta" && propuesta.imagen_referencia)
+      || (zona.referencia && zona.referencia.ruta) || config.imagen_referencia || null;
+    if (zona.referencia) zona.tamano = [zona.referencia.ancho, zona.referencia.alto];
+    zona.imagen = ruta;
+    zonaImagen.hidden = !ruta;
+    document.getElementById("zona-sin-imagen").hidden = !!ruta;
+    if (ruta && zonaImagen.getAttribute("src") !== "/" + ruta) zonaImagen.src = "/" + ruta;
+    document.getElementById("zona-lienzo").style.aspectRatio = zona.tamano[0] + " / " + zona.tamano[1];
+  }
+
+  function figura(nombre, atributos, texto) {
+    const nodo = document.createElementNS(SVG, nombre);
+    for (const [clave, valor] of Object.entries(atributos)) nodo.setAttribute(clave, valor);
+    if (texto !== undefined) nodo.textContent = texto;
+    return nodo;
+  }
+
+  function pintarZona() {
+    const [ancho, alto] = zona.tamano, r = ancho / 85;
+    zonaSvg.setAttribute("viewBox", "0 0 " + ancho + " " + alto);
+    const puntos = zona.vertices.map(v => [v[0] * ancho, v[1] * alto]);
+    const nodos = [];
+    const propuesta = zona.origen === "propuesta";
+    if (puntos.length >= 2) {
+      nodos.push(figura(puntos.length >= 3 ? "polygon" : "polyline", {
+        points: puntos.map(p => p.join(",")).join(" "), fill: puntos.length >= 3 ? "rgba(224,43,32,.28)" : "none",
+        stroke: "#E02B20", "stroke-width": r / 3, "stroke-dasharray": propuesta ? r + " " + r / 1.5 : "none",
+        "stroke-linejoin": "round"
+      }));
+    }
+    const etiqueta = (x, y, texto) => figura("text", {
+      x, y, fill: "#F2F1EA", stroke: "#111414", "stroke-width": r / 4, "paint-order": "stroke",
+      "font-size": r * 1.9, "font-weight": 700, "text-anchor": "middle", "dominant-baseline": "central", "pointer-events": "none"
+    }, texto);
+    if (puntos.length === 4) {                            // los dos lados que piden medida
+      ["ancho", "largo"].forEach((nombre, i) => {
+        nodos.push(etiqueta((puntos[i][0] + puntos[i + 1][0]) / 2, (puntos[i][1] + puntos[i + 1][1]) / 2, nombre));
+      });
+    }
+    puntos.forEach((p, i) => {
+      nodos.push(figura("circle", { cx: p[0], cy: p[1], r, fill: i === zona.agarrado ? "#F2F1EA" : "#F9C80E",
+                                    stroke: "#111414", "stroke-width": r / 5 }));
+      nodos.push(etiqueta(p[0] + r * 1.9, p[1] - r * 1.6, String(i + 1)));
+    });
+    zonaSvg.replaceChildren(...nodos);
+
+    const estado = document.getElementById("zona-estado");
+    let texto = zona.aviso;
+    if (zona.solicitud) texto = "Detectando la cinta… la estación responde en unos segundos.";
+    else if (!texto) {
+      const medidas = zona.config.rectangulo_real;
+      if (zona.origen === "activa") {
+        texto = "Zona activa de " + zona.vertices.length + " vértices. " + (medidas && zona.config.zona_peligro.length === 4
+          ? "Mide en metros (" + conComa(medidas.ancho_m) + " × " + conComa(medidas.largo_m) + " m)."
+          : "Mide en píxeles: para medir en metros necesita cuatro vértices y sus dos medidas.");
+      } else if (zona.vertices.length) {
+        texto = "Zona de " + zona.vertices.length + " vértices en edición: todavía no está activa.";
+      } else {
+        texto = "Sin zona todavía: pulsa «Detectar zona» o marca los vértices sobre la imagen.";
+      }
+    }
+    if (zona.sucio && !zona.solicitud && zona.vertices.length) texto += " · Sin guardar: pulsa «Guardar zona» para activarla.";
+    estado.textContent = texto;
+    estado.classList.toggle("problema", zona.problema);
+    document.getElementById("zona-descartar").disabled = !zona.sucio;
+    document.getElementById("zona-borrar").disabled = zona.vertices.length === 0;
+    document.getElementById("zona-detectar").disabled = !!zona.solicitud;
+  }
+
+  // ---- Mouse sobre la imagen: agregar, mover y quitar vértices ----
+  function puntoDelEvento(evento) {
+    const caja = zonaSvg.getBoundingClientRect();
+    return [Math.min(1, Math.max(0, (evento.clientX - caja.left) / caja.width)),
+            Math.min(1, Math.max(0, (evento.clientY - caja.top) / caja.height))];
+  }
+
+  function verticeCercano(punto) {
+    // Distancia en píxeles de pantalla: el radio de agarre no depende del tamaño con que se vea la imagen
+    const caja = zonaSvg.getBoundingClientRect();
+    let mejor = null, minima = 18;
+    zona.vertices.forEach((v, i) => {
+      const d = Math.hypot((v[0] - punto[0]) * caja.width, (v[1] - punto[1]) * caja.height);
+      if (d < minima) { minima = d; mejor = i; }
+    });
+    return mejor;
+  }
+
+  function distanciaALado(p, a, b) {
+    const dx = b[0] - a[0], dy = b[1] - a[1], largo = dx * dx + dy * dy;
+    const u = largo ? Math.max(0, Math.min(1, ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / largo)) : 0;
+    return Math.hypot(p[0] - (a[0] + u * dx), p[1] - (a[1] + u * dy));
+  }
+
+  function lugarPara(punto) {
+    // Con tres o más vértices el nuevo entra en el lado más cercano, así el polígono no se cruza
+    const n = zona.vertices.length;
+    if (n < 3) return n;
+    let mejor = 0, minima = Infinity;
+    for (let i = 0; i < n; i++) {
+      const d = distanciaALado(punto, zona.vertices[i], zona.vertices[(i + 1) % n]);
+      if (d < minima) { minima = d; mejor = i; }
+    }
+    return mejor + 1;
+  }
+
+  function editada() { zona.sucio = true; zona.origen = "editada"; zona.aviso = ""; zona.problema = false; }
+
+  zonaSvg.addEventListener("pointerdown", evento => {
+    if (evento.button !== 0) return;
+    const punto = puntoDelEvento(evento);
+    let indice = verticeCercano(punto);
+    if (indice === null) {
+      if (zona.vertices.length >= 64) return;
+      indice = lugarPara(punto);
+      zona.vertices.splice(indice, 0, punto);
+      editada();
+    }
+    zona.agarrado = indice;
+    zonaSvg.setPointerCapture(evento.pointerId);
+    pintarZona();
+  });
+  zonaSvg.addEventListener("pointermove", evento => {
+    if (zona.agarrado === null) return;
+    zona.vertices[zona.agarrado] = puntoDelEvento(evento);
+    editada();
+    pintarZona();
+  });
+  const soltarVertice = () => { if (zona.agarrado !== null) { zona.agarrado = null; pintarZona(); } };
+  zonaSvg.addEventListener("pointerup", soltarVertice);
+  zonaSvg.addEventListener("pointercancel", soltarVertice);
+  zonaSvg.addEventListener("contextmenu", evento => {
+    evento.preventDefault();
+    const indice = verticeCercano(puntoDelEvento(evento));
+    if (indice === null) return;
+    zona.vertices.splice(indice, 1);
+    editada();
+    pintarZona();
+  });
+
+  // ---- Botones ----
+  async function leerConfigDeZona() {
+    const respuesta = await fetch(RUTA_ZONA, { cache: "no-store" });
+    if (!respuesta.ok) throw new Error("La estación de zona todavía no subió su configuración.");
+    return respuesta.json();
+  }
+
+  async function escribirConfigDeZona(config) {
+    const respuesta = await fetch(RUTA_ZONA, {
+      method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(config)
+    });
+    if (!respuesta.ok) {
+      const cuerpo = await respuesta.json().catch(() => ({}));
+      throw new Error("La plataforma rechazó la configuración: " + ((cuerpo.detalle || []).join("; ") || respuesta.status));
+    }
+  }
+
+  function avisarZona(texto, problema) {
+    zona.aviso = texto; zona.problema = !!problema; zona.avisoHasta = Date.now() + 8000;
+    pintarZona();
+  }
+
+  document.getElementById("zona-detectar").addEventListener("click", async () => {
+    try {
+      const solicitud = new Date().toISOString();
+      await escribirConfigDeZona({ ...(await leerConfigDeZona()), solicitud_deteccion: solicitud });
+      zona.solicitud = solicitud; zona.aviso = ""; zona.problema = false;
+      zona.vencimiento = setTimeout(() => {
+        zona.solicitud = null;
+        avisarZona("La estación no respondió al pedido de detección. ¿Está corriendo?", true);
+      }, 15000);
+      pintarZona();
+    } catch (error) { avisarZona(error.message, true); }
+  });
+
+  document.getElementById("zona-guardar").addEventListener("click", async () => {
+    if (zona.vertices.length < 3) { avisarZona("La zona necesita al menos tres vértices.", true); return; }
+    const ancho = decimal(zonaCampos.ancho.value), largo = decimal(zonaCampos.largo.value), margen = decimal(zonaCampos.margen.value);
+    const unaSola = (ancho > 0) !== (largo > 0);
+    if (unaSola) { avisarZona("Escribe las dos medidas, ancho y largo, o deja las dos vacías.", true); return; }
+    try {
+      const nueva = {
+        ...(await leerConfigDeZona()),
+        zona_peligro: zona.vertices.map(v => [Number(v[0].toFixed(5)), Number(v[1].toFixed(5))]),
+        rectangulo_real: ancho > 0 && largo > 0 ? { ancho_m: ancho, largo_m: largo } : null,
+        zona_propuesta: null,                              // la propuesta ya se confirmó (o se reemplazó)
+        solicitud_deteccion: null
+      };
+      if (margen >= 0) nueva.margen_advertencia_m = margen;
+      if (zona.imagen) nueva.imagen_referencia = zona.imagen;
+      await escribirConfigDeZona(nueva);
+      zona.sucio = false; zona.origen = "activa"; zona.config = nueva; zona.firma = "";
+      avisarZona("Zona guardada. La estación la aplica en unos segundos." + (nueva.rectangulo_real && nueva.zona_peligro.length !== 4
+        ? " Para medir en metros debe tener cuatro vértices: por ahora mide en píxeles." : ""));
+    } catch (error) { avisarZona(error.message, true); }
+  });
+
+  document.getElementById("zona-descartar").addEventListener("click", async () => {
+    try {
+      // Descartar también retira la propuesta pendiente, para que no vuelva a aparecer
+      const actual = await leerConfigDeZona();
+      if (actual.zona_propuesta) await escribirConfigDeZona({ ...actual, zona_propuesta: null, solicitud_deteccion: null });
+      zona.config = { ...actual, zona_propuesta: null, solicitud_deteccion: null };
+      zona.sucio = false; zona.firma = "";
+      cargarZona(); pintarZona();
+    } catch (error) { avisarZona(error.message, true); }
+  });
+
+  document.getElementById("zona-borrar").addEventListener("click", () => {
+    zona.vertices = []; editada(); pintarZona();
+  });
 
   actualizar();
   actualizarModulos();

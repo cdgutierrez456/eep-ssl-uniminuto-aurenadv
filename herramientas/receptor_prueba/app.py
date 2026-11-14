@@ -4,9 +4,11 @@ HERRAMIENTA DE PRUEBA: existe solo para probar los módulos Python sin la
 plataforma real (Next.js, carpeta plataforma/). No es parte del producto final.
 """
 
+import asyncio
 import json
 import sqlite3
 import sys
+import threading
 import uuid
 from contextlib import closing
 from datetime import datetime
@@ -15,7 +17,7 @@ from typing import Any
 from zoneinfo import ZoneInfo
 
 from fastapi import Body, FastAPI, File, HTTPException, UploadFile
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from jsonschema import Draft202012Validator
 
@@ -23,7 +25,66 @@ from modulos.comun.esquema import errores_de
 
 ZONA_HORARIA = ZoneInfo("America/Bogota")
 RUTA_PAGINA = Path(__file__).parent / "pagina.html"
+RUTA_ALARMA = Path(__file__).parent / "alarma.html"
 CARPETA_CONTRATO = Path(__file__).resolve().parents[2] / "contrato"
+INTERVALO_RELOJ_SSE_S = 5.0  # cada cuánto el flujo SSE manda la hora del servidor (y de paso sigue vivo)
+
+
+def _ahora() -> str:
+    """Hora del servidor en ISO 8601 con milisegundos (America/Bogota)."""
+    return datetime.now(ZONA_HORARIA).isoformat(timespec="milliseconds")
+
+
+def _mensaje_sse(datos: Any, evento: str | None = None, identificador: str | None = None) -> str:
+    """Un mensaje de Server-Sent Events: campos opcionales ``event`` e ``id`` y los datos en JSON de una línea."""
+    cabecera = (f"event: {evento}\n" if evento else "") + (f"id: {identificador}\n" if identificador else "")
+    return f"{cabecera}data: {json.dumps(datos, ensure_ascii=False)}\n\n"
+
+
+class Difusor:
+    """Reparte cada evento nuevo a los navegadores conectados a GET /api/stream.
+
+    Los eventos llegan por un hilo (POST /api/eventos) y se entregan en el bucle asíncrono de
+    cada conexión, cada una con su propia cola. Si un navegador se atrasa, pierde los más viejos.
+    """
+
+    MAXIMO_EN_COLA = 500
+
+    def __init__(self) -> None:
+        self._suscriptores: set[tuple[asyncio.AbstractEventLoop, asyncio.Queue]] = set()
+        self._cerrojo = threading.Lock()
+
+    def suscribir(self) -> tuple[asyncio.AbstractEventLoop, asyncio.Queue]:
+        suscripcion = (asyncio.get_running_loop(), asyncio.Queue(maxsize=self.MAXIMO_EN_COLA))
+        with self._cerrojo:
+            self._suscriptores.add(suscripcion)
+        return suscripcion
+
+    def cancelar(self, suscripcion: tuple[asyncio.AbstractEventLoop, asyncio.Queue]) -> None:
+        with self._cerrojo:
+            self._suscriptores.discard(suscripcion)
+
+    @property
+    def conectados(self) -> int:
+        with self._cerrojo:
+            return len(self._suscriptores)
+
+    def difundir(self, evento: dict) -> None:
+        """Entrega el evento a todos los conectados. Se puede llamar desde cualquier hilo."""
+        with self._cerrojo:
+            suscriptores = list(self._suscriptores)
+        for suscripcion in suscriptores:
+            bucle, cola = suscripcion
+            try:
+                bucle.call_soon_threadsafe(self._poner, cola, evento)
+            except RuntimeError:  # el bucle de esa conexión ya se cerró
+                self.cancelar(suscripcion)
+
+    @staticmethod
+    def _poner(cola: asyncio.Queue, evento: dict) -> None:
+        if cola.full():
+            cola.get_nowait()
+        cola.put_nowait(evento)
 
 
 def _errores_de_config(modulo: str, config: Any) -> list[str]:
@@ -109,6 +170,8 @@ def crear_app(carpeta_datos: str | Path = ".") -> FastAPI:
 
     app = FastAPI(title="Receptor de prueba SST en vivo", docs_url="/docs")
     app.mount("/media", StaticFiles(directory=carpeta_media), name="media")
+    difusor = Difusor()
+    app.state.difusor = difusor
 
     @app.post("/api/eventos", status_code=201)
     def recibir_eventos(cuerpo: Any = Body(...)):
@@ -138,7 +201,35 @@ def crear_app(carpeta_datos: str | Path = ".") -> FastAPI:
                     nuevos.append(evento)
         for evento in nuevos:
             _imprimir_evento(evento)
+            difusor.difundir(evento)  # empuje en tiempo real a quienes escuchan GET /api/stream
         return {"aceptados": [evento["id"] for evento in eventos]}
+
+    @app.get("/api/stream")
+    async def flujo_de_eventos():
+        """Empuje en tiempo real (Server-Sent Events) de cada evento nuevo, tal como llegó.
+
+        Cada evento sale como un mensaje sin nombre (``onmessage`` en el navegador) con su ``id``
+        y el sobre completo en ``data``. Al conectar y cada pocos segundos sale además un mensaje
+        ``reloj`` con la hora del servidor, para que la vista mida la antigüedad de los eventos
+        sin depender del reloj del navegador.
+        """
+        suscripcion = difusor.suscribir()
+
+        async def generar():
+            try:
+                yield _mensaje_sse({"ahora": _ahora()}, evento="reloj")
+                while True:
+                    try:
+                        evento = await asyncio.wait_for(suscripcion[1].get(), INTERVALO_RELOJ_SSE_S)
+                    except asyncio.TimeoutError:
+                        yield _mensaje_sse({"ahora": _ahora()}, evento="reloj")
+                    else:
+                        yield _mensaje_sse(evento, identificador=evento["id"])
+            finally:
+                difusor.cancelar(suscripcion)
+
+        return StreamingResponse(generar(), media_type="text/event-stream",
+                                 headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
 
     @app.get("/api/eventos")
     def consultar_eventos(desde: str | None = None, estacion: str | None = None, limite: int = 500):
@@ -229,10 +320,15 @@ def crear_app(carpeta_datos: str | Path = ".") -> FastAPI:
                 "estado": evento["datos"]["estado"],
                 "ultimo_latido": evento["timestamp"],
             }
-        return {"estado": "ok", "eventos": total, "modulos": modulos}
+        return {"estado": "ok", "eventos": total, "modulos": modulos, "ahora": _ahora()}
 
     @app.get("/", response_class=HTMLResponse)
     def pagina():
         return RUTA_PAGINA.read_text(encoding="utf-8")
+
+    @app.get("/alarma", response_class=HTMLResponse)
+    def alarma():
+        """Vista de alarma de la zona de peligro, a pantalla completa (visual y sonora)."""
+        return RUTA_ALARMA.read_text(encoding="utf-8")
 
     return app
