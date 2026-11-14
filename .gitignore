@@ -33,4 +33,7 @@ Thumbs.db
 datasets/
 runs/
 *.pt
+# Excepción: los modelos activos de EPP sí se versionan (ver modulos/epp/README.md)
+!modulos/epp/modelos/epp-alimentos-v1.pt
+!modulos/epp/modelos/epp-industria-v2.pt
 *.tflite

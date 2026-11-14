@@ -25,9 +25,10 @@ Además de la instalación base del repositorio (ver [README](../../README.md)):
   más lento.
 - **No instales el paquete `roboflow`**: reemplaza OpenCV 5 por una versión vieja. La
   descarga de datasets usa la API REST directamente.
-- Los pesos no están en git. Deben estar en `modulos/epp/modelos/`:
-  `epp-alimentos-v1.pt` y `epp-industria-v2.pt`. Si falta uno, ese perfil queda no
-  disponible y el otro sigue funcionando.
+- Los pesos de los dos perfiles activos (`epp-alimentos-v1.pt` y `epp-industria-v2.pt`,
+  ~5 MB cada uno) vienen en el repositorio, en `modulos/epp/modelos/`. Los demás `.pt`
+  (versiones anteriores, corridas de entrenamiento) no se versionan. Si falta uno, ese
+  perfil queda no disponible y el otro sigue funcionando.
 
 ## Cómo correr
 
