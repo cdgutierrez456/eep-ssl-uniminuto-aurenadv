@@ -15,6 +15,10 @@ SST, no lo reemplaza; todo resultado de IA es un "borrador — validar en campo"
 Contexto completo, arquitectura y contrato: `docs/plataforma-sst-en-vivo-brief.md`.
 Léelo antes de un cambio grande.
 
+**Cambio respecto al brief, módulo de zona:** no hay ESP32 ni torre de luz. La alarma, visual
+y sonora, vive en la plataforma; la estación solo publica eventos (`estado_zona`,
+`ingreso_zona`, `casi_accidente`). Ver `modulos/zona/README.md`.
+
 **No crear ni modificar nada dentro de `plataforma/`**: es de Cristian.
 
 ## Convenciones obligatorias para todos los módulos
@@ -91,6 +95,17 @@ Correr las pruebas:
 ```
 .venv\Scripts\python -m pytest
 ```
+
+Bajar los modelos públicos que usan los módulos (una vez por equipo, con internet):
+
+```
+.venv\Scripts\python -m herramientas.descargar_modelos
+```
+
+Los pesos preentrenados y públicos (hoy `yolo26n-pose.pt`, del módulo de zona) **no se
+versionan**: se pueden volver a bajar y `*.pt` está en `.gitignore`. Se anotan en
+`herramientas/descargar_modelos.py` con su URL, tamaño y huella SHA-256, y esa herramienta los
+trae si faltan. Solo se versionan los pesos entrenados por nosotros (los de EPP), que son únicos.
 
 ## Cámaras
 

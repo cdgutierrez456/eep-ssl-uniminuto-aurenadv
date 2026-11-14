@@ -1,0 +1,26 @@
+{
+  "zona_peligro": null,
+  "rectangulo_real": null,
+  "margen_advertencia_m": 0.5,
+  "margen_advertencia_px": 80,
+  "imagen_referencia": null,
+  "solicitud_deteccion": null,
+  "zona_propuesta": null,
+  "deteccion": {
+    "confianza_persona": 0.4,
+    "confianza_punto": 0.5,
+    "antirrebote_s": 0.3,
+    "histeresis": 0.2,
+    "segundos_perdida": 1.0,
+    "segundos_perdida_peligro": 4.0,
+    "radio_reasociacion_m": 0.5,
+    "radio_reasociacion_px": 80
+  },
+  "cinta_hsv": {
+    "h_min": 18,
+    "h_max": 38,
+    "s_min": 80,
+    "v_min": 80
+  },
+  "sonido_local": false
+}

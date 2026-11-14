@@ -31,6 +31,7 @@ dev = [
     "python-multipart>=0.0.9",
     "pytest>=8.0",
     "pyyaml>=6.0",  # perfiles del módulo EPP (sus pruebas no necesitan cámara ni modelos)
+    "pillow>=10.0",  # texto con tildes de la ventana de zona (sus pruebas no necesitan cámara ni modelos)
 ]
 # Módulo EPP. PyTorch se instala aparte, con el índice que corresponda a la GPU
 # (ver modulos/epp/README.md); sin eso, pip trae la versión solo-CPU.
@@ -38,6 +39,13 @@ epp = [
     "ultralytics>=8.4",
     "pyyaml>=6.0",
     "imagehash>=4.3",  # solo para preparar el dataset
+]
+# Módulo de zona de peligro. PyTorch, como en EPP, se instala aparte. El modelo de pose no viene
+# con el paquete: se baja con python -m herramientas.descargar_modelos
+zona = [
+    "ultralytics>=8.4",
+    "lap>=0.5.12",  # asignación del tracking de Ultralytics; sin él, lo intenta instalar solo al arrancar
+    "pillow>=10.0",  # texto con tildes en la ventana de la estación
 ]
 
 [tool.setuptools.packages.find]
@@ -49,6 +57,8 @@ include = ["modulos*", "herramientas*"]
 # Tablas REBA, mensajes, recomendaciones y configuración por defecto del módulo de ergonomía
 "modulos.ergonomia.nucleo" = ["*.json"]
 "modulos.ergonomia.config" = ["*.json"]
+# Configuración por defecto del módulo de zona
+"modulos.zona.config" = ["*.json"]
 
 [tool.pytest.ini_options]
 testpaths = ["pruebas"]

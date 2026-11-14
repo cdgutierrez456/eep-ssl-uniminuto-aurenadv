@@ -35,8 +35,8 @@ def test_estado_zona(estado, severidad):
 
 
 def test_estado_zona_de_refresco():
-    evento = evento_estado_zona("mano", EstadoZona("peligro", 1, 0), refresco=True)
-    assert evento.datos == {"zona_id": "mano", "estado": "peligro", "personas_peligro": 1,
+    evento = evento_estado_zona("piso", EstadoZona("peligro", 1, 0), refresco=True)
+    assert evento.datos == {"zona_id": "piso", "estado": "peligro", "personas_peligro": 1,
                             "personas_advertencia": 0, "refresco": True}
     publicable(evento)
 
@@ -101,11 +101,11 @@ def test_casi_accidente_sin_distancia_medible_omite_los_campos():
     publicable(evento)
 
 
-def test_la_zona_de_mano_usa_sus_propias_palabras():
-    textos = Textos(quien="Una mano", lugar="la zona de atrapamiento")
+def test_las_palabras_del_casi_accidente_se_pueden_cambiar_por_zona():
+    textos = Textos(quien="Un montacargas", lugar="la vía peatonal")
     assert descripcion_casi_accidente(None, textos) == (
-        "Una mano se acercó a la zona de atrapamiento hasta la franja de advertencia y se retiró sin entrar.")
-    assert evento_casi_accidente("mano", 12.0, textos=textos).datos["zona_id"] == "mano"
+        "Un montacargas se acercó a la vía peatonal hasta la franja de advertencia y se retiró sin entrar.")
+    assert evento_casi_accidente("via-peatonal", 12.0, textos=textos).datos["zona_id"] == "via-peatonal"
 
 
 # ------------------------------------------------------------------- ejemplos

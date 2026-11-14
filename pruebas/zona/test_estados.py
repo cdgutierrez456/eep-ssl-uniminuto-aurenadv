@@ -386,6 +386,91 @@ def test_quien_ya_iba_saliendo_no_cuenta_como_oculta_dentro():
     assert instante(resultados, "ingreso_zona") == pytest.approx(2.1, abs=2 / FPS)   # espera de 1 s, no de 4
 
 
+# ----------------------------------------------------- cambios de id del tracker
+def test_si_el_tracker_cambia_el_id_en_la_franja_sale_un_solo_casi_accidente():
+    # La misma persona se acerca como id 1, el tracker la pierde 0,3 s y la devuelve como id 2, 20 px más allá
+    persona_1 = quieto(LEJOS, 0.5) + tramo(LEJOS, CERCA, 1) + quieto(CERCA, 0.5)
+    persona_2 = ausente(2.3) + quieto((370.0, 455.0), 0.5) + tramo((370.0, 455.0), LEJOS, 1) + quieto(LEJOS, 1)
+    resultados = simular(monitor_px(), {1: persona_1, 2: persona_2})
+
+    assert estados(resultados) == [("libre", 0, 0), ("advertencia", 0, 1), ("libre", 0, 0)]   # sin parpadeos
+    (casi,) = eventos(resultados, "casi_accidente")
+    assert casi.persona_id == 2
+    assert casi.datos["distancia_min_px"] == pytest.approx(30.0, abs=1.0)    # el mínimo de todo el acercamiento
+    herencias = [(persona.persona_id, persona.heredada_de) for _, resultado in resultados
+                 for persona in resultado.personas if persona.heredada_de is not None]
+    assert herencias == [(2, 1)]
+
+
+def test_si_el_tracker_cambia_el_id_dentro_de_la_zona_sale_un_solo_ingreso():
+    # De un fotograma al siguiente, sin perderla: id 1 y enseguida id 2 en el mismo sitio
+    persona_1 = quieto(DENTRO, 2)
+    persona_2 = ausente(2) + quieto((610.0, 455.0), 2) + quieto(LEJOS, 1)
+    resultados = simular(monitor_px(), {1: persona_1, 2: persona_2})
+
+    assert estados(resultados) == [("libre", 0, 0), ("peligro", 1, 0), ("libre", 0, 0)]
+    (ingreso,) = eventos(resultados, "ingreso_zona")
+    assert ingreso.persona_id == 2 and ingreso.datos["duracion_s"] == pytest.approx(4.0, abs=0.1)
+    assert sum(persona.entro_a_peligro for _, resultado in resultados for persona in resultado.personas) == 1
+
+
+def test_un_id_nuevo_lejos_del_que_se_perdio_es_otra_persona():
+    # La 1 se pierde en la franja de la izquierda; 0,3 s después aparece un id nuevo en la franja de la derecha
+    persona_1 = quieto(CERCA, 1)
+    persona_2 = ausente(1.3) + quieto(CERCA_DERECHA, 1) + quieto(LEJOS_DERECHA, 1)
+    resultados = simular(monitor_px(), {1: persona_1, 2: persona_2})
+    assert [evento.persona_id for evento in eventos(resultados, "casi_accidente")] == [1, 2]
+    assert not any(persona.heredada_de for _, resultado in resultados for persona in resultado.personas)
+
+
+def test_pasada_la_espera_un_id_nuevo_en_el_mismo_sitio_es_otra_persona():
+    # En advertencia la espera es de 1 s: quien aparece 1,5 s después ya no hereda nada
+    persona_1 = quieto(CERCA, 1)
+    persona_2 = ausente(2.5) + quieto(CERCA, 1) + quieto(LEJOS, 1)
+    resultados = simular(monitor_px(), {1: persona_1, 2: persona_2})
+    assert nombres(resultados) == ["libre", "advertencia", "libre", "advertencia", "libre"]
+    assert [evento.persona_id for evento in eventos(resultados, "casi_accidente")] == [1, 2]
+
+
+@pytest.mark.parametrize("radio_px, hereda", [(80.0, False), (150.0, True), (0.0, False)])
+def test_el_radio_de_reasociacion_en_pixeles_es_configurable(radio_px, hereda):
+    # El id nuevo aparece a 100 px de donde se perdió el anterior
+    persona_1 = quieto(CERCA, 1)
+    persona_2 = ausente(1.2) + quieto((350.0, 550.0), 1)
+    resultados = simular(monitor_px(radio_reasociacion_px=radio_px), {1: persona_1, 2: persona_2})
+    heredo = any(persona.heredada_de == 1 for _, resultado in resultados for persona in resultado.personas)
+    assert heredo is hereda
+
+
+@pytest.mark.parametrize("separacion_px, hereda", [(80.0, True), (140.0, False)])
+def test_con_homografia_el_radio_va_en_metros(separacion_px, hereda):
+    # 200 px por metro: 80 px son 0,4 m (dentro del radio de 0,5 m) y 140 px son 0,7 m (fuera)
+    persona_1 = quieto(CERCA, 1)
+    persona_2 = ausente(1.2) + quieto((350.0, 450.0 + separacion_px), 1)
+    resultados = simular(monitor_m(), {1: persona_1, 2: persona_2})
+    heredo = any(persona.heredada_de == 1 for _, resultado in resultados for persona in resultado.personas)
+    assert heredo is hereda
+
+
+def test_con_dos_perdidas_cerca_el_id_nuevo_hereda_a_la_mas_cercana():
+    persona_1 = quieto((340.0, 400.0), 1)
+    persona_2 = quieto((340.0, 500.0), 1)
+    persona_3 = ausente(1.2) + quieto((345.0, 480.0), 1)       # a 20 px de la 2 y a 80 px de la 1
+    resultados = simular(monitor_px(), {1: persona_1, 2: persona_2, 3: persona_3})
+    herencias = [(persona.persona_id, persona.heredada_de) for _, resultado in resultados
+                 for persona in resultado.personas if persona.heredada_de is not None]
+    assert herencias == [(3, 2)]
+
+
+def test_quien_sigue_a_la_vista_no_le_presta_su_historial_a_un_id_nuevo():
+    # La 1 sigue en la franja; aparece un id nuevo pegado a ella: son dos personas
+    persona_1 = quieto(CERCA, 3)
+    persona_2 = ausente(1) + quieto((355.0, 460.0), 2)
+    resultados = simular(monitor_px(), {1: persona_1, 2: persona_2})
+    assert ("advertencia", 0, 2) in estados(resultados)
+    assert not any(persona.heredada_de for _, resultado in resultados for persona in resultado.personas)
+
+
 def test_una_oclusion_corta_no_cierra_nada():
     monitor = monitor_px()
     resultados = simular(monitor, {1: quieto(DENTRO, 1) + ausente(0.5) + quieto(DENTRO, 1)})

@@ -1,0 +1,168 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aurenadv.com/sst/contrato/config_zona.schema.json",
+  "title": "Configuración del módulo de zona de peligro",
+  "description": "Cuerpo de PUT y GET /api/modulos/zona/config. Define la zona, su calibración y los parámetros de detección. Todas las claves son opcionales: la que falte conserva su valor por defecto. Los polígonos van en coordenadas normalizadas (0 a 1) sobre la imagen de referencia de la cámara.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "zona_peligro": {
+      "description": "Zona de peligro activa, marcada en el piso. null: todavía no hay zona y el módulo no vigila nada.",
+      "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/poligono" }]
+    },
+    "rectangulo_real": {
+      "description": "Medidas reales del rectángulo de cinta. Con ellas, y si zona_peligro tiene cuatro vértices, las distancias y el margen van en metros. ancho_m es el lado del primer vértice al segundo; largo_m, el del segundo al tercero. null: todo va en píxeles.",
+      "oneOf": [
+        { "type": "null" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["ancho_m", "largo_m"],
+          "properties": {
+            "ancho_m": { "type": "number", "exclusiveMinimum": 0, "maximum": 50 },
+            "largo_m": { "type": "number", "exclusiveMinimum": 0, "maximum": 50 }
+          }
+        }
+      ]
+    },
+    "margen_advertencia_m": {
+      "description": "Ancho de la franja de advertencia alrededor de la zona, en metros. Se usa cuando la zona mide en metros.",
+      "type": "number",
+      "minimum": 0,
+      "maximum": 10
+    },
+    "margen_advertencia_px": {
+      "description": "Ancho de la franja de advertencia en píxeles de la imagen de la cámara. Se usa cuando la zona no mide en metros.",
+      "type": "number",
+      "minimum": 0,
+      "maximum": 2000
+    },
+    "imagen_referencia": {
+      "description": "Ruta del medio (como la devuelve POST /api/medios) de la imagen sobre la que se marcó zona_peligro. La escribe quien guarda la zona.",
+      "oneOf": [{ "type": "null" }, { "type": "string", "minLength": 1 }]
+    },
+    "solicitud_deteccion": {
+      "description": "Pedido de detección automática de la cinta: una marca de tiempo ISO 8601. Cuando cambia, el módulo detecta la cinta y responde en zona_propuesta. Quien guarda la zona lo deja en null.",
+      "oneOf": [{ "type": "null" }, { "type": "string", "minLength": 1, "maxLength": 64 }]
+    },
+    "zona_propuesta": {
+      "description": "Respuesta del módulo a solicitud_deteccion. Es solo una propuesta: no se vigila hasta que una persona la confirma y se guarda como zona_peligro. Quien guarda la zona lo deja en null.",
+      "oneOf": [
+        { "type": "null" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["solicitud", "poligono", "mensaje"],
+          "properties": {
+            "solicitud": {
+              "description": "La solicitud_deteccion que se atendió. Si coincide con la vigente, ya está atendida.",
+              "oneOf": [{ "type": "null" }, { "type": "string", "minLength": 1, "maxLength": 64 }]
+            },
+            "poligono": {
+              "description": "Polígono propuesto. null: no se encontró la cinta (mensaje dice por qué).",
+              "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/poligono" }]
+            },
+            "es_cuadrilatero": {
+              "description": "true si la propuesta tiene cuatro vértices: sirve como rectángulo para medir en metros.",
+              "type": "boolean"
+            },
+            "mensaje": { "description": "Texto para mostrar al operador.", "type": "string" },
+            "imagen_referencia": {
+              "description": "Ruta del medio de la imagen sobre la que se detectó.",
+              "oneOf": [{ "type": "null" }, { "type": "string", "minLength": 1 }]
+            }
+          }
+        }
+      ]
+    },
+    "deteccion": {
+      "description": "Parámetros de la detección de personas y de la máquina de estados.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "confianza_persona": {
+          "description": "Confianza mínima del detector para contar a una persona.",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "confianza_punto": {
+          "description": "Confianza mínima de un tobillo (o muñeca) para usarlo como punto de apoyo. Por debajo se usa el borde inferior de la caja de la persona.",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "antirrebote_s": {
+          "description": "Segundos que debe sostenerse un nivel para cambiar de estado.",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 5
+        },
+        "histeresis": {
+          "description": "Fracción del margen que hay que alejarse de más para bajar de nivel.",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "segundos_perdida": {
+          "description": "Segundos sin ver a una persona para darla por retirada.",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 30
+        },
+        "segundos_perdida_peligro": {
+          "description": "Lo mismo para quien se dejó de ver dentro de la zona: puede estar oculta detrás de la máquina, y mientras tanto la alarma sigue.",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 60
+        },
+        "radio_reasociacion_m": {
+          "description": "Si el tracker le cambia el id a una persona, el id nuevo hereda su estado y su historial cuando aparece a menos de este radio (en metros) de donde se la vio por última vez. Se usa cuando la zona mide en metros.",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 5
+        },
+        "radio_reasociacion_px": {
+          "description": "El mismo radio en píxeles de la imagen, para cuando la zona no mide en metros.",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 2000
+        }
+      }
+    },
+    "cinta_hsv": {
+      "description": "Rango de color del amarillo de la cinta en HSV de OpenCV (tono de 0 a 179; saturación y brillo de 0 a 255).",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "h_min": { "type": "integer", "minimum": 0, "maximum": 179 },
+        "h_max": { "type": "integer", "minimum": 0, "maximum": 179 },
+        "s_min": { "type": "integer", "minimum": 0, "maximum": 255 },
+        "v_min": { "type": "integer", "minimum": 0, "maximum": 255 }
+      }
+    },
+    "sonido_local": {
+      "description": "Pitido en la propia estación. El sonido principal está en la plataforma.",
+      "type": "boolean"
+    }
+  },
+  "$defs": {
+    "punto": {
+      "description": "Vértice [x, y] en coordenadas normalizadas sobre la imagen: (0, 0) arriba a la izquierda, (1, 1) abajo a la derecha.",
+      "type": "array",
+      "prefixItems": [
+        { "type": "number", "minimum": 0, "maximum": 1 },
+        { "type": "number", "minimum": 0, "maximum": 1 }
+      ],
+      "items": false,
+      "minItems": 2
+    },
+    "poligono": {
+      "description": "Vértices en orden, sin repetir el primero al final.",
+      "type": "array",
+      "items": { "$ref": "#/$defs/punto" },
+      "minItems": 3,
+      "maxItems": 64
+    }
+  }
+}

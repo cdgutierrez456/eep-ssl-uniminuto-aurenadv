@@ -30,7 +30,7 @@ class EstadoZona:
 
 @dataclass(frozen=True)
 class Textos:
-    """Palabras con que se describe un casi-accidente; cambian entre la zona de piso y la de mano."""
+    """Palabras con que se describe un casi-accidente: quién se acercó y a qué."""
 
     quien: str = "Una persona"
     lugar: str = "la zona de peligro"

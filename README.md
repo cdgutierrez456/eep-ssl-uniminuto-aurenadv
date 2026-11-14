@@ -12,12 +12,15 @@ auren-sst/
 │   ├── evento.schema.json     # JSON Schema del sobre y de cada tipo de evento
 │   ├── config_epp.schema.json # Configuración remota del módulo EPP
 │   ├── config_ergonomia.schema.json # Configuración remota del módulo de ergonomía
+│   ├── config_zona.schema.json # Configuración remota del módulo de zona
 │   └── ejemplos/              # Un evento válido por tipo (sirven de mocks)
 ├── modulos/                   # Juan — Python
 │   ├── comun/                 # Cliente compartido: publicar, latido, medios, rostros, config remota, cámaras
 │   ├── epp/                   # Verificación de EPP por perfil en vivo (python -m modulos.epp)
+│   ├── zona/                  # Zona de peligro con alarma en la plataforma (python -m modulos.zona)
 │   └── ergonomia/             # Evaluación REBA en vivo, en su propio entorno (python -m modulos.ergonomia)
 ├── herramientas/
+│   ├── descargar_modelos.py   # Baja los modelos públicos que no se versionan (python -m herramientas.descargar_modelos)
 │   └── receptor_prueba/       # Imita la API local para probar módulos (no es la plataforma)
 ├── pruebas/                   # pytest
 ├── docs/                      # Brief técnico y cambios de contrato
@@ -32,6 +35,12 @@ También está `ergonomia` ([modulos/ergonomia/README.md](modulos/ergonomia/READ
 reporte PDF. Corre en un entorno aparte, `modulos/ergonomia/.venv`, porque MediaPipe choca con el OpenCV del
 entorno compartido; su README trae la instalación. Sus cambios de contrato están en el mismo
 [docs/cambios-contrato.md](docs/cambios-contrato.md).
+
+También está `zona` ([modulos/zona/README.md](modulos/zona/README.md)): detecta personas que se acercan o entran a
+una zona marcada en el piso con cinta amarilla. No usa ESP32 ni torre de luz: la alarma, visual y sonora, vive en
+la plataforma. El receptor de prueba trae la vista de alarma (`/alarma`) y el editor de zona como referencia, y
+[docs/cambios-contrato.md](docs/cambios-contrato.md) dice qué debe implementar la plataforma. Necesita el modelo de
+pose, que se baja una vez con `python -m herramientas.descargar_modelos`.
 
 ## Cómo arrancar
 

@@ -19,6 +19,9 @@ Cómo decide:
   ahí, tapada por la máquina: conserva el peligro ``segundos_perdida_peligro`` segundos, y la
   alarma no se apaga. Si en ese lapso aparece dentro de la zona alguien con un id nuevo, se
   asume que es la misma persona y hereda su estado y su historial: un solo ingreso.
+- **Cambios de id del tracker.** Un id nuevo que aparece a menos del radio de reasociación
+  de donde se vio por última vez a una persona perdida (dentro de su espera) es esa persona:
+  hereda su estado y su historial, así no salen dos eventos por la misma.
 """
 
 from __future__ import annotations
@@ -51,6 +54,9 @@ class Parametros:
     segundos_perdida: float = 1.0  # sin ver a una persona este tiempo, se da por retirada
     segundos_perdida_peligro: float = 4.0  # lo mismo para quien se dejó de ver dentro de la zona
     intervalo_refresco_s: float = 2.0  # cada cuánto se repite estado_zona mientras no esté libre
+    # Un id nuevo que aparece a menos de este radio de una persona recién perdida es esa persona
+    radio_reasociacion_m: float = 0.5  # cuando la zona mide en metros
+    radio_reasociacion_px: float = 80.0  # cuando mide en píxeles
 
 
 @dataclass(frozen=True)
@@ -145,7 +151,7 @@ def _separacion(unos: Sequence[Punto], otros: Sequence[Punto]) -> float:
 class MonitorZona:
     """Vigila una zona: llámese ``actualizar`` una vez por fotograma.
 
-    ``textos`` cambia las palabras del casi-accidente (la zona de mano no habla de personas).
+    ``textos`` cambia las palabras con que se describe un casi-accidente, si la zona lo necesita.
     """
 
     def __init__(self, zona: Zona, parametros: Parametros | None = None, textos: Textos | None = None) -> None:
@@ -183,7 +189,7 @@ class MonitorZona:
             persona = self._personas.get(persona_id)
             heredada_de = None
             if persona is None:
-                persona = self._oculta_que_reaparece(puntos, t, presentes)
+                persona = self._perdida_que_reaparece(puntos, t, presentes)
                 if persona is None:
                     persona = _Persona(persona_id, t)
                 else:  # misma persona con otro id: sigue su seguimiento donde iba
@@ -227,21 +233,29 @@ class MonitorZona:
             return self.parametros.segundos_perdida_peligro
         return self.parametros.segundos_perdida
 
-    def _oculta_que_reaparece(self, puntos: tuple[Punto, ...], t: float,
-                              presentes: Mapping[int, tuple[Punto, ...]]) -> _Persona | None:
-        """Si un id nuevo aparece dentro de la zona donde alguien se había dejado de ver, es esa persona.
+    def _perdida_que_reaparece(self, puntos: tuple[Punto, ...], t: float,
+                               presentes: Mapping[int, tuple[Punto, ...]]) -> _Persona | None:
+        """Decide si un id nuevo es en realidad una persona que se había dejado de ver.
 
-        Devuelve su seguimiento (el de la más cercana, si hay varias ocultas) o None si el id
-        nuevo es de verdad otra persona.
+        Lo es en dos casos, siempre dentro de la espera de la persona perdida:
+
+        - Aparece a menos del radio de reasociación de donde se la vio por última vez: el
+          tracker le cambió el id.
+        - Aparece dentro de la zona y la perdida estaba oculta dentro: salió de detrás de la
+          máquina, aunque sea por el otro lado.
+
+        Devuelve el seguimiento de la más cercana que cumpla, o None si es de verdad otra persona.
         """
-        if not self.zona.medir(puntos).dentro:
+        radio = self.parametros.radio_reasociacion_m if self.zona.en_metros else self.parametros.radio_reasociacion_px
+        dentro = self.zona.medir(puntos).dentro
+        candidatas = [
+            persona for persona in self._personas.values()
+            if persona.persona_id not in presentes and t - persona.visto <= self._espera(persona)
+            and ((dentro and persona.oculta_dentro) or self.zona.separacion(persona.puntos, puntos) <= radio)
+        ]
+        if not candidatas:
             return None
-        ocultas = [persona for persona in self._personas.values()
-                   if persona.persona_id not in presentes and persona.oculta_dentro
-                   and t - persona.visto <= self.parametros.segundos_perdida_peligro]
-        if not ocultas:
-            return None
-        return min(ocultas, key=lambda persona: _separacion(persona.puntos, puntos))
+        return min(candidatas, key=lambda persona: _separacion(persona.puntos, puntos))
 
     def _observar(self, persona: _Persona, t: float, puntos: tuple[Punto, ...], alarma_activa: bool,
                   eventos: list[EventoZona], heredada_de: int | None = None) -> VistaPersona:

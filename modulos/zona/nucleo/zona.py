@@ -63,6 +63,14 @@ class Zona:
             return medida.distancia_m
         return medida.distancia_px
 
+    def separacion(self, unos: Sequence[Punto], otros: Sequence[Punto]) -> float:
+        """Distancia entre los dos puntos más cercanos de dos grupos (en píxeles de la imagen),
+        en la unidad de la zona: metros sobre el piso si mide en metros, píxeles si no."""
+        if self.en_metros:
+            unos = [punto for punto in map(self.homografia.aplicar, unos) if punto is not None]
+            otros = [punto for punto in map(self.homografia.aplicar, otros) if punto is not None]
+        return min((math.dist(a, b) for a in unos for b in otros), default=math.inf)
+
     def medir(self, puntos: Sequence[Punto]) -> Medida:
         """Mide los puntos de apoyo de una persona (en píxeles de la imagen) contra la zona.
 
