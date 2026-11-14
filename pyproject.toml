@@ -46,6 +46,9 @@ include = ["modulos*", "herramientas*"]
 [tool.setuptools.package-data]
 "modulos.comun" = ["modelos/*.onnx"]
 "herramientas.receptor_prueba" = ["*.html"]
+# Tablas REBA, mensajes, recomendaciones y configuración por defecto del módulo de ergonomía
+"modulos.ergonomia.nucleo" = ["*.json"]
+"modulos.ergonomia.config" = ["*.json"]
 
 [tool.pytest.ini_options]
 testpaths = ["pruebas"]
