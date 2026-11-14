@@ -60,6 +60,7 @@ def publicar(
     adjuntos: list[dict] | None = None,
     *,
     modulo_version: str | None = None,
+    urgente: bool = False,
 ) -> dict:
     """Publica un evento en la plataforma sin bloquear al módulo.
 
@@ -67,12 +68,16 @@ def publicar(
     inmediato; un hilo en segundo plano lo envía a {API_URL}/api/eventos y lo
     reintenta con espera creciente si la API no responde. Devuelve el sobre.
 
+    ``urgente`` es para eventos de los que depende una alarma: si la cola está
+    esperando para reintentar tras un fallo, corta esa espera y reintenta ya, así
+    el evento sale apenas vuelve la conexión. Sin él, nada cambia.
+
     Lanza EventoInvalido si el evento no cumple el contrato: es un error del
     módulo que publica y debe corregirse en el código, no reintentarse.
     """
     evento = construir_evento(
         estacion, tipo, datos, severidad, sesion_id, adjuntos, modulo_version=modulo_version
     )
-    obtener_cola(estacion).encolar(evento)
+    obtener_cola(estacion).encolar(evento, urgente=urgente)
     log.info("Evento %s/%s publicado (severidad %s, id %s)", estacion, tipo, severidad, evento["id"][:8])
     return evento

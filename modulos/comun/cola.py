@@ -36,18 +36,25 @@ class ColaEventos:
         self.ruta_rechazados = ruta.with_name(ruta.stem + ".rechazados.jsonl")
         self._candado = threading.Lock()
         self._hay_trabajo = threading.Event()
+        self._urgente = threading.Event()  # un evento urgente corta la espera entre reintentos
         self._hilo: threading.Thread | None = None
         self.ruta.parent.mkdir(parents=True, exist_ok=True)
 
     # ------------------------------------------------------------ escritura
 
-    def encolar(self, evento: dict) -> None:
-        """Escribe el evento en disco y despierta al hilo de envío."""
+    def encolar(self, evento: dict, urgente: bool = False) -> None:
+        """Escribe el evento en disco y despierta al hilo de envío.
+
+        Con ``urgente``, si el hilo está esperando para reintentar tras un fallo, deja de
+        esperar y reintenta ya: el evento sale apenas la API vuelva a responder.
+        """
         linea = json.dumps(evento, ensure_ascii=False)
         with self._candado:
             with open(self.ruta, "a", encoding="utf-8") as archivo:
                 archivo.write(linea + "\n")
         self._asegurar_hilo()
+        if urgente:
+            self._urgente.set()
         self._hay_trabajo.set()
 
     def pendientes(self) -> list[dict]:
@@ -104,6 +111,7 @@ class ColaEventos:
             while True:
                 pendientes = self.pendientes()
                 if not pendientes:
+                    self._urgente.clear()  # sin nada pendiente no hay espera que cortar
                     self._hay_trabajo.clear()
                     # Segunda mirada para no dormirse con un evento recién encolado
                     if not self.pendientes():
@@ -137,7 +145,9 @@ class ColaEventos:
                     url, fallo, len(pendientes), espera,
                 )
                 avisado = True
-                time.sleep(espera)
+                # Espera el intervalo completo, salvo que llegue un evento urgente: ese la corta
+                self._urgente.wait(espera)
+                self._urgente.clear()
                 espera = min(espera * 2, ESPERA_MAXIMA_S)
 
 
