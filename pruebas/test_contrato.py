@@ -13,7 +13,7 @@ EJEMPLOS = sorted(CARPETA_EJEMPLOS.glob("*.json"))
 TIPOS_DEL_BRIEF = {
     "evaluacion_reba", "reporte_generado", "verificacion_epp", "ingreso_zona", "casi_accidente",
     "inspeccion_foto", "informe_incidente", "lead_registrado", "estado_modulo",
-    "config_actualizada",
+    "config_actualizada", "estado_zona",
 }
 
 

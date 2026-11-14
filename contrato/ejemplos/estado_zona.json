@@ -1,0 +1,10 @@
+{
+  "id": "c3d9a2f1-6b47-4e0a-8f15-2a9d7c4b1e60",
+  "version_esquema": 1,
+  "estacion": "zona",
+  "tipo": "estado_zona",
+  "timestamp": "2026-11-20T10:41:00-05:00",
+  "severidad": "alta",
+  "datos": { "zona_id": "piso", "estado": "peligro", "personas_peligro": 1, "personas_advertencia": 0 },
+  "origen": { "dispositivo": "pc-stand", "modulo_version": "0.1.0" }
+}

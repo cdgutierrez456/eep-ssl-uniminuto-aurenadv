@@ -4,11 +4,12 @@
   "estacion": "zona",
   "tipo": "casi_accidente",
   "timestamp": "2026-11-20T10:41:06-05:00",
-  "severidad": "critica",
+  "severidad": "alta",
   "datos": {
-    "zona_id": "prensa-1",
-    "descripcion": "Una persona permaneció dentro del perímetro de la prensa con la alarma activa.",
-    "distancia_min_px": 18
+    "zona_id": "piso",
+    "descripcion": "Una persona se acercó a 0,32 m de la zona de peligro y se retiró sin entrar.",
+    "distancia_min_px": 46,
+    "distancia_min_m": 0.32
   },
   "adjuntos": [ { "tipo": "imagen", "ruta": "media/2026-11-20/e09b6c14.jpg" } ],
   "origen": { "dispositivo": "pc-stand", "modulo_version": "0.1.0" }

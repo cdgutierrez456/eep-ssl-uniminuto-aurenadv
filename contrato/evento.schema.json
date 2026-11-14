@@ -29,6 +29,7 @@
         "verificacion_epp",
         "ingreso_zona",
         "casi_accidente",
+        "estado_zona",
         "inspeccion_foto",
         "informe_incidente",
         "lead_registrado",
@@ -91,6 +92,10 @@
     {
       "if": { "required": ["tipo"], "properties": { "tipo": { "const": "casi_accidente" } } },
       "then": { "properties": { "estacion": { "const": "zona" }, "datos": { "$ref": "#/$defs/datos_casi_accidente" } } }
+    },
+    {
+      "if": { "required": ["tipo"], "properties": { "tipo": { "const": "estado_zona" } } },
+      "then": { "properties": { "estacion": { "const": "zona" }, "datos": { "$ref": "#/$defs/datos_estado_zona" } } }
     },
     {
       "if": { "required": ["tipo"], "properties": { "tipo": { "const": "inspeccion_foto" } } },
@@ -254,7 +259,27 @@
       "properties": {
         "zona_id": { "type": "string", "minLength": 1 },
         "descripcion": { "type": "string", "minLength": 1 },
-        "distancia_min_px": { "type": "number", "minimum": 0 }
+        "distancia_min_px": { "type": "number", "minimum": 0 },
+        "distancia_min_m": {
+          "description": "Opcional. Distancia mínima en metros sobre el piso. Solo viene cuando la zona está calibrada con sus medidas reales.",
+          "type": "number",
+          "minimum": 0
+        }
+      }
+    },
+    "datos_estado_zona": {
+      "description": "Estado de una zona de peligro: de él depende la alarma. Se publica en cada cambio de estado o de conteos y, con refresco: true, cada 2 s mientras la zona no esté libre. Severidad: libre info, advertencia media, peligro alta.",
+      "type": "object",
+      "required": ["zona_id", "estado", "personas_peligro", "personas_advertencia"],
+      "properties": {
+        "zona_id": { "type": "string", "minLength": 1 },
+        "estado": { "enum": ["libre", "advertencia", "peligro"] },
+        "personas_peligro": { "description": "Personas dentro de la zona de peligro.", "type": "integer", "minimum": 0 },
+        "personas_advertencia": { "description": "Personas en la franja de advertencia, sin pisar la zona.", "type": "integer", "minimum": 0 },
+        "refresco": {
+          "description": "Opcional. true si el evento repite el estado vigente sin que nada haya cambiado: mantiene viva la alarma. El historial del tablero debe filtrar estos eventos.",
+          "type": "boolean"
+        }
       }
     },
     "datos_inspeccion_foto": {

@@ -4,7 +4,7 @@
   "estacion": "zona",
   "tipo": "ingreso_zona",
   "timestamp": "2026-11-20T10:41:03-05:00",
-  "severidad": "media",
-  "datos": { "zona_id": "prensa-1", "duracion_s": 2.8, "alarma_activada": true },
+  "severidad": "alta",
+  "datos": { "zona_id": "piso", "duracion_s": 2.8, "alarma_activada": true },
   "origen": { "dispositivo": "pc-stand", "modulo_version": "0.1.0" }
 }

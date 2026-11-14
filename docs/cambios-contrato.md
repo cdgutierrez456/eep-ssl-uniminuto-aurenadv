@@ -287,3 +287,78 @@ recomendaciones por reglas escritas (sin IA, funciona sin internet) y cómo se m
 el número de visitante, la pantalla de ergonomía muestra un QR hacia
 `{BASE_URL_PUBLICA}/r/{sesion_id}` desde el primer intento. Sin esa variable no hay QR. La
 URL pública sigue siendo una decisión abierta del brief: la estación solo la lee.
+
+---
+
+# Cambios de contrato — módulo de zona de peligro
+
+Para Cristian. Lo que agrega el módulo de zona. Todo es aditivo: `version_esquema` sigue en 1
+y ningún evento anterior cambia de forma.
+
+**Cambio respecto al brief: no hay ESP32 ni torre de luz.** La alarma, visual y sonora, vive
+en la plataforma. La estación solo publica eventos y tiene un respaldo visual en su ventana.
+
+Esta sección crece con el módulo. Por ahora cubre los eventos. La configuración de la zona,
+`GET /api/stream`, la vista de alarma, el editor de zona y las fotos adjuntas se documentan
+aquí cuando estén implementados en el receptor de prueba.
+
+## 1. Evento nuevo: `estado_zona`
+
+Añadido a [`contrato/evento.schema.json`](../contrato/evento.schema.json); ejemplo en
+[`contrato/ejemplos/estado_zona.json`](../contrato/ejemplos/estado_zona.json). De este evento
+depende la alarma.
+
+| Campo | Valor |
+|---|---|
+| `tipo`, `estacion` | `estado_zona`, siempre `zona` |
+| `datos.zona_id` | `piso` (la zona marcada con cinta) o `mano` (zona opcional sobre la máquina) |
+| `datos.estado` | `libre`, `advertencia` o `peligro`: el peor nivel entre las personas a la vista |
+| `datos.personas_peligro` | Personas con un pie dentro de la zona |
+| `datos.personas_advertencia` | Personas en la franja de advertencia, sin pisar la zona |
+| `datos.refresco` | Opcional. `true` si el evento repite el estado vigente sin que nada haya cambiado |
+| `severidad` | `libre` → `info`; `advertencia` → `media`; `peligro` → `alta` |
+
+Cuándo se publica:
+
+- **En cada cambio** de estado o de conteos (por ejemplo, una segunda persona se acerca
+  mientras la zona ya está en peligro). Estos no traen `refresco`.
+- **Al arrancar y al cerrar la estación**, uno con `libre`, para que ninguna alarma se quede
+  encendida de una sesión anterior.
+- **Cada 2 s mientras la zona no esté libre**, con `refresco: true`. Mantiene viva la alarma:
+  si dejan de llegar, la estación se cayó o perdió la conexión.
+
+Un cambio se confirma cuando se sostiene 0,3 s, así que la alarma no parpadea con el temblor
+de la detección. Si la estación estuvo sin conexión, los eventos salen de su cola local más
+tarde y con su `timestamp` original.
+
+Lo que el tablero debe hacer:
+
+1. **Alarma por zona.** El estado de cada zona es su último `estado_zona`; la alarma del stand
+   es el peor estado entre las zonas (`piso` y `mano`).
+2. **Ignorar los viejos.** Un `estado_zona` con más de 5 s de antigüedad (su `timestamp`
+   frente a la hora actual) no enciende ni cambia la alarma: salió tarde de una cola.
+3. **Apagado automático.** Si pasan 5 s sin recibir ningún `estado_zona` de una zona que no
+   está libre, la alarma de esa zona se apaga sola.
+4. **Filtrar los refrescos del historial.** Los eventos con `refresco: true` no van al feed ni
+   a los conteos: solo sirven para sostener la alarma.
+
+## 2. `ingreso_zona` y `casi_accidente`
+
+Ya existían. Lo que cambia y cómo llegan:
+
+- **`ingreso_zona`**: uno por persona, cuando **sale** de la zona de peligro. `duracion_s` va
+  desde que puso el pie dentro hasta que dejó de estar dentro. `alarma_activada` dice si la
+  alarma estuvo activa en algún momento del ingreso. Severidad `alta`. Si la misma persona
+  entra dos veces, llegan dos.
+  - Quien queda oculto dentro de la zona (detrás de la máquina) sigue contando como dentro:
+    la zona sigue en `peligro` hasta 4 s después de dejar de verlo. Si no reaparece, llega
+    su `ingreso_zona` con la duración hasta la última vez que se vio.
+- **`casi_accidente`**: cuando una persona entra a la franja de advertencia y se va sin pisar
+  la zona. Quien sí entró genera `ingreso_zona`, no `casi_accidente`. Severidad `alta`.
+  - Campo opcional nuevo: `datos.distancia_min_m`, la distancia mínima en metros sobre el
+    piso. Solo viene cuando la zona está calibrada con sus medidas reales.
+  - `datos.distancia_min_px` viene siempre (píxeles de la imagen).
+  - `datos.descripcion` solo menciona metros cuando hay `distancia_min_m`.
+  - El [ejemplo](../contrato/ejemplos/casi_accidente.json) se corrigió: antes describía a
+    alguien dentro del perímetro con severidad `critica`, que es un `ingreso_zona`.
+- Ninguno de los dos trae `sesion_id`: la cámara de la zona no identifica al visitante.
